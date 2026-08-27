@@ -1,0 +1,212 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------
+   Tokens. Espelham o tailwind.config — use as classes do Tailwind no
+   dia a dia; estas variaveis existem para gradientes, sombras e SVG.
+   ------------------------------------------------------------------ */
+:root {
+  --navy: #15263d;
+  --navy-deep: #182230; /* navy + #1C1C1C 40% */
+  --navy-raised: #223248; /* navy + #F5F2EC 6%  */
+  --cream: #f5f2ec;
+  --ink: #1c1c1c;
+  --gold: #b58b57;
+  --gray: #707070;
+
+  /* Texto secundario AA-safe: cinza puro reprova nos dois fundos. */
+  --muted-on-light: rgba(28, 28, 28, 0.68); /* 5.0:1 sobre creme */
+  --muted-on-dark: rgba(245, 242, 236, 0.72); /* 7.7:1 sobre navy  */
+
+  --hairline: rgba(181, 139, 87, 0.28);
+  --hairline-strong: rgba(181, 139, 87, 0.55);
+  --hairline-light: rgba(28, 28, 28, 0.14);
+
+  --container: 1240px;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--navy);
+    color: var(--cream);
+    font-family: var(--font-montserrat), system-ui, sans-serif;
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Foco visivel sempre — dourado sobre escuro, tinta sobre claro. */
+  :focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background: var(--gold);
+    color: var(--ink);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+@layer components {
+  /* ----------------------------------------------------------------
+     Trama de sarja. Diagonal a 45deg a cada 3px, creme a 4%.
+     E isto — nao gradiente colorido — que da o ar de confeccao.
+     ---------------------------------------------------------------- */
+  .fabric {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .fabric::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+        45deg,
+        rgba(245, 242, 236, 0.04) 0px,
+        rgba(245, 242, 236, 0.04) 1px,
+        transparent 1px,
+        transparent 3px
+      ),
+      repeating-linear-gradient(
+        -45deg,
+        rgba(28, 28, 28, 0.05) 0px,
+        rgba(28, 28, 28, 0.05) 1px,
+        transparent 1px,
+        transparent 4px
+      );
+  }
+
+  /* Vinheta suave para dar profundidade sem sombra colorida. */
+  .fabric-vignette::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(
+      120% 80% at 50% 0%,
+      rgba(245, 242, 236, 0.06) 0%,
+      transparent 60%
+    );
+  }
+
+  .container-am {
+    width: 100%;
+    max-width: var(--container);
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .container-am {
+      padding-inline: 3rem;
+    }
+  }
+
+  /* Ritmo vertical unico de secao. Um lugar so, para nao criar
+     classes de padding que se anulam entre secoes. */
+  .section-y {
+    padding-block: 6rem;
+  }
+
+  @media (min-width: 768px) {
+    .section-y {
+      padding-block: 10rem;
+    }
+  }
+
+  .section-y-sm {
+    padding-block: 4rem;
+  }
+
+  @media (min-width: 768px) {
+    .section-y-sm {
+      padding-block: 6rem;
+    }
+  }
+
+  /* ----------------------------------------------------------------
+     Pesponto (topstitch). Traco 6px / intervalo 4px, 1px de espessura.
+     Usado nas emendas entre paineis e no perimetro de blocos aplicados.
+     ---------------------------------------------------------------- */
+  .stitch-line {
+    background-image: repeating-linear-gradient(
+      to right,
+      var(--gold) 0px,
+      var(--gold) 6px,
+      transparent 6px,
+      transparent 10px
+    );
+    height: 1px;
+    opacity: 0.75;
+  }
+
+  /* Marca de giz do alfaiate: risco de 24px antes de todo sobretitulo. */
+  .chalk-rule::before {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 1px;
+    background: var(--gold);
+    vertical-align: middle;
+    margin-right: 0.75rem;
+  }
+}
+
+@layer utilities {
+  .text-muted-on-light {
+    color: var(--muted-on-light);
+  }
+
+  .text-muted-on-dark {
+    color: var(--muted-on-dark);
+  }
+
+  /* Trava de legibilidade: Cormorant 300 so existe grande.
+     Abaixo de 40px o peso sobe; abaixo de 28px nao se usa a serifa. */
+  .font-display {
+    font-weight: 300;
+  }
+
+  .font-display-mid {
+    font-family: var(--font-cormorant), Georgia, serif;
+    font-weight: 400;
+  }
+}
+
+/* Respeita quem pediu menos movimento: tudo nasce no estado final. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
