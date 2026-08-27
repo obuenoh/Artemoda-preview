@@ -1,0 +1,346 @@
+// Gerenciador Arte e Moda — Fase 1
+//
+// PORTABILIDADE: roda em SQLite agora (zero setup na maquina dela) e porta
+// para Postgres trocando o provider. Por isso, deliberadamente:
+//   - nenhum `enum` do Prisma (SQLite nao suporta) — String + uniao em TS
+//   - dinheiro em Int de CENTAVOS
+//   - quantidade em Int de MILESIMOS da unidade (1,5 m = 1500)
+// Nenhum float em lugar nenhum.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────── empresa, gente e auditoria
+
+model Empresa {
+  id        String   @id @default(cuid())
+  nome      String
+  cnpj      String?
+  // TODO: confirmar com o contador. Ate la nao dispara nenhuma regra fiscal.
+  regime    String? // simples | mei | lucro_presumido
+  criadoEm  DateTime @default(now())
+
+  usuarios       Usuario[]
+  fornecedores   Fornecedor[]
+  materiasPrimas MateriaPrima[]
+  clientes       Cliente[]
+  compras        Compra[]
+  movimentos     MovimentoEstoque[]
+  remessas       Remessa[]
+  inventarios    Inventario[]
+  auditoria      Auditoria[]
+}
+
+model Usuario {
+  id        String   @id @default(cuid())
+  empresaId String
+  nome      String
+  email     String   @unique
+  senhaHash String
+  papel     String // dona | producao | vendas
+  ativo     Boolean  @default(true)
+  criadoEm  DateTime @default(now())
+
+  empresa  Empresa   @relation(fields: [empresaId], references: [id])
+  sessoes  Sessao[]
+  auditoria Auditoria[]
+
+  @@index([empresaId])
+}
+
+model Sessao {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  usuarioId String
+  expiraEm  DateTime
+  criadoEm  DateTime @default(now())
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+}
+
+/// Quem fez, o que, quando. Nunca sobrescrito.
+model Auditoria {
+  id         String   @id @default(cuid())
+  empresaId  String
+  usuarioId  String?
+  entidade   String
+  entidadeId String
+  acao       String // criou | alterou | ajustou | anulou
+  resumo     String
+  criadoEm   DateTime @default(now())
+
+  empresa Empresa  @relation(fields: [empresaId], references: [id])
+  usuario Usuario? @relation(fields: [usuarioId], references: [id])
+
+  @@index([empresaId, criadoEm])
+  @@index([entidade, entidadeId])
+}
+
+// ────────────────────────────────────────────────────────────── cadastros
+
+model Fornecedor {
+  id                String   @id @default(cuid())
+  empresaId         String
+  nome              String
+  cnpj              String?
+  contato           String?
+  whatsapp          String?
+  /// Lista separada por virgula: tecido,aviamento,dtf,silk,bordado,servico,outro
+  tipos             String
+  condicaoPagamento String   @default("a_vista") // a_vista | 30 | 30_60
+  prazoMedioDias    Int      @default(0)
+  observacoes       String?
+  ativo             Boolean  @default(true)
+  criadoEm          DateTime @default(now())
+
+  empresa       Empresa       @relation(fields: [empresaId], references: [id])
+  tabelasPreco  TabelaPreco[]
+  compras       Compra[]
+  remessas      Remessa[]
+
+  @@index([empresaId])
+}
+
+/// Versionada: uma tabela por vigencia. vigenciaFim null = tabela vigente.
+/// Nunca se edita preco antigo — cria-se nova vigencia. E assim que ela ve
+/// "esse fornecedor subiu 12% desde a ultima compra".
+model TabelaPreco {
+  id            String    @id @default(cuid())
+  fornecedorId  String
+  vigenciaInicio DateTime
+  vigenciaFim   DateTime?
+  observacoes   String?
+  criadoEm      DateTime  @default(now())
+
+  fornecedor Fornecedor        @relation(fields: [fornecedorId], references: [id], onDelete: Cascade)
+  itens      TabelaPrecoItem[]
+
+  @@index([fornecedorId, vigenciaInicio])
+}
+
+model TabelaPrecoItem {
+  id             String  @id @default(cuid())
+  tabelaPrecoId  String
+  /// materia_prima  → preco por unidade de compra do artigo
+  /// servico        → preco por peca do servico (bordado, DTF, silk)
+  tipo           String
+  materiaPrimaId String?
+  tipoServico    String? // bordado | dtf | silk | outro
+  descricao      String
+  unidade        String // metro | kg | peca
+  precoCentavos  Int
+
+  tabelaPreco  TabelaPreco   @relation(fields: [tabelaPrecoId], references: [id], onDelete: Cascade)
+  materiaPrima MateriaPrima? @relation(fields: [materiaPrimaId], references: [id])
+
+  @@index([tabelaPrecoId])
+  @@index([materiaPrimaId])
+}
+
+model MateriaPrima {
+  id            String   @id @default(cuid())
+  empresaId     String
+  nome          String
+  composicao    String?
+  cor           String?
+  larguraMil    Int? // metros x1000
+  gramaturaGm2  Int?
+  unidade       String   @default("metro") // metro | kg
+  /// TODO(cliente): se ela comprar em kg e consumir em metro, este fator
+  /// converte. 1000 = 1 para 1. So e usado quando as unidades diferem.
+  fatorConversaoMil Int  @default(1000)
+  estoqueMinimoMil  Int  @default(0)
+  localizacao   String?
+  ativo         Boolean  @default(true)
+  criadoEm      DateTime @default(now())
+
+  empresa     Empresa            @relation(fields: [empresaId], references: [id])
+  movimentos  MovimentoEstoque[]
+  itensCompra CompraItem[]
+  precos      TabelaPrecoItem[]
+  itensInventario InventarioItem[]
+
+  @@index([empresaId])
+}
+
+model Cliente {
+  id                String   @id @default(cuid())
+  empresaId         String
+  tipo              String // escola | empresa | marca
+  nome              String
+  cnpj              String?
+  contato           String?
+  whatsapp          String?
+  condicaoPagamento String   @default("a_vista")
+  observacoes       String?
+  ativo             Boolean  @default(true)
+  criadoEm          DateTime @default(now())
+
+  empresa  Empresa   @relation(fields: [empresaId], references: [id])
+  remessas Remessa[]
+
+  @@index([empresaId])
+}
+
+// ───────────────────────────────────────────────────────────────── compras
+
+model Compra {
+  id                 String   @id @default(cuid())
+  empresaId          String
+  fornecedorId       String
+  numeroNf           String?
+  data               DateTime
+  freteCentavos      Int      @default(0)
+  outrosCustosCentavos Int    @default(0)
+  observacoes        String?
+  criadoEm           DateTime @default(now())
+
+  empresa    Empresa      @relation(fields: [empresaId], references: [id])
+  fornecedor Fornecedor   @relation(fields: [fornecedorId], references: [id])
+  itens      CompraItem[]
+
+  @@index([empresaId, data])
+}
+
+model CompraItem {
+  id             String @id @default(cuid())
+  compraId       String
+  materiaPrimaId String
+  quantidadeMil  Int
+  valorUnitarioCentavos Int
+  /// Rateio do frete e outros custos, calculado pelo sistema (por valor).
+  /// Ela nunca digita isto — regra "nao pedir o que da para calcular".
+  rateioCentavos Int    @default(0)
+
+  compra       Compra       @relation(fields: [compraId], references: [id], onDelete: Cascade)
+  materiaPrima MateriaPrima @relation(fields: [materiaPrimaId], references: [id])
+
+  @@index([compraId])
+}
+
+// ─────────────────────────────────────── estoque: lancamentos IMUTAVEIS
+
+/// A unica fonte de verdade do estoque. Saldo = SUM(quantidadeMil).
+/// Nunca se faz UPDATE aqui. Correcao entra como novo lancamento de ajuste
+/// com motivo e autor. Sem isso, o dia em que os numeros nao baterem nao
+/// tem como descobrir por que.
+model MovimentoEstoque {
+  id             String   @id @default(cuid())
+  empresaId      String
+  materiaPrimaId String
+  /// entrada_compra | entrada_inicial | saida_producao | ajuste_inventario
+  /// | devolucao_fornecedor | perda
+  tipo           String
+  /// Positivo entra, negativo sai. Sempre com sinal.
+  quantidadeMil  Int
+  custoUnitarioCentavos Int
+  /// Custo medio ponderado APOS este lancamento. Congelado aqui para o
+  /// historico ser auditavel e a consulta barata.
+  custoMedioAposCentavos Int
+  /// Saldo APOS este lancamento — permite ler o extrato sem recalcular.
+  saldoAposMil   Int
+  origemTipo     String? // compra | inventario | remessa | manual
+  origemId       String?
+  motivo         String?
+  usuarioId      String?
+  criadoEm       DateTime @default(now())
+
+  empresa      Empresa      @relation(fields: [empresaId], references: [id])
+  materiaPrima MateriaPrima @relation(fields: [materiaPrimaId], references: [id])
+
+  @@index([empresaId, materiaPrimaId, criadoEm])
+}
+
+model Inventario {
+  id        String   @id @default(cuid())
+  empresaId String
+  data      DateTime
+  /// aberto | aplicado
+  status    String   @default("aberto")
+  /// Inventario de abertura: como comecar com o tecido que ja esta na
+  /// prateleira, sem nota de compra.
+  abertura  Boolean  @default(false)
+  observacoes String?
+  criadoEm  DateTime @default(now())
+
+  empresa Empresa          @relation(fields: [empresaId], references: [id])
+  itens   InventarioItem[]
+
+  @@index([empresaId])
+}
+
+model InventarioItem {
+  id             String @id @default(cuid())
+  inventarioId   String
+  materiaPrimaId String
+  saldoSistemaMil Int
+  contagemFisicaMil Int
+  /// Obrigatorio quando ha diferenca: sem motivo o ajuste nao entra.
+  motivo         String?
+  /// Usado so no inventario de abertura, onde nao existe custo historico.
+  custoEstimadoCentavos Int?
+
+  inventario   Inventario   @relation(fields: [inventarioId], references: [id], onDelete: Cascade)
+  materiaPrima MateriaPrima @relation(fields: [materiaPrimaId], references: [id])
+
+  @@index([inventarioId])
+}
+
+// ──────────────────────────────────────── peças no parceiro (o buraco negro)
+
+model Remessa {
+  id           String   @id @default(cuid())
+  empresaId    String
+  fornecedorId String
+  clienteId    String?
+  /// Na Fase 1 nao existe ordem de producao ainda. Ela identifica o lote
+  /// por texto ("Polo Colegio Alfa - lote agosto"). Na Fase 2 isto ganha
+  /// ordemProducaoId sem quebrar nada do que ja foi registrado.
+  referencia   String
+  tipoServico  String // bordado | dtf | silk | outro
+  dataEnvio    DateTime
+  previsaoRetorno DateTime
+  quantidadeEnviada Int
+  valorPorPecaCentavos Int
+  observacoes  String?
+  criadoEm     DateTime @default(now())
+
+  empresa    Empresa    @relation(fields: [empresaId], references: [id])
+  fornecedor Fornecedor @relation(fields: [fornecedorId], references: [id])
+  cliente    Cliente?   @relation(fields: [clienteId], references: [id])
+  retornos   Retorno[]
+
+  @@index([empresaId, dataEnvio])
+}
+
+/// Retorno parcial e a regra, nao a excecao — por isso 1:N.
+model Retorno {
+  id             String   @id @default(cuid())
+  remessaId      String
+  dataRetorno    DateTime
+  quantidadeOk   Int
+  quantidadeDefeito Int   @default(0)
+  motivoDefeito  String?
+  observacoes    String?
+  criadoEm       DateTime @default(now())
+
+  remessa Remessa @relation(fields: [remessaId], references: [id], onDelete: Cascade)
+
+  @@index([remessaId])
+}
+
+/// Configuracoes que dependem de resposta dela ou do contador.
+/// Ficam aqui como dado, nunca chumbadas no codigo.
+model Configuracao {
+  chave     String   @id
+  valor     String
+  descricao String
+  pendente  Boolean  @default(false)
+  criadoEm  DateTime @default(now())
+}

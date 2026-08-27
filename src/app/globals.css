@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --fio: rgba(28, 28, 28, 0.13);
+  --fio-ouro: rgba(181, 139, 87, 0.3);
+  --texto-fraco: rgba(28, 28, 28, 0.68); /* 5,0:1 sobre creme — AA */
+  --texto-claro: rgba(245, 242, 236, 0.74);
+}
+
+@layer base {
+  body {
+    background: #f5f2ec;
+    color: #1c1c1c;
+    font-family: var(--fonte-ui), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Alvos de toque generosos: ela usa no tablet, em pe. */
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+  }
+  button.compacto,
+  a.compacto {
+    min-height: 0;
+  }
+
+  :focus-visible {
+    outline: 2px solid #b58b57;
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  .campo {
+    @apply w-full rounded-sm border border-fio bg-white px-3 py-2.5 text-[0.9375rem] text-ink
+           transition-colors placeholder:text-ink/35 focus:border-gold focus:outline-none;
+  }
+
+  .rotulo-campo {
+    @apply block text-rotulo font-semibold uppercase text-[color:var(--texto-fraco)];
+  }
+
+  .bt {
+    @apply inline-flex items-center justify-center gap-2 rounded-sm border px-5 py-2.5
+           text-rotulo font-bold uppercase transition-colors;
+  }
+  .bt-cheio {
+    @apply border-gold bg-gold text-ink hover:bg-transparent hover:text-[#8a6640];
+  }
+  .bt-vazio {
+    @apply border-fio text-[color:var(--texto-fraco)] hover:border-gold hover:text-gold;
+  }
+  .bt-perigo {
+    @apply border-alerta text-alerta hover:bg-alerta hover:text-white;
+  }
+
+  .cartao {
+    @apply rounded border border-fio bg-cream-alt p-4;
+  }
+
+  .selo {
+    @apply inline-block whitespace-nowrap rounded-sm px-2 py-1 text-rotulo font-bold uppercase;
+  }
+  .selo-ruim {
+    @apply bg-alerta text-white;
+  }
+  .selo-bom {
+    @apply bg-ok text-white;
+  }
+  .selo-neutro {
+    @apply border border-dashed border-[color:var(--texto-fraco)] text-[color:var(--texto-fraco)];
+  }
+
+  .tabela-rolagem {
+    @apply -mx-4 overflow-x-auto px-4 md:mx-0 md:px-0;
+  }
+
+  .th {
+    @apply whitespace-nowrap border-b border-fio pb-2 pr-3 text-left text-rotulo font-bold
+           uppercase text-[color:var(--texto-fraco)];
+  }
+  .td {
+    @apply border-b border-fio py-3 pr-3 align-top text-dado;
+  }
+
+  .fraco {
+    color: var(--texto-fraco);
+  }
+  .miudo {
+    @apply block text-xs;
+    color: var(--texto-fraco);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
