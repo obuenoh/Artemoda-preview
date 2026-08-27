@@ -1,0 +1,23 @@
+# Dependencias
+node_modules/
+
+# Build Next.js
+.next/
+out/
+*.tsbuildinfo
+
+# Variaveis de ambiente (nunca versionar)
+.env
+.env.local
+.env*.local
+
+# Banco de dados local
+*.db
+*.db-journal
+
+# Repositorio externo clonado dentro do projeto
+projetos/site/MazyOS/
+
+# Sistema
+.DS_Store
+*.log
