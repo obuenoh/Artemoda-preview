@@ -1,7 +1,9 @@
-# Prévia estática — Arte e Moda
+# Artemoda — prévia
 
-Publicado automaticamente a partir de `projetos/site` (branch `main`).
-Este branch (`gh-pages`) contém só o build exportado — não é o código-fonte.
+Branch de publicação. **Não é código-fonte** — é o resultado de um build.
 
-**Envio do formulário de contato está desativado nesta prévia** (é uma
-página estática, sem servidor por trás). Funciona na versão final.
+- `index.html` — página de entrada com os dois projetos
+- `site/` — export estático do site institucional
+- `painel/` — protótipo navegável do gerenciador (números de demonstração)
+
+O código vive na branch `main`.
