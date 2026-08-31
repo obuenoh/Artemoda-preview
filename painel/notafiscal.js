@@ -60,7 +60,10 @@
     var totalPecas = itens.reduce(function (s, i) { return s + i.pecas; }, 0);
     var totalComDesconto = aplicarDesconto(totalCentavos, descontoPercentualCem, descontoValorCentavos);
 
-    renderResultado(itens, totalCentavos, totalPecas, totalComDesconto);
+    renderResultado(itens, totalCentavos, totalPecas, totalComDesconto, {
+      inicio: inicioStr, fim: fimStr, clienteId: clienteId,
+      descontoPercentual: descontoPercentual, descontoValor: descontoValorReais,
+    });
   }
 
   function escapar(txt) {
@@ -69,7 +72,7 @@
     return d.innerHTML;
   }
 
-  function renderResultado(itens, totalCentavos, totalPecas, totalComDesconto) {
+  function renderResultado(itens, totalCentavos, totalPecas, totalComDesconto, filtro) {
     if (!elResultado) return;
 
     if (itens.length === 0) {
@@ -90,6 +93,12 @@
       );
     }).join('');
 
+    var query = 'inicio=' + encodeURIComponent(filtro.inicio) + '&fim=' + encodeURIComponent(filtro.fim) +
+      (filtro.clienteId ? '&clienteId=' + encodeURIComponent(filtro.clienteId) : '');
+    var queryComDesconto = query +
+      '&descontoPercentual=' + encodeURIComponent(filtro.descontoPercentual) +
+      '&descontoValor=' + encodeURIComponent(filtro.descontoValor);
+
     elResultado.hidden = false;
     elResultado.innerHTML =
       '<div class="tabela-rolagem">' +
@@ -101,7 +110,10 @@
       '<span class="text-sm text-[color:var(--texto-claro)]">Bruto: ' + D.formatoReais(totalCentavos) + '</span>' +
       '<span class="ml-auto text-xl font-bold">' + D.formatoReais(totalComDesconto) + '</span>' +
       '</div>' +
-      '<p class="mt-4 miudo fraco">Nesta prévia, "Gerar só o relatório" e "Emitir nota fiscal" ficam desligados — no sistema de verdade, o rascunho é salvo para a dona revisar.</p>';
+      '<div class="mt-5 flex flex-wrap gap-3">' +
+      '<a href="relatorio.html?' + query + '" target="_blank" rel="noreferrer" class="bt bt-vazio">Gerar só o relatório</a>' +
+      '<a href="rascunho.html?' + queryComDesconto + '" class="bt bt-cheio">Emitir nota fiscal (rascunho)</a>' +
+      '</div>';
   }
 
   elBtnCalcular.addEventListener('click', calcular);
