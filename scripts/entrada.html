@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Arte e Moda — Prévia do projeto</title>
+<meta name="description" content="Prévia do novo site e do gerenciador interno da Arte e Moda.">
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Cormorant+Garamond:wght@300;400;500&display=swap">
+<style>
+/* Paleta do manual da marca. Dourado e acento, nunca preenchimento — a unica
+   area solida em dourado aqui e o monograma, como manda a identidade.
+   Texto secundario usa alpha da propria paleta: #707070 reprova AA nos dois
+   fundos, entao nao entra em texto corrido. */
+:root{
+  --bg:#F5F2EC; --card:#FAF8F4; --ink:#1C1C1C; --ink-2:rgba(28,28,28,.68);
+  --ink-3:rgba(28,28,28,.52); --rule:rgba(21,38,61,.18); --gold:#B58B57; --navy:#15263D;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#15263D; --card:#1B2E48; --ink:#F5F2EC; --ink-2:rgba(245,242,236,.72);
+    --ink-3:rgba(245,242,236,.55); --rule:rgba(245,242,236,.20); --navy:#F5F2EC;
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:Montserrat,"Helvetica Neue",Arial,sans-serif;
+  line-height:1.6;display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:32px 20px;
+}
+.wrap{max-width:660px;width:100%}
+.mark{display:flex;align-items:center;gap:12px;margin-bottom:34px}
+.mono{
+  width:38px;height:38px;display:grid;place-items:center;border:1px solid var(--gold);
+  border-radius:2px;color:var(--gold);font-family:"Cormorant Garamond",Georgia,serif;
+  font-size:18px;line-height:1;letter-spacing:.02em;
+}
+.wm{font-size:15px;letter-spacing:.28em;text-transform:uppercase;font-weight:500;color:var(--ink)}
+h1{
+  font-family:"Cormorant Garamond",Georgia,serif;font-size:clamp(30px,5.5vw,44px);
+  font-weight:400;letter-spacing:-.005em;margin:0 0 10px;line-height:1.12;
+}
+.sub{color:var(--ink-2);margin:0 0 34px;font-size:15.5px;max-width:52ch}
+.cards{display:grid;gap:14px}
+a.card{
+  display:block;background:var(--card);border:1px solid var(--rule);padding:22px 24px;
+  text-decoration:none;color:inherit;transition:border-color .15s;border-radius:2px;
+}
+a.card:hover,a.card:focus-visible{border-color:var(--gold);outline:none}
+a.card h2{
+  font-family:"Cormorant Garamond",Georgia,serif;font-size:23px;font-weight:500;margin:0 0 5px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+a.card h2 .go{
+  font-family:Montserrat,sans-serif;font-size:11px;color:var(--gold);
+  letter-spacing:.14em;text-transform:uppercase;font-weight:600;white-space:nowrap;
+}
+a.card p{margin:0;color:var(--ink-2);font-size:14.5px}
+.tag{
+  display:inline-block;font-size:10.5px;letter-spacing:.14em;font-weight:600;
+  text-transform:uppercase;color:var(--ink-3);border:1px solid var(--rule);
+  padding:4px 9px;margin-bottom:14px;border-radius:2px;
+}
+/* Pesponto: traco 6, intervalo 4, 1px — acompanha a emenda entre os paines. */
+.costura{
+  height:1px;margin:34px 0 18px;border:0;
+  background-image:linear-gradient(90deg,var(--gold) 0 6px,transparent 6px 10px);
+  background-size:10px 1px;background-repeat:repeat-x;opacity:.55;
+}
+footer{font-size:12.5px;color:var(--ink-3);line-height:1.85}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="mark">
+    <span class="mono" aria-hidden="true">AM</span>
+    <span class="wm">Arte e Moda</span>
+  </div>
+
+  <span class="tag">Prévia · não é o site no ar</span>
+  <h1>O site e o gerenciador</h1>
+  <p class="sub">Duas coisas para você navegar e comentar. Funcionam no celular e no computador.</p>
+
+  <div class="cards">
+    <a class="card" href="site/index.html">
+      <h2>O site <span class="go">abrir →</span></h2>
+      <p>A vitrine da confecção: uniforme escolar, uniforme empresarial e private label,
+      com o formulário de orçamento. O envio está desligado nesta prévia.</p>
+    </a>
+    <a class="card" href="painel/index.html">
+      <h2>O gerenciador <span class="go">abrir →</span></h2>
+      <p>O sistema interno que substitui caderno e planilha: venda por bipagem, estoque,
+      compras, fornecedores e nota fiscal. Os números são de demonstração — servem para
+      você ver como funciona.</p>
+    </a>
+  </div>
+
+  <hr class="costura">
+  <footer>
+    Prévia do projeto Arte e Moda.<br>
+    Feito por Caíque · consultoria de soluções digitais.
+  </footer>
+</div>
+</body>
+</html>

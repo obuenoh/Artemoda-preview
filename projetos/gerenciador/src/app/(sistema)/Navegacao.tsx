@@ -7,11 +7,12 @@ import { Monograma } from '@/components/Marca';
 import type { Papel } from '@/lib/sessao';
 
 const itens: { href: string; rotulo: string; papeis: Papel[] }[] = [
-  { href: '/', rotulo: 'Hoje', papeis: ['dona', 'producao', 'vendas'] },
+  { href: '/', rotulo: 'Visão Geral', papeis: ['dona', 'producao', 'vendas'] },
+  { href: '/vendas', rotulo: 'Vendas', papeis: ['dona', 'vendas'] },
+  { href: '/nota-fiscal', rotulo: 'Nota Fiscal', papeis: ['dona'] },
   { href: '/tecidos', rotulo: 'Tecidos', papeis: ['dona', 'producao'] },
   { href: '/estoque', rotulo: 'Estoque', papeis: ['dona', 'producao'] },
   { href: '/compras', rotulo: 'Compras', papeis: ['dona', 'producao'] },
-  { href: '/parceiros', rotulo: 'Parceiros', papeis: ['dona', 'producao'] },
   { href: '/fornecedores', rotulo: 'Fornecedores', papeis: ['dona', 'producao'] },
   { href: '/clientes', rotulo: 'Clientes', papeis: ['dona', 'vendas'] },
 ];

@@ -1,53 +1,98 @@
 import Link from 'next/link';
 import { exigirUsuario } from '@/lib/sessao';
-import { posicaoEstoque } from '@/lib/estoque';
+import { posicaoEstoque, listarTiposProduto } from '@/lib/estoque';
 import { centavosParaReais, centavosNumero, milFormatado } from '@/lib/numeros';
 import { TituloPagina, FaixaTotal, Vazio, Botao } from '@/components/Ui';
 
 export const metadata = { title: 'Estoque' };
 
-export default async function EstoquePage() {
+export default async function EstoquePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ setor?: string }>;
+}) {
+  const { setor } = await searchParams;
   const usuario = await exigirUsuario();
-  const linhas = await posicaoEstoque(usuario.empresaId);
 
-  const total = linhas.reduce((s, l) => s + l.valorCentavos, 0);
+  const [todasLinhas, tipos] = await Promise.all([
+    posicaoEstoque(usuario.empresaId),
+    listarTiposProduto(usuario.empresaId),
+  ]);
+
+  const linhas = setor ? todasLinhas.filter((l) => l.tipoProdutoId === setor) : todasLinhas;
   const abaixo = linhas.filter((l) => l.abaixoDoMinimo);
+  const total = linhas.reduce((s, l) => s + l.valorCentavos, 0);
+
+  // Contagem por setor, para o filtro mostrar quanto tem em cada um.
+  const contagemPorTipo = new Map<string, number>();
+  for (const l of todasLinhas) {
+    contagemPorTipo.set(l.tipoProdutoId, (contagemPorTipo.get(l.tipoProdutoId) ?? 0) + 1);
+  }
 
   return (
     <>
       <TituloPagina
-        titulo="Estoque de tecido"
-        sub="Saldo, custo e tempo parado — tudo somado a partir dos lançamentos"
+        titulo="Estoque"
+        sub="Tecido e aviamento — saldo, custo e tempo parado, por setor"
         acao={
           <div className="flex flex-wrap gap-3">
             <Botao href="/estoque/parado" variante="vazio">
               O que está parado
             </Botao>
-            <Botao href="/estoque/contagem">Fazer contagem</Botao>
+            <Botao href="/estoque/contagem" variante="vazio">
+              Fazer contagem
+            </Botao>
+            <Botao href="/estoque/novo-produto">Novo produto</Botao>
           </div>
         }
       />
 
-      {linhas.length === 0 ? (
+      {tipos.length > 0 && (
+        <div className="mt-5 flex flex-wrap gap-2">
+          <Link
+            href="/estoque"
+            className={`bt compacto py-2 ${!setor ? 'bt-cheio' : 'bt-vazio'}`}
+          >
+            Todos os setores
+          </Link>
+          {tipos.map((t) => (
+            <Link
+              key={t.id}
+              href={`/estoque?setor=${t.id}`}
+              className={`bt compacto py-2 ${setor === t.id ? 'bt-cheio' : 'bt-vazio'}`}
+            >
+              {t.nome}
+              {contagemPorTipo.has(t.id) && (
+                <span className="ml-1.5 opacity-70">({contagemPorTipo.get(t.id)})</span>
+              )}
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {todasLinhas.length === 0 ? (
         <Vazio
-          titulo="Nenhum tecido cadastrado."
-          texto="Cadastre os tecidos e registre a primeira compra — ou faça o estoque de abertura para começar com o que já está na prateleira."
-          acao={<Botao href="/tecidos/novo">Cadastrar tecido</Botao>}
+          titulo="Nenhum produto cadastrado."
+          texto="Cadastre tecido, etiqueta, elástico, agulha, zíper — o que você compra e guarda em estoque. Depois disso dá para registrar compras e acompanhar o que tem."
+          acao={<Botao href="/estoque/novo-produto">Cadastrar produto</Botao>}
         />
+      ) : linhas.length === 0 ? (
+        <Vazio titulo="Nada neste setor ainda." texto="Cadastre o primeiro produto deste tipo." acao={<Botao href="/estoque/novo-produto">Novo produto</Botao>} />
       ) : (
         <>
           {abaixo.length > 0 && (
             <p className="mt-5 rounded border border-alerta bg-alerta/5 px-4 py-3 text-sm">
-              <strong>{abaixo.length} tecido(s) abaixo do mínimo:</strong>{' '}
+              <strong>{abaixo.length} item(ns) abaixo do mínimo:</strong>{' '}
               {abaixo.map((l) => l.nome).join(', ')}.
             </p>
           )}
 
           <div className="tabela-rolagem mt-6">
-            <table className="w-full min-w-[820px] border-collapse text-sm">
+            <table className="w-full min-w-[860px] border-collapse text-sm">
               <thead>
                 <tr>
-                  <th className="th">Tecido</th>
+                  <th className="th">Produto</th>
+                  <th className="th">Setor</th>
                   <th className="th">Onde está</th>
                   <th className="th">Tem</th>
                   <th className="th">Custo médio</th>
@@ -63,6 +108,9 @@ export default async function EstoquePage() {
                     <td className="td font-semibold">
                       {l.nome}
                       {l.cor && <span className="miudo">{l.cor}</span>}
+                    </td>
+                    <td className="td">
+                      <span className="selo selo-neutro">{l.tipoProdutoNome}</span>
                     </td>
                     <td className="td">{l.localizacao ?? <span className="fraco">—</span>}</td>
                     <td className="td font-semibold">
@@ -123,7 +171,9 @@ export default async function EstoquePage() {
           </div>
 
           <FaixaTotal>
-            <span className="text-sm text-[color:var(--texto-claro)]">Total em tecido:</span>
+            <span className="text-sm text-[color:var(--texto-claro)]">
+              {setor ? 'Total neste setor:' : 'Total em estoque:'}
+            </span>
             <span className="text-xl font-bold">{centavosParaReais(total)}</span>
           </FaixaTotal>
 

@@ -8,12 +8,24 @@ import { Button } from '@/components/ui/Button';
 import { empresa, whatsappLink, mensagensWhatsapp } from '@/data/empresa';
 import { leadSchema, TIPOS, PERSONALIZACOES, PRAZOS } from '@/lib/lead-schema';
 import {
+  gerarMensagemOrcamento,
+  criarLinkWhatsappOrcamento,
+} from '@/lib/whatsapp-orcamento';
+import {
   trackInitiateCheckout,
   trackFormStep,
   trackLead,
   trackContact,
 } from '@/lib/analytics';
 import { capturarUtm, lerUtm } from '@/lib/utm';
+
+function WhatsAppIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m0 1.67c2.2 0 4.27.86 5.83 2.42a8.2 8.2 0 0 1 2.41 5.82c0 4.54-3.7 8.24-8.25 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.26-8.24M8.53 7.33c-.16 0-.42.06-.64.3-.22.24-.85.83-.85 2.03 0 1.2.87 2.35.99 2.51.12.17 1.69 2.58 4.1 3.61.57.25 1.02.4 1.37.51.58.18 1.1.16 1.51.1.46-.07 1.42-.58 1.62-1.15.2-.56.2-1.05.14-1.15-.06-.1-.22-.16-.46-.28-.24-.12-1.42-.7-1.64-.78-.22-.08-.38-.12-.54.12-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.93-1.19-.71-.63-1.19-1.42-1.33-1.66-.14-.24-.02-.37.1-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.19-.46-.39-.4-.54-.41z" />
+    </svg>
+  );
+}
 
 type Tipo = (typeof TIPOS)[number];
 type Prazo = (typeof PRAZOS)[number];
@@ -88,9 +100,10 @@ export function QuoteForm({
   const [passo, setPasso] = useState(1);
   const [dados, setDados] = useState<Estado>({ ...inicial, tipo: tipoInicial ?? '' });
   const [erros, setErros] = useState<Partial<Record<keyof Estado, string>>>({});
-  const [status, setStatus] = useState<'idle' | 'enviando' | 'ok' | 'erro'>('idle');
+  const [status, setStatus] = useState<'idle' | 'enviando' | 'ok' | 'erro' | 'previa'>('idle');
   const [erroGeral, setErroGeral] = useState('');
   const [arquivo, setArquivo] = useState<File | null>(null);
+  const [copiado, setCopiado] = useState(false);
   const iniciado = useRef(false);
   const painel = useRef<HTMLDivElement>(null);
 
@@ -150,6 +163,21 @@ export function QuoteForm({
     setStatus('enviando');
     setErroGeral('');
 
+    const linkWhatsapp = criarLinkWhatsappOrcamento(dados, Boolean(arquivo));
+
+    // Prévia estática (GitHub Pages): não existe servidor para receber o
+    // envio de verdade. Abre o WhatsApp com o orçamento e mostra a confirmação.
+    if (process.env.NEXT_PUBLIC_PREVIEW_ESTATICO === '1') {
+      setStatus('previa');
+      trackLead({ tipo: dados.tipo, origem, quantidade: dados.quantidade });
+      try {
+        window.open(linkWhatsapp, '_blank');
+      } catch {
+        // Bloqueador de popups — usuário pode clicar no botão da tela
+      }
+      return;
+    }
+
     try {
       const form = new FormData();
       form.append(
@@ -168,45 +196,135 @@ export function QuoteForm({
       if (json.ok) {
         trackLead({ tipo: dados.tipo, origem, quantidade: dados.quantidade });
         setStatus('ok');
+        try {
+          window.open(linkWhatsapp, '_blank');
+        } catch {
+          // Bloqueador de popups
+        }
         return;
       }
 
       if (json.campos) {
         setErros(json.campos as Partial<Record<keyof Estado, string>>);
       }
-      setErroGeral(json.erro || 'Não conseguimos enviar agora.');
+      setErroGeral(json.erro || 'Não conseguimos salvar no servidor agora.');
       setStatus('erro');
     } catch {
       setErroGeral(
-        'A conexão caiu no meio do caminho. Tenta de novo — ou chama no WhatsApp que a gente responde na hora.',
+        'Houve uma instabilidade na conexão com o servidor. Mas seu orçamento está pronto: clique no botão abaixo para enviá-lo diretamente pelo WhatsApp!',
       );
       setStatus('erro');
     }
   }
 
-  // ---------------------------------------------------------------- sucesso
-  if (status === 'ok') {
+  const linkWhatsappOrcamento = criarLinkWhatsappOrcamento(dados, Boolean(arquivo));
+  const mensagemOrcamento = gerarMensagemOrcamento(dados, Boolean(arquivo));
+
+  // ------------------------------------------------------- tela de confirmacao (ok ou previa)
+  if (status === 'previa' || status === 'ok') {
+    const isPrevia = status === 'previa';
     return (
       <div
         className={`rounded-sm border border-hairline-light bg-cream p-8 text-ink md:p-12 ${className}`}
       >
-        <p className="font-sans text-label font-semibold uppercase text-gold">Pedido recebido</p>
-        <h3 className="mt-5 font-display-mid text-[1.75rem] leading-snug text-ink">
-          Recebemos. Agora é com a gente.
-        </h3>
-        <p className="mt-4 max-w-measure text-body-sm text-muted-on-light">
-          Uma pessoa da equipe vai ler o seu pedido e responder pelo WhatsApp com as opções de
-          tecido e o prazo real de produção. Se for urgente, chama direto — a gente prefere assim.
-        </p>
-        <div className="mt-8">
-          <Button
-            href={whatsappLink(mensagensWhatsapp.contato)}
-            variant="outline-dark"
-            onClick={() => trackContact({ canal: 'whatsapp', origem: `${origem}-pos-envio` })}
-          >
-            Falar no WhatsApp agora
-          </Button>
+        <div className="inline-flex items-center gap-2 rounded-[1px] bg-gold/15 px-3 py-1 text-gold font-sans text-label font-semibold uppercase">
+          <WhatsAppIcon className="h-3.5 w-3.5" />
+          {isPrevia ? 'Orçamento Pronto para Envio' : 'Orçamento Gerado com Sucesso'}
         </div>
+
+        <h3 className="mt-5 font-display-mid text-[1.75rem] leading-snug text-ink">
+          {isPrevia
+            ? 'Seu orçamento está pronto para ser enviado no WhatsApp.'
+            : 'Recebemos seu pedido! Envie também pelo WhatsApp para resposta imediata.'}
+        </h3>
+
+        <p className="mt-4 max-w-measure text-body-sm text-muted-on-light">
+          {isPrevia
+            ? 'Formatamos todos os detalhes do seu pedido com as peças, quantidades e personalizações. Uma conversa no WhatsApp foi aberta para você enviar com 1 toque.'
+            : 'Seu pedido foi registrado em nosso sistema. Para acelerar o retorno com a nossa equipe comercial e fábrica, envie o resumo formatado no WhatsApp:'}
+        </p>
+
+        {/* Resumo do que foi orçado */}
+        <div className="mt-6 rounded-sm border border-gold/30 bg-white/70 p-5 text-ink shadow-sm">
+          <div className="flex items-center justify-between border-b border-hairline-light pb-3">
+            <p className="font-sans text-label font-semibold uppercase text-gold">
+              O que está no seu orçamento
+            </p>
+            <span className="font-sans text-[0.6875rem] uppercase text-muted-on-light">
+              Arte e Moda
+            </span>
+          </div>
+          <div className="mt-3 grid grid-cols-1 gap-2.5 text-body-sm sm:grid-cols-2">
+            <div>
+              <span className="font-medium text-ink/70">Necessidade:</span>{' '}
+              <strong className="font-semibold text-ink">{dados.tipo || 'A definir'}</strong>
+            </div>
+            <div>
+              <span className="font-medium text-ink/70">Quantidade:</span>{' '}
+              <strong className="font-semibold text-ink">{dados.quantidade || 'A definir'}</strong>
+            </div>
+            <div>
+              <span className="font-medium text-ink/70">Prazo desejado:</span>{' '}
+              <strong className="font-semibold text-ink">{dados.prazo || 'A definir'}</strong>
+            </div>
+            <div>
+              <span className="font-medium text-ink/70">Personalização:</span>{' '}
+              <strong className="font-semibold text-ink">
+                {dados.personalizacao.length > 0 ? dados.personalizacao.join(', ') : 'Não definida'}
+              </strong>
+            </div>
+            <div className="sm:col-span-2 border-t border-hairline-light pt-2 text-[0.8125rem]">
+              <span className="font-medium text-ink/70">Contato:</span>{' '}
+              <span className="text-ink font-semibold">{dados.nome}</span>{' '}
+              {dados.organizacao ? `· ${dados.organizacao}` : ''}{' '}
+              {dados.whatsapp ? `· ${dados.whatsapp}` : ''}{' '}
+              {dados.cidade ? `· ${dados.cidade}` : ''}
+            </div>
+            {dados.mensagem && (
+              <div className="sm:col-span-2 border-t border-hairline-light pt-2 text-[0.8125rem] text-muted-on-light italic">
+                &ldquo;{dados.mensagem}&rdquo;
+              </div>
+            )}
+            {arquivo && (
+              <div className="sm:col-span-2 text-[0.75rem] text-gold font-medium">
+                📎 Anexo selecionado: {arquivo.name}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
+          <Button
+            href={linkWhatsappOrcamento}
+            variant="primary"
+            onClick={() =>
+              trackContact({
+                canal: 'whatsapp',
+                origem: `${origem}-${isPrevia ? 'previa' : 'pos-envio'}-orcamento`,
+              })
+            }
+            className="w-full sm:w-auto"
+          >
+            <WhatsAppIcon className="h-4 w-4" />
+            Enviar para o WhatsApp agora
+          </Button>
+
+          <button
+            type="button"
+            onClick={() => {
+              navigator.clipboard.writeText(mensagemOrcamento);
+              setCopiado(true);
+              setTimeout(() => setCopiado(false), 2500);
+            }}
+            className="inline-flex items-center justify-center font-sans text-label font-semibold uppercase text-ink underline decoration-gold underline-offset-4 hover:text-gold"
+          >
+            {copiado ? '✓ Orçamento copiado!' : 'Copiar texto do orçamento'}
+          </button>
+        </div>
+
+        <p className="mt-4 text-[0.75rem] text-muted-on-light">
+          Caso o WhatsApp não tenha aberto automaticamente na sua tela, clique no botão dourado acima.
+        </p>
       </div>
     );
   }
@@ -271,12 +389,6 @@ export function QuoteForm({
                 selecionado={dados.tipo === tipo}
                 onClick={() => {
                   set('tipo', tipo);
-                  // Toque único já avança: o compromisso pedido a quem
-                  // veio de anúncio é um toque, não um cadastro.
-                  setTimeout(() => {
-                    setPasso(2);
-                    trackFormStep(2, TOTAL);
-                  }, 160);
                 }}
               />
             ))}
@@ -302,6 +414,19 @@ export function QuoteForm({
                 aria-describedby={erros.quantidade ? 'quantidade-erro' : undefined}
                 onChange={(e) => set('quantidade', e.target.value)}
               />
+              {(() => {
+                const match = dados.quantidade.match(/\d+/);
+                const num = match ? parseInt(match[0], 10) : null;
+                if (num !== null && num > 0 && num < empresa.producao.pedidoMinimo && !erros.quantidade) {
+                  return (
+                    <p role="alert" className="mt-2 text-body-sm text-gold font-medium">
+                      <span aria-hidden="true" className="mr-2 text-gold">↳</span>
+                      Nosso pedido mínimo de confecção é de {empresa.producao.pedidoMinimo} peças.
+                    </p>
+                  );
+                }
+                return null;
+              })()}
             </Campo>
 
             <fieldset>
@@ -426,6 +551,42 @@ export function QuoteForm({
 
         {passo === 5 && (
           <div className="grid gap-6">
+            {/* Resumo do que está sendo orçado */}
+            <div className="rounded-sm border border-gold/30 bg-gold/5 p-5 text-ink">
+              <div className="flex items-center justify-between border-b border-gold/20 pb-2.5">
+                <p className="font-sans text-label font-semibold uppercase text-gold">
+                  Resumo do que você está orçando
+                </p>
+                <span className="font-sans text-[0.6875rem] uppercase text-muted-on-light">
+                  Passos 1 a 4
+                </span>
+              </div>
+              <div className="mt-3 grid grid-cols-1 gap-2.5 text-body-sm sm:grid-cols-2">
+                <div>
+                  <span className="font-medium text-ink/70">Produção:</span>{' '}
+                  <strong className="font-semibold text-ink">{dados.tipo || 'A definir'}</strong>{' '}
+                  {dados.quantidade ? `(${dados.quantidade})` : ''}
+                </div>
+                <div>
+                  <span className="font-medium text-ink/70">Prazo:</span>{' '}
+                  <strong className="font-semibold text-ink">{dados.prazo || 'A definir'}</strong>
+                </div>
+                <div className="sm:col-span-2">
+                  <span className="font-medium text-ink/70">Personalização:</span>{' '}
+                  <strong className="font-semibold text-ink">
+                    {dados.personalizacao.length > 0
+                      ? dados.personalizacao.join(', ')
+                      : 'Não informada'}
+                  </strong>
+                </div>
+                <div className="sm:col-span-2 border-t border-gold/15 pt-2 text-[0.8125rem] text-ink/80">
+                  <span className="font-medium text-ink/70">Contato:</span>{' '}
+                  {dados.nome || 'Não informado'} {dados.organizacao ? `· ${dados.organizacao}` : ''}{' '}
+                  {dados.whatsapp ? `· ${dados.whatsapp}` : ''} {dados.cidade ? `· ${dados.cidade}` : ''}
+                </div>
+              </div>
+            </div>
+
             <Campo id="mensagem" label="Conte o que precisa" opcional erro={erros.mensagem}>
               <textarea
                 id="mensagem"
@@ -487,9 +648,25 @@ export function QuoteForm({
             </div>
 
             {status === 'erro' && erroGeral && (
-              <p role="alert" className="rounded-sm border border-gold bg-gold/10 p-4 text-body-sm text-ink">
-                {erroGeral}
-              </p>
+              <div
+                role="alert"
+                className="rounded-sm border border-gold bg-gold/10 p-5 text-body-sm text-ink space-y-3"
+              >
+                <p>{erroGeral}</p>
+                <div>
+                  <Button
+                    href={linkWhatsappOrcamento}
+                    variant="primary"
+                    onClick={() =>
+                      trackContact({ canal: 'whatsapp', origem: `${origem}-fallback-erro` })
+                    }
+                    className="w-full sm:w-auto"
+                  >
+                    <WhatsAppIcon className="h-4 w-4" />
+                    Enviar orçamento pelo WhatsApp agora
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
         )}
@@ -510,12 +687,27 @@ export function QuoteForm({
 
           <div className="order-1 sm:order-2">
             {passo < TOTAL ? (
-              <Button type="button" onClick={avancar} className="w-full sm:w-auto">
+              <Button
+                type="button"
+                onClick={avancar}
+                disabled={(() => {
+                  if (passo === 2) {
+                    const match = dados.quantidade.match(/\d+/);
+                    const num = match ? parseInt(match[0], 10) : null;
+                    if (num !== null && num > 0 && num < empresa.producao.pedidoMinimo) {
+                      return true;
+                    }
+                  }
+                  return false;
+                })()}
+                className="w-full sm:w-auto"
+              >
                 Continuar
               </Button>
             ) : (
               <Button type="submit" disabled={status === 'enviando'} className="w-full sm:w-auto">
-                {status === 'enviando' ? 'Enviando…' : 'Enviar pedido de orçamento'}
+                <WhatsAppIcon className="h-4 w-4" />
+                {status === 'enviando' ? 'Enviando…' : 'Enviar orçamento pelo WhatsApp'}
               </Button>
             )}
           </div>

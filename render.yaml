@@ -1,0 +1,24 @@
+# Configuracao de deploy do gerenciador no Render.
+# O Render le este arquivo sozinho quando voce cria um "Blueprint"
+# apontando para este repositorio.
+services:
+  - type: web
+    name: artemoda-gerenciador
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: projetos/gerenciador
+    buildCommand: npm ci && npx prisma generate && npm run build
+    startCommand: sh scripts/iniciar-producao.sh
+    healthCheckPath: /entrar
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # No plano free o disco e apagado a cada reinicio, entao o banco
+      # vive dentro da pasta do app e e repopulado no start.
+      # Para os dados ficarem permanentes, veja DEPLOY.md.
+      - key: DATABASE_URL
+        value: file:./prisma/dev.db
+      # Gerado pelo Render e nunca versionado.
+      - key: SESSAO_SECRET
+        generateValue: true

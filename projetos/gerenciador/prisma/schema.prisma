@@ -1,10 +1,11 @@
-// Gerenciador Arte e Moda — Fase 1
+// Gerenciador Arte e Moda — Fase 1 + Vendas/Nota Fiscal (v2)
 //
 // PORTABILIDADE: roda em SQLite agora (zero setup na maquina dela) e porta
 // para Postgres trocando o provider. Por isso, deliberadamente:
 //   - nenhum `enum` do Prisma (SQLite nao suporta) — String + uniao em TS
 //   - dinheiro em Int de CENTAVOS
-//   - quantidade em Int de MILESIMOS da unidade (1,5 m = 1500)
+//   - quantidade de materia-prima em Int de MILESIMOS (1,5 m = 1500)
+//   - quantidade de produto acabado em Int de UNIDADES (peca nao e fracionaria)
 // Nenhum float em lugar nenhum.
 
 generator client {
@@ -19,22 +20,27 @@ datasource db {
 // ─────────────────────────────────────────────── empresa, gente e auditoria
 
 model Empresa {
-  id        String   @id @default(cuid())
-  nome      String
-  cnpj      String?
+  id       String   @id @default(cuid())
+  nome     String
+  cnpj     String?
   // TODO: confirmar com o contador. Ate la nao dispara nenhuma regra fiscal.
-  regime    String? // simples | mei | lucro_presumido
-  criadoEm  DateTime @default(now())
+  regime   String? // simples | mei | lucro_presumido
+  criadoEm DateTime @default(now())
 
-  usuarios       Usuario[]
-  fornecedores   Fornecedor[]
-  materiasPrimas MateriaPrima[]
-  clientes       Cliente[]
-  compras        Compra[]
-  movimentos     MovimentoEstoque[]
-  remessas       Remessa[]
-  inventarios    Inventario[]
-  auditoria      Auditoria[]
+  usuarios          Usuario[]
+  fornecedores      Fornecedor[]
+  tiposProduto      TipoProduto[]
+  materiasPrimas    MateriaPrima[]
+  clientes          Cliente[]
+  compras           Compra[]
+  movimentos        MovimentoEstoque[]
+  inventarios       Inventario[]
+  produtosAcabados  ProdutoAcabado[]
+  movimentosProduto MovimentoProdutoAcabado[]
+  vendas            Venda[]
+  lancamentosCaixa  LancamentoCaixa[]
+  notasFiscais      NotaFiscal[]
+  auditoria         Auditoria[]
 }
 
 model Usuario {
@@ -47,8 +53,8 @@ model Usuario {
   ativo     Boolean  @default(true)
   criadoEm  DateTime @default(now())
 
-  empresa  Empresa   @relation(fields: [empresaId], references: [id])
-  sessoes  Sessao[]
+  empresa   Empresa     @relation(fields: [empresaId], references: [id])
+  sessoes   Sessao[]
   auditoria Auditoria[]
 
   @@index([empresaId])
@@ -84,6 +90,25 @@ model Auditoria {
 
 // ────────────────────────────────────────────────────────────── cadastros
 
+/// Categoria de item de estoque de materia-prima: Tecido, Etiqueta, Ziper...
+/// Lista aberta — a dona cria um tipo novo quando precisar, sem depender
+/// de mudanca de codigo.
+model TipoProduto {
+  id                  String   @id @default(cuid())
+  empresaId           String
+  nome                String
+  unidadePadrao       String   @default("unidade") // metro | kg | unidade
+  /// So o tipo "Tecido" (semeado) liga os campos extras (composicao,
+  /// largura, gramatura) no formulario de cadastro.
+  mostrarCamposTecido Boolean  @default(false)
+  criadoEm            DateTime @default(now())
+
+  empresa        Empresa        @relation(fields: [empresaId], references: [id])
+  materiasPrimas MateriaPrima[]
+
+  @@index([empresaId])
+}
+
 model Fornecedor {
   id                String   @id @default(cuid())
   empresaId         String
@@ -99,10 +124,9 @@ model Fornecedor {
   ativo             Boolean  @default(true)
   criadoEm          DateTime @default(now())
 
-  empresa       Empresa       @relation(fields: [empresaId], references: [id])
-  tabelasPreco  TabelaPreco[]
-  compras       Compra[]
-  remessas      Remessa[]
+  empresa      Empresa       @relation(fields: [empresaId], references: [id])
+  tabelasPreco TabelaPreco[]
+  compras      Compra[]
 
   @@index([empresaId])
 }
@@ -111,12 +135,12 @@ model Fornecedor {
 /// Nunca se edita preco antigo — cria-se nova vigencia. E assim que ela ve
 /// "esse fornecedor subiu 12% desde a ultima compra".
 model TabelaPreco {
-  id            String    @id @default(cuid())
-  fornecedorId  String
+  id             String    @id @default(cuid())
+  fornecedorId   String
   vigenciaInicio DateTime
-  vigenciaFim   DateTime?
-  observacoes   String?
-  criadoEm      DateTime  @default(now())
+  vigenciaFim    DateTime?
+  observacoes    String?
+  criadoEm       DateTime  @default(now())
 
   fornecedor Fornecedor        @relation(fields: [fornecedorId], references: [id], onDelete: Cascade)
   itens      TabelaPrecoItem[]
@@ -144,29 +168,32 @@ model TabelaPrecoItem {
 }
 
 model MateriaPrima {
-  id            String   @id @default(cuid())
-  empresaId     String
-  nome          String
-  composicao    String?
-  cor           String?
-  larguraMil    Int? // metros x1000
-  gramaturaGm2  Int?
-  unidade       String   @default("metro") // metro | kg
+  id                String   @id @default(cuid())
+  empresaId         String
+  tipoProdutoId     String
+  nome              String
+  composicao        String?
+  cor               String?
+  larguraMil        Int? // metros x1000
+  gramaturaGm2      Int?
+  unidade           String   @default("metro") // metro | kg | unidade
   /// TODO(cliente): se ela comprar em kg e consumir em metro, este fator
   /// converte. 1000 = 1 para 1. So e usado quando as unidades diferem.
-  fatorConversaoMil Int  @default(1000)
-  estoqueMinimoMil  Int  @default(0)
-  localizacao   String?
-  ativo         Boolean  @default(true)
-  criadoEm      DateTime @default(now())
+  fatorConversaoMil Int      @default(1000)
+  estoqueMinimoMil  Int      @default(0)
+  localizacao       String?
+  ativo             Boolean  @default(true)
+  criadoEm          DateTime @default(now())
 
-  empresa     Empresa            @relation(fields: [empresaId], references: [id])
-  movimentos  MovimentoEstoque[]
-  itensCompra CompraItem[]
-  precos      TabelaPrecoItem[]
+  empresa         Empresa            @relation(fields: [empresaId], references: [id])
+  tipoProduto     TipoProduto        @relation(fields: [tipoProdutoId], references: [id])
+  movimentos      MovimentoEstoque[]
+  itensCompra     CompraItem[]
+  precos          TabelaPrecoItem[]
   itensInventario InventarioItem[]
 
   @@index([empresaId])
+  @@index([tipoProdutoId])
 }
 
 model Cliente {
@@ -182,8 +209,9 @@ model Cliente {
   ativo             Boolean  @default(true)
   criadoEm          DateTime @default(now())
 
-  empresa  Empresa   @relation(fields: [empresaId], references: [id])
-  remessas Remessa[]
+  empresa      Empresa      @relation(fields: [empresaId], references: [id])
+  vendas       Venda[]
+  notasFiscais NotaFiscal[]
 
   @@index([empresaId])
 }
@@ -191,15 +219,15 @@ model Cliente {
 // ───────────────────────────────────────────────────────────────── compras
 
 model Compra {
-  id                 String   @id @default(cuid())
-  empresaId          String
-  fornecedorId       String
-  numeroNf           String?
-  data               DateTime
-  freteCentavos      Int      @default(0)
-  outrosCustosCentavos Int    @default(0)
-  observacoes        String?
-  criadoEm           DateTime @default(now())
+  id                   String   @id @default(cuid())
+  empresaId            String
+  fornecedorId         String
+  numeroNf             String?
+  data                 DateTime
+  freteCentavos        Int      @default(0)
+  outrosCustosCentavos Int      @default(0)
+  observacoes          String?
+  criadoEm             DateTime @default(now())
 
   empresa    Empresa      @relation(fields: [empresaId], references: [id])
   fornecedor Fornecedor   @relation(fields: [fornecedorId], references: [id])
@@ -209,14 +237,14 @@ model Compra {
 }
 
 model CompraItem {
-  id             String @id @default(cuid())
-  compraId       String
-  materiaPrimaId String
-  quantidadeMil  Int
+  id                    String @id @default(cuid())
+  compraId              String
+  materiaPrimaId        String
+  quantidadeMil         Int
   valorUnitarioCentavos Int
   /// Rateio do frete e outros custos, calculado pelo sistema (por valor).
   /// Ela nunca digita isto — regra "nao pedir o que da para calcular".
-  rateioCentavos Int    @default(0)
+  rateioCentavos        Int    @default(0)
 
   compra       Compra       @relation(fields: [compraId], references: [id], onDelete: Cascade)
   materiaPrima MateriaPrima @relation(fields: [materiaPrimaId], references: [id])
@@ -224,32 +252,32 @@ model CompraItem {
   @@index([compraId])
 }
 
-// ─────────────────────────────────────── estoque: lancamentos IMUTAVEIS
+// ─────────────────────────────────────── estoque de materia-prima: IMUTAVEL
 
-/// A unica fonte de verdade do estoque. Saldo = SUM(quantidadeMil).
+/// A unica fonte de verdade do estoque de materia-prima. Saldo = SUM(quantidadeMil).
 /// Nunca se faz UPDATE aqui. Correcao entra como novo lancamento de ajuste
 /// com motivo e autor. Sem isso, o dia em que os numeros nao baterem nao
 /// tem como descobrir por que.
 model MovimentoEstoque {
-  id             String   @id @default(cuid())
-  empresaId      String
-  materiaPrimaId String
+  id                     String   @id @default(cuid())
+  empresaId              String
+  materiaPrimaId         String
   /// entrada_compra | entrada_inicial | saida_producao | ajuste_inventario
   /// | devolucao_fornecedor | perda
-  tipo           String
+  tipo                   String
   /// Positivo entra, negativo sai. Sempre com sinal.
-  quantidadeMil  Int
-  custoUnitarioCentavos Int
+  quantidadeMil          Int
+  custoUnitarioCentavos  Int
   /// Custo medio ponderado APOS este lancamento. Congelado aqui para o
   /// historico ser auditavel e a consulta barata.
   custoMedioAposCentavos Int
   /// Saldo APOS este lancamento — permite ler o extrato sem recalcular.
-  saldoAposMil   Int
-  origemTipo     String? // compra | inventario | remessa | manual
-  origemId       String?
-  motivo         String?
-  usuarioId      String?
-  criadoEm       DateTime @default(now())
+  saldoAposMil           Int
+  origemTipo             String? // compra | inventario | manual
+  origemId               String?
+  motivo                 String?
+  usuarioId              String?
+  criadoEm               DateTime @default(now())
 
   empresa      Empresa      @relation(fields: [empresaId], references: [id])
   materiaPrima MateriaPrima @relation(fields: [materiaPrimaId], references: [id])
@@ -258,16 +286,16 @@ model MovimentoEstoque {
 }
 
 model Inventario {
-  id        String   @id @default(cuid())
-  empresaId String
-  data      DateTime
+  id          String   @id @default(cuid())
+  empresaId   String
+  data        DateTime
   /// aberto | aplicado
-  status    String   @default("aberto")
+  status      String   @default("aberto")
   /// Inventario de abertura: como comecar com o tecido que ja esta na
   /// prateleira, sem nota de compra.
-  abertura  Boolean  @default(false)
+  abertura    Boolean  @default(false)
   observacoes String?
-  criadoEm  DateTime @default(now())
+  criadoEm    DateTime @default(now())
 
   empresa Empresa          @relation(fields: [empresaId], references: [id])
   itens   InventarioItem[]
@@ -276,13 +304,13 @@ model Inventario {
 }
 
 model InventarioItem {
-  id             String @id @default(cuid())
-  inventarioId   String
-  materiaPrimaId String
-  saldoSistemaMil Int
-  contagemFisicaMil Int
+  id                    String  @id @default(cuid())
+  inventarioId          String
+  materiaPrimaId        String
+  saldoSistemaMil       Int
+  contagemFisicaMil     Int
   /// Obrigatorio quando ha diferenca: sem motivo o ajuste nao entra.
-  motivo         String?
+  motivo                String?
   /// Usado so no inventario de abertura, onde nao existe custo historico.
   custoEstimadoCentavos Int?
 
@@ -292,47 +320,148 @@ model InventarioItem {
   @@index([inventarioId])
 }
 
-// ──────────────────────────────────────── peças no parceiro (o buraco negro)
+// ───────────────────────────────────────── produto acabado (peca da loja)
 
-model Remessa {
-  id           String   @id @default(cuid())
-  empresaId    String
-  fornecedorId String
-  clienteId    String?
-  /// Na Fase 1 nao existe ordem de producao ainda. Ela identifica o lote
-  /// por texto ("Polo Colegio Alfa - lote agosto"). Na Fase 2 isto ganha
-  /// ordemProducaoId sem quebrar nada do que ja foi registrado.
-  referencia   String
-  tipoServico  String // bordado | dtf | silk | outro
-  dataEnvio    DateTime
-  previsaoRetorno DateTime
-  quantidadeEnviada Int
-  valorPorPecaCentavos Int
-  observacoes  String?
-  criadoEm     DateTime @default(now())
+/// O que fica pronto na loja para vender no balcao: uniformes por
+/// tamanho/cor, cada um com um SKU/codigo de barras proprio.
+model ProdutoAcabado {
+  id                 String   @id @default(cuid())
+  empresaId          String
+  nome               String
+  tamanho            String?
+  cor                String?
+  /// Codigo que a leitora bipa, ou digitado a mao no balcao.
+  sku                String
+  precoVendaCentavos Int
+  custoCentavos      Int      @default(0)
+  estoqueMinimo      Int      @default(0)
+  ativo              Boolean  @default(true)
+  criadoEm           DateTime @default(now())
 
-  empresa    Empresa    @relation(fields: [empresaId], references: [id])
-  fornecedor Fornecedor @relation(fields: [fornecedorId], references: [id])
-  cliente    Cliente?   @relation(fields: [clienteId], references: [id])
-  retornos   Retorno[]
+  empresa    Empresa                   @relation(fields: [empresaId], references: [id])
+  movimentos MovimentoProdutoAcabado[]
+  itensVenda VendaItem[]
 
-  @@index([empresaId, dataEnvio])
+  @@unique([empresaId, sku])
+  @@index([empresaId])
 }
 
-/// Retorno parcial e a regra, nao a excecao — por isso 1:N.
-model Retorno {
-  id             String   @id @default(cuid())
-  remessaId      String
-  dataRetorno    DateTime
-  quantidadeOk   Int
-  quantidadeDefeito Int   @default(0)
-  motivoDefeito  String?
-  observacoes    String?
-  criadoEm       DateTime @default(now())
+/// Mesmo principio do estoque de tecido: nunca UPDATE, saldo e soma.
+/// Peca nao e fracionaria — quantidade em unidades inteiras, sem milesimos.
+model MovimentoProdutoAcabado {
+  id                    String   @id @default(cuid())
+  empresaId             String
+  produtoAcabadoId      String
+  tipo                  String // entrada_producao | saida_venda | ajuste_inventario | perda
+  quantidade            Int // com sinal: positivo entra, negativo sai
+  custoUnitarioCentavos Int
+  saldoAposUnidades     Int
+  origemTipo            String? // venda | manual
+  origemId              String?
+  motivo                String?
+  usuarioId             String?
+  criadoEm              DateTime @default(now())
 
-  remessa Remessa @relation(fields: [remessaId], references: [id], onDelete: Cascade)
+  empresa        Empresa        @relation(fields: [empresaId], references: [id])
+  produtoAcabado ProdutoAcabado @relation(fields: [produtoAcabadoId], references: [id])
 
-  @@index([remessaId])
+  @@index([empresaId, produtoAcabadoId, criadoEm])
+}
+
+// ──────────────────────────────────────────────────────────────── vendas
+
+model Venda {
+  id               String   @id @default(cuid())
+  empresaId        String
+  clienteId        String?
+  /// loja (balcao, com ou sem cliente identificado) | producao (pedido
+  /// fechado para escola/empresa/marca)
+  canal            String
+  formaPagamento   String   @default("dinheiro") // dinheiro | pix | cartao | fiado
+  totalCentavos    Int
+  descontoCentavos Int      @default(0)
+  observacoes      String?
+  usuarioId        String?
+  criadoEm         DateTime @default(now())
+
+  empresa      Empresa           @relation(fields: [empresaId], references: [id])
+  cliente      Cliente?          @relation(fields: [clienteId], references: [id])
+  itens        VendaItem[]
+  notasFiscais NotaFiscalVenda[]
+
+  @@index([empresaId, criadoEm])
+  @@index([clienteId])
+}
+
+model VendaItem {
+  id                    String @id @default(cuid())
+  vendaId               String
+  produtoAcabadoId      String
+  quantidade            Int
+  precoUnitarioCentavos Int
+
+  venda          Venda          @relation(fields: [vendaId], references: [id], onDelete: Cascade)
+  produtoAcabado ProdutoAcabado @relation(fields: [produtoAcabadoId], references: [id])
+
+  @@index([vendaId])
+}
+
+/// Caixa simples: uma linha por entrada/saida de dinheiro. Alimentado
+/// automaticamente quando uma venda e concluida. Nao substitui contas a
+/// pagar/receber (isso e Fase 3) — e so o extrato de caixa.
+model LancamentoCaixa {
+  id            String   @id @default(cuid())
+  empresaId     String
+  tipo          String // entrada | saida
+  origemTipo    String? // venda | manual
+  origemId      String?
+  valorCentavos Int
+  descricao     String
+  data          DateTime @default(now())
+  usuarioId     String?
+
+  empresa Empresa @relation(fields: [empresaId], references: [id])
+
+  @@index([empresaId, data])
+}
+
+// ────────────────────────────────────────────────────────────── nota fiscal
+
+/// Ainda em rascunho de proposito: falta definicao do contador (regime,
+/// CFOP, certificado). Este registro deixa pronta a tela e o calculo —
+/// emissao real exige integrar um provedor homologado (nunca falar
+/// direto com a SEFAZ). Ate la, status fica sempre "rascunho".
+model NotaFiscal {
+  id                       String   @id @default(cuid())
+  empresaId                String
+  clienteId                String?
+  periodoInicio            DateTime
+  periodoFim               DateTime
+  totalVendasCentavos      Int
+  descontoPercentualCem    Int      @default(0) // x100: 1050 = 10,50%
+  descontoValorCentavos    Int      @default(0)
+  totalComDescontoCentavos Int
+  status                   String   @default("rascunho") // rascunho | emitida
+  observacoes              String?
+  usuarioId                String?
+  criadoEm                 DateTime @default(now())
+
+  empresa Empresa           @relation(fields: [empresaId], references: [id])
+  cliente Cliente?          @relation(fields: [clienteId], references: [id])
+  vendas  NotaFiscalVenda[]
+
+  @@index([empresaId, criadoEm])
+}
+
+model NotaFiscalVenda {
+  id           String @id @default(cuid())
+  notaFiscalId String
+  vendaId      String
+
+  notaFiscal NotaFiscal @relation(fields: [notaFiscalId], references: [id], onDelete: Cascade)
+  venda      Venda      @relation(fields: [vendaId], references: [id])
+
+  @@unique([notaFiscalId, vendaId])
 }
 
 /// Configuracoes que dependem de resposta dela ou do contador.

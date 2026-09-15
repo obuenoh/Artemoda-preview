@@ -219,6 +219,15 @@ const tecidoSchema = z.object({
   localizacao: z.string().optional(),
 });
 
+/** Acha o tipo "Tecido" da empresa, ou cria se por algum motivo não existir. */
+async function tipoProdutoTecido(empresaId: string) {
+  const existente = await db.tipoProduto.findFirst({ where: { empresaId, nome: 'Tecido' } });
+  if (existente) return existente;
+  return db.tipoProduto.create({
+    data: { empresaId, nome: 'Tecido', unidadePadrao: 'metro', mostrarCamposTecido: true },
+  });
+}
+
 export async function criarTecido(_e: Resultado, form: FormData): Promise<Resultado> {
   const usuario = await exigirPapel('dona', 'producao');
 
@@ -236,9 +245,12 @@ export async function criarTecido(_e: Resultado, form: FormData): Promise<Result
     };
   }
 
+  const tipo = await tipoProdutoTecido(usuario.empresaId);
+
   const mp = await db.materiaPrima.create({
     data: {
       empresaId: usuario.empresaId,
+      tipoProdutoId: tipo.id,
       nome: parsed.data.nome,
       composicao: parsed.data.composicao || null,
       cor: parsed.data.cor || null,
@@ -262,4 +274,98 @@ export async function criarTecido(_e: Resultado, form: FormData): Promise<Result
   revalidatePath('/tecidos');
   revalidatePath('/estoque');
   redirect('/tecidos');
+}
+
+// ───────────────────────────────────────── produto de estoque (setores)
+
+const tipoProdutoSchema = z.object({
+  nome: z.string().trim().min(2, 'Dê um nome ao tipo, como "Zíper".'),
+  unidadePadrao: z.enum(['metro', 'kg', 'unidade']),
+});
+
+/** "+ Novo tipo" na tela de Estoque — lista aberta, sem depender de código. */
+export async function criarTipoProduto(_e: Resultado, form: FormData): Promise<Resultado> {
+  const usuario = await exigirPapel('dona', 'producao');
+
+  const parsed = tipoProdutoSchema.safeParse(Object.fromEntries(form));
+  if (!parsed.success) return erros(parsed.error.issues);
+
+  const jaExiste = await db.tipoProduto.findFirst({
+    where: { empresaId: usuario.empresaId, nome: parsed.data.nome },
+  });
+  if (jaExiste) {
+    return {
+      erro: 'Confira os campos marcados.',
+      campos: { nome: 'Já existe um tipo com esse nome.' },
+    };
+  }
+
+  await db.tipoProduto.create({
+    data: { empresaId: usuario.empresaId, nome: parsed.data.nome, unidadePadrao: parsed.data.unidadePadrao },
+  });
+
+  revalidatePath('/estoque');
+  revalidatePath('/estoque/novo-produto');
+  return null;
+}
+
+const produtoEstoqueSchema = z.object({
+  tipoProdutoId: z.string().min(1, 'Escolha o tipo do produto.'),
+  nome: z.string().trim().min(2, 'Informe o nome do produto.'),
+  cor: z.string().optional(),
+  unidade: z.enum(['metro', 'kg', 'unidade']),
+  localizacao: z.string().optional(),
+});
+
+/** Cadastro genérico de item de estoque — qualquer setor, não só tecido. */
+export async function criarProdutoEstoque(_e: Resultado, form: FormData): Promise<Resultado> {
+  const usuario = await exigirPapel('dona', 'producao');
+
+  const bruto = Object.fromEntries(form) as Record<string, string>;
+  const parsed = produtoEstoqueSchema.safeParse(bruto);
+  if (!parsed.success) return erros(parsed.error.issues);
+
+  const tipo = await db.tipoProduto.findFirst({
+    where: { id: parsed.data.tipoProdutoId, empresaId: usuario.empresaId },
+  });
+  if (!tipo) {
+    return { erro: 'Confira os campos marcados.', campos: { tipoProdutoId: 'Escolha um tipo válido.' } };
+  }
+
+  const minimo = bruto.estoqueMinimo ? numeroParaMil(bruto.estoqueMinimo) : 0;
+  if (minimo === null) {
+    return {
+      erro: 'Confira os campos marcados.',
+      campos: { estoqueMinimo: 'Use só número, como 40 ou 40,5.' },
+    };
+  }
+
+  const largura = tipo.mostrarCamposTecido && bruto.largura ? numeroParaMil(bruto.largura) : null;
+
+  const mp = await db.materiaPrima.create({
+    data: {
+      empresaId: usuario.empresaId,
+      tipoProdutoId: tipo.id,
+      nome: parsed.data.nome,
+      cor: parsed.data.cor || null,
+      unidade: parsed.data.unidade,
+      localizacao: parsed.data.localizacao || null,
+      composicao: tipo.mostrarCamposTecido ? (bruto.composicao || null) : null,
+      larguraMil: largura,
+      gramaturaGm2: tipo.mostrarCamposTecido && bruto.gramatura ? Number(bruto.gramatura) || null : null,
+      estoqueMinimoMil: minimo,
+    },
+  });
+
+  await registrarAuditoria({
+    empresaId: usuario.empresaId,
+    usuarioId: usuario.id,
+    entidade: 'materia_prima',
+    entidadeId: mp.id,
+    acao: 'criou',
+    resumo: `Cadastrou ${tipo.nome.toLowerCase()}: ${mp.nome}`,
+  });
+
+  revalidatePath('/estoque');
+  redirect('/estoque');
 }

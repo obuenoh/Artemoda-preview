@@ -1,4 +1,4 @@
-# Dependencias
+# Dependências
 node_modules/
 
 # Build Next.js
@@ -6,18 +6,30 @@ node_modules/
 out/
 *.tsbuildinfo
 
-# Variaveis de ambiente (nunca versionar)
+# Variáveis de ambiente (nunca versionar)
 .env
 .env.local
-.env*.local
+.env.*.local
+.env.*
 
-# Banco de dados local
+# Banco de dados local (SQLite / Prisma)
 *.db
 *.db-journal
 
-# Repositorio externo clonado dentro do projeto
-projetos/site/MazyOS/
+# Leads capturados pelo site (dado pessoal — nunca versionar)
+projetos/site/leads/
+
+# Saídas e drop zone do MazyOS (somente README versionado)
+saidas/*
+!saidas/README.md
+dados/*
+!dados/README.md
+
+# Backups e arquivos compactados
+*.zip
+_arquivo/
 
 # Sistema
 .DS_Store
+Thumbs.db
 *.log

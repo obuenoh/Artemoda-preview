@@ -38,8 +38,14 @@ export function milParaNumero(mil: number, casas = 2): string {
   });
 }
 
+export function unidadeCurta(unidade: string): string {
+  if (unidade === 'kg') return 'kg';
+  if (unidade === 'unidade') return 'un';
+  return 'm';
+}
+
 export function milFormatado(mil: number, unidade: string): string {
-  return `${milParaNumero(mil)} ${unidade === 'kg' ? 'kg' : 'm'}`;
+  return `${milParaNumero(mil)} ${unidadeCurta(unidade)}`;
 }
 
 export function numeroParaMil(entrada: string): number | null {

@@ -33,8 +33,14 @@ export const leadSchema = z.object({
   quantidade: z
     .string()
     .trim()
-    .min(1, 'Informe uma quantidade aproximada — pode ser estimativa.')
-    .refine((v) => /\d/.test(v), 'Informe a quantidade em número, mesmo que aproximado.'),
+    .min(1, 'Informe uma quantidade aproximada — nosso pedido mínimo é de 30 peças.')
+    .refine((v) => /\d/.test(v), 'Informe a quantidade em número (ex: 50 peças).')
+    .refine((v) => {
+      const match = v.match(/\d+/);
+      if (!match) return false;
+      const num = parseInt(match[0], 10);
+      return num >= 30;
+    }, 'Nosso pedido mínimo de confecção é de 30 peças. Por favor, informe 30 ou mais.'),
 
   prazo: z.enum(PRAZOS, {
     errorMap: () => ({ message: 'Escolha o prazo que você tem em mente.' }),

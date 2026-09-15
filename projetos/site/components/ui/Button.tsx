@@ -15,7 +15,7 @@ const styles: Record<Variant, string> = {
 };
 
 const shared =
-  'inline-flex items-center justify-center gap-2 rounded-sm px-7 min-h-[48px] font-sans text-[0.6875rem] font-semibold uppercase tracking-[0.18em] transition-colors duration-300 ease-seam';
+  'inline-flex items-center justify-center gap-2 rounded-sm px-7 min-h-[48px] font-sans text-[0.6875rem] font-semibold uppercase tracking-[0.18em] transition-colors duration-300 ease-seam disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none';
 
 type Props = {
   children: ReactNode;

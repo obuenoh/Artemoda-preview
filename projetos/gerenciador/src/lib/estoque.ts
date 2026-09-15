@@ -151,12 +151,15 @@ export type LinhaEstoque = {
   diasParado: number | null;
   abaixoDoMinimo: boolean;
   variacaoPct: number | null;
+  tipoProdutoId: string;
+  tipoProdutoNome: string;
 };
 
-/** Posicao de estoque de todos os tecidos, derivada do razao. */
+/** Posicao de estoque de todos os produtos (tecido e aviamento), por setor. */
 export async function posicaoEstoque(empresaId: string): Promise<LinhaEstoque[]> {
   const materias = await db.materiaPrima.findMany({
     where: { empresaId, ativo: true },
+    include: { tipoProduto: true },
     orderBy: { nome: 'asc' },
   });
 
@@ -191,8 +194,15 @@ export async function posicaoEstoque(empresaId: string): Promise<LinhaEstoque[]>
         : null,
       abaixoDoMinimo: mp.estoqueMinimoMil > 0 && estado.saldoMil < mp.estoqueMinimoMil,
       variacaoPct: variacao,
+      tipoProdutoId: mp.tipoProdutoId,
+      tipoProdutoNome: mp.tipoProduto.nome,
     });
   }
 
   return linhas;
+}
+
+/** Tipos de produto (setores) cadastrados pela empresa, para o filtro e o formulario. */
+export async function listarTiposProduto(empresaId: string) {
+  return db.tipoProduto.findMany({ where: { empresaId }, orderBy: { nome: 'asc' } });
 }
