@@ -3,6 +3,7 @@ const isPreview = process.env.NEXT_PUBLIC_PREVIEW_ESTATICO === '1';
 
 const nextConfig = {
   reactStrictMode: true,
+  trailingSlash: true,
   images: {
     formats: ['image/avif', 'image/webp'],
     unoptimized: isPreview,

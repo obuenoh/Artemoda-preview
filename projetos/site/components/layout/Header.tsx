@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Logo } from '@/components/ui/Logo';
 import { Button } from '@/components/ui/Button';
@@ -8,10 +9,10 @@ import { Button } from '@/components/ui/Button';
 const nav = [
   { label: 'Soluções', href: '/#solucoes' },
   { label: 'Processo', href: '/#processo' },
-  { label: 'Escolas', href: '/uniformes-escolares' },
-  { label: 'Empresas', href: '/uniformes-empresariais' },
-  { label: 'Private label', href: '/private-label' },
-  { label: 'Sobre', href: '/sobre' },
+  { label: 'Escolas', href: '/uniformes-escolares/' },
+  { label: 'Empresas', href: '/uniformes-empresariais/' },
+  { label: 'Private label', href: '/private-label/' },
+  { label: 'Sobre', href: '/sobre/' },
 ];
 
 /**
@@ -21,6 +22,13 @@ const nav = [
 export function Header({ simplificado = false }: { simplificado?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
   const [aberto, setAberto] = useState(false);
+  const pathname = usePathname();
+
+  const isHome =
+    !pathname ||
+    pathname === '/' ||
+    pathname === '/Artemoda-preview/site' ||
+    pathname === '/Artemoda-preview/site/';
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -35,6 +43,49 @@ export function Header({ simplificado = false }: { simplificado?: boolean }) {
       document.body.style.overflow = '';
     };
   }, [aberto]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const id = window.location.hash.replace('#', '');
+      const el = document.getElementById(id);
+      if (el) {
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }, 150);
+      }
+    }
+  }, []);
+
+  function handleNavClick(e: React.MouseEvent, href: string) {
+    if (href.includes('#')) {
+      const hash = href.split('#')[1];
+      if (isHome) {
+        e.preventDefault();
+        const target = document.getElementById(hash);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+          window.history.pushState(null, '', `#${hash}`);
+        }
+        setAberto(false);
+        return;
+      }
+    }
+    setAberto(false);
+  }
+
+  function rolarParaOrcamento(e: React.MouseEvent) {
+    if (isHome) {
+      e.preventDefault();
+      const orcamento = document.getElementById('orcamento');
+      if (orcamento) {
+        orcamento.scrollIntoView({ behavior: 'smooth' });
+        window.history.pushState(null, '', '#orcamento');
+      }
+      setAberto(false);
+    } else {
+      setAberto(false);
+    }
+  }
 
   return (
     <header
@@ -58,6 +109,7 @@ export function Header({ simplificado = false }: { simplificado?: boolean }) {
                 <li key={item.href}>
                   <Link
                     href={item.href}
+                    onClick={(e) => handleNavClick(e, item.href)}
                     className="font-sans text-[0.6875rem] font-medium uppercase tracking-[0.18em] text-muted-on-dark transition-colors duration-300 hover:text-gold"
                   >
                     {item.label}
@@ -69,7 +121,12 @@ export function Header({ simplificado = false }: { simplificado?: boolean }) {
         )}
 
         <div className="flex items-center gap-3">
-          <Button href="/contato" variant="primary" className="hidden sm:inline-flex">
+          <Button
+            href={isHome ? '#orcamento' : '/#orcamento'}
+            onClick={rolarParaOrcamento}
+            variant="primary"
+            className="hidden sm:inline-flex"
+          >
             Solicitar orçamento
           </Button>
 
@@ -106,7 +163,7 @@ export function Header({ simplificado = false }: { simplificado?: boolean }) {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    onClick={() => setAberto(false)}
+                    onClick={(e) => handleNavClick(e, item.href)}
                     className="block border-b border-hairline py-4 font-sans text-[0.75rem] font-medium uppercase tracking-[0.18em] text-cream transition-colors hover:text-gold"
                   >
                     {item.label}
@@ -114,7 +171,12 @@ export function Header({ simplificado = false }: { simplificado?: boolean }) {
                 </li>
               ))}
             </ul>
-            <Button href="/contato" variant="primary" className="mt-8 w-full">
+            <Button
+              href={isHome ? '#orcamento' : '/#orcamento'}
+              onClick={rolarParaOrcamento}
+              variant="primary"
+              className="mt-8 w-full"
+            >
               Solicitar orçamento
             </Button>
           </nav>

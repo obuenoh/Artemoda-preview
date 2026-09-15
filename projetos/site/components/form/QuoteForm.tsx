@@ -33,8 +33,9 @@ type Personalizacao = (typeof PERSONALIZACOES)[number];
 
 type Estado = {
   tipo: Tipo | '';
+  tipoOutro: string;
   quantidade: string;
-  prazo: Prazo | '';
+  prazo: string;
   personalizacao: Personalizacao[];
   nome: string;
   organizacao: string;
@@ -48,6 +49,7 @@ type Estado = {
 
 const inicial: Estado = {
   tipo: '',
+  tipoOutro: '',
   quantidade: '',
   prazo: '',
   personalizacao: [],
@@ -65,7 +67,7 @@ const TOTAL = 5;
 
 const titulos = [
   'O que você precisa produzir?',
-  'Quantas peças e para quando?',
+  'Quantas peças você precisa?',
   'Qual personalização entra na peça?',
   'Para quem enviamos a proposta?',
   'Mais alguma coisa que ajude?',
@@ -74,7 +76,7 @@ const titulos = [
 /** Campos validados em cada passo. */
 const camposPorPasso: Record<number, (keyof Estado)[]> = {
   1: ['tipo'],
-  2: ['quantidade', 'prazo'],
+  2: ['quantidade'],
   3: ['personalizacao'],
   4: ['nome', 'organizacao', 'whatsapp', 'email', 'cidade'],
   5: ['consentimento'],
@@ -103,13 +105,42 @@ export function QuoteForm({
   const [status, setStatus] = useState<'idle' | 'enviando' | 'ok' | 'erro' | 'previa'>('idle');
   const [erroGeral, setErroGeral] = useState('');
   const [arquivo, setArquivo] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [copiado, setCopiado] = useState(false);
+  const [copiouFoto, setCopiouFoto] = useState(false);
   const iniciado = useRef(false);
   const painel = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     capturarUtm();
   }, []);
+
+  useEffect(() => {
+    if (arquivo && arquivo.type.startsWith('image/')) {
+      const url = URL.createObjectURL(arquivo);
+      setPreviewUrl(url);
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    }
+    setPreviewUrl(null);
+  }, [arquivo]);
+
+  async function copiarImagemClipboard() {
+    if (!arquivo) return;
+    try {
+      if (arquivo.type.startsWith('image/')) {
+        await navigator.clipboard.write([
+          new ClipboardItem({ [arquivo.type]: arquivo }),
+        ]);
+        setCopiouFoto(true);
+        setTimeout(() => setCopiouFoto(false), 3000);
+      }
+    } catch {
+      // Fallback para navegadores sem permissão de escrita direta de blob
+      setCopiouFoto(false);
+    }
+  }
 
   function marcarInicio() {
     if (iniciado.current) return;
@@ -124,6 +155,19 @@ export function QuoteForm({
   }
 
   function validar(passoAlvo: number): boolean {
+    if (passoAlvo === 1) {
+      if (!dados.tipo) {
+        setErros({ tipo: 'Escolha o tipo de produção que você precisa.' });
+        return false;
+      }
+      if (dados.tipo === 'Outro' && (!dados.tipoOutro || dados.tipoOutro.trim().length < 2)) {
+        setErros({ tipoOutro: 'Por favor, descreva o que você gostaria de produzir.' });
+        return false;
+      }
+      setErros({});
+      return true;
+    }
+
     const campos = camposPorPasso[passoAlvo] ?? [];
     const shape = Object.fromEntries(campos.map((c) => [c, true]));
     const parcial = leadSchema.pick(shape as never).safeParse(dados);
@@ -163,7 +207,7 @@ export function QuoteForm({
     setStatus('enviando');
     setErroGeral('');
 
-    const linkWhatsapp = criarLinkWhatsappOrcamento(dados, Boolean(arquivo));
+    const linkWhatsapp = criarLinkWhatsappOrcamento(dados, arquivo?.name);
 
     // Prévia estática (GitHub Pages): não existe servidor para receber o
     // envio de verdade. Abre o WhatsApp com o orçamento e mostra a confirmação.
@@ -217,8 +261,8 @@ export function QuoteForm({
     }
   }
 
-  const linkWhatsappOrcamento = criarLinkWhatsappOrcamento(dados, Boolean(arquivo));
-  const mensagemOrcamento = gerarMensagemOrcamento(dados, Boolean(arquivo));
+  const linkWhatsappOrcamento = criarLinkWhatsappOrcamento(dados, arquivo?.name);
+  const mensagemOrcamento = gerarMensagemOrcamento(dados, arquivo?.name);
 
   // ------------------------------------------------------- tela de confirmacao (ok ou previa)
   if (status === 'previa' || status === 'ok') {
@@ -257,17 +301,17 @@ export function QuoteForm({
           <div className="mt-3 grid grid-cols-1 gap-2.5 text-body-sm sm:grid-cols-2">
             <div>
               <span className="font-medium text-ink/70">Necessidade:</span>{' '}
-              <strong className="font-semibold text-ink">{dados.tipo || 'A definir'}</strong>
+              <strong className="font-semibold text-ink">
+                {dados.tipo === 'Outro' && dados.tipoOutro
+                  ? `Outro (${dados.tipoOutro})`
+                  : dados.tipo || 'A definir'}
+              </strong>
             </div>
             <div>
               <span className="font-medium text-ink/70">Quantidade:</span>{' '}
               <strong className="font-semibold text-ink">{dados.quantidade || 'A definir'}</strong>
             </div>
-            <div>
-              <span className="font-medium text-ink/70">Prazo desejado:</span>{' '}
-              <strong className="font-semibold text-ink">{dados.prazo || 'A definir'}</strong>
-            </div>
-            <div>
+            <div className="sm:col-span-2">
               <span className="font-medium text-ink/70">Personalização:</span>{' '}
               <strong className="font-semibold text-ink">
                 {dados.personalizacao.length > 0 ? dados.personalizacao.join(', ') : 'Não definida'}
@@ -286,8 +330,35 @@ export function QuoteForm({
               </div>
             )}
             {arquivo && (
-              <div className="sm:col-span-2 text-[0.75rem] text-gold font-medium">
-                📎 Anexo selecionado: {arquivo.name}
+              <div className="sm:col-span-2 mt-2 rounded-sm border border-gold/40 bg-gold/10 p-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  {previewUrl ? (
+                    <img
+                      src={previewUrl}
+                      alt="Arte anexada"
+                      className="h-16 w-16 rounded-sm object-cover border border-gold/30"
+                    />
+                  ) : (
+                    <span className="text-2xl">📎</span>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[0.8125rem] font-medium text-ink truncate">
+                      Arte ou referência: <strong>{arquivo.name}</strong>
+                    </p>
+                    <p className="text-[0.75rem] text-muted-on-light mt-0.5">
+                      {(arquivo.size / 1024).toFixed(0)} KB · Ao abrir a conversa no WhatsApp, anexe sua foto/arquivo para o atendente!
+                    </p>
+                  </div>
+                  {previewUrl && (
+                    <button
+                      type="button"
+                      onClick={copiarImagemClipboard}
+                      className="shrink-0 rounded-sm border border-gold bg-cream px-3 py-1.5 font-sans text-[0.6875rem] font-semibold uppercase text-ink hover:bg-gold hover:text-white transition-colors"
+                    >
+                      {copiouFoto ? '✓ Foto copiada!' : 'Copiar foto'}
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -381,17 +452,40 @@ export function QuoteForm({
         </div>
 
         {passo === 1 && (
-          <div role="radiogroup" aria-label="Tipo de necessidade" className="grid gap-3">
-            {TIPOS.map((tipo) => (
-              <OpcaoBotao
-                key={tipo}
-                label={tipo}
-                selecionado={dados.tipo === tipo}
-                onClick={() => {
-                  set('tipo', tipo);
-                }}
-              />
-            ))}
+          <div className="grid gap-3">
+            <div role="radiogroup" aria-label="Tipo de necessidade" className="grid gap-3">
+              {TIPOS.map((tipo) => (
+                <OpcaoBotao
+                  key={tipo}
+                  label={tipo}
+                  selecionado={dados.tipo === tipo}
+                  onClick={() => {
+                    set('tipo', tipo);
+                  }}
+                />
+              ))}
+            </div>
+
+            {dados.tipo === 'Outro' && (
+              <div className="mt-1 rounded-sm border border-gold/40 bg-gold/5 p-4 transition-all">
+                <Campo
+                  id="tipoOutro"
+                  label="O que você precisa produzir?"
+                  erro={erros.tipoOutro}
+                >
+                  <input
+                    id="tipoOutro"
+                    className={inputCls}
+                    placeholder="Ex: Aventais, ecobags, jalecos, bonés, peças para evento…"
+                    value={dados.tipoOutro}
+                    autoFocus
+                    aria-invalid={Boolean(erros.tipoOutro)}
+                    onChange={(e) => set('tipoOutro', e.target.value)}
+                  />
+                </Campo>
+              </div>
+            )}
+
             {erros.tipo && (
               <p role="alert" className="text-body-sm text-ink">
                 <span aria-hidden="true" className="mr-2 text-gold">↳</span>
@@ -429,27 +523,9 @@ export function QuoteForm({
               })()}
             </Campo>
 
-            <fieldset>
-              <legend className="font-sans text-label font-semibold uppercase text-ink">
-                Prazo desejado
-              </legend>
-              <div role="radiogroup" aria-label="Prazo desejado" className="mt-3 grid gap-3">
-                {PRAZOS.map((prazo) => (
-                  <OpcaoBotao
-                    key={prazo}
-                    label={prazo}
-                    selecionado={dados.prazo === prazo}
-                    onClick={() => set('prazo', prazo)}
-                  />
-                ))}
-              </div>
-              {erros.prazo && (
-                <p role="alert" className="mt-2 text-body-sm text-ink">
-                  <span aria-hidden="true" className="mr-2 text-gold">↳</span>
-                  {erros.prazo}
-                </p>
-              )}
-            </fieldset>
+            <div className="rounded-sm border border-hairline-light bg-white/70 p-4 text-body-sm text-muted-on-light">
+              <span className="font-medium text-ink">Prazo de confecção:</span> Nossa equipe informará o cronograma detalhado de produção e entrega diretamente para você após a avaliação do seu pedido.
+            </div>
           </div>
         )}
 
@@ -564,14 +640,14 @@ export function QuoteForm({
               <div className="mt-3 grid grid-cols-1 gap-2.5 text-body-sm sm:grid-cols-2">
                 <div>
                   <span className="font-medium text-ink/70">Produção:</span>{' '}
-                  <strong className="font-semibold text-ink">{dados.tipo || 'A definir'}</strong>{' '}
+                  <strong className="font-semibold text-ink">
+                    {dados.tipo === 'Outro' && dados.tipoOutro
+                      ? `Outro (${dados.tipoOutro})`
+                      : dados.tipo || 'A definir'}
+                  </strong>{' '}
                   {dados.quantidade ? `(${dados.quantidade})` : ''}
                 </div>
                 <div>
-                  <span className="font-medium text-ink/70">Prazo:</span>{' '}
-                  <strong className="font-semibold text-ink">{dados.prazo || 'A definir'}</strong>
-                </div>
-                <div className="sm:col-span-2">
                   <span className="font-medium text-ink/70">Personalização:</span>{' '}
                   <strong className="font-semibold text-ink">
                     {dados.personalizacao.length > 0
@@ -609,6 +685,35 @@ export function QuoteForm({
               <p className="mt-2 font-sans text-label uppercase text-muted-on-light">
                 PDF, AI, EPS, SVG, PNG ou JPG · até 5 MB
               </p>
+
+              {arquivo && (
+                <div className="mt-3 flex items-center gap-3 rounded-sm border border-gold/40 bg-white/90 p-3 shadow-xs">
+                  {previewUrl ? (
+                    <img
+                      src={previewUrl}
+                      alt="Prévia da arte"
+                      className="h-14 w-14 rounded-sm object-cover border border-gold/30 shrink-0"
+                    />
+                  ) : (
+                    <span className="text-2xl shrink-0">📎</span>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[0.8125rem] font-medium text-ink truncate">
+                      {arquivo.name}
+                    </p>
+                    <p className="text-[0.6875rem] text-muted-on-light">
+                      {(arquivo.size / 1024).toFixed(0)} KB · Pronto para ser enviado pelo WhatsApp
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setArquivo(null)}
+                    className="shrink-0 font-sans text-[0.6875rem] font-medium uppercase text-ink/70 hover:text-ink underline"
+                  >
+                    Remover
+                  </button>
+                </div>
+              )}
             </Campo>
 
             <div>

@@ -30,6 +30,12 @@ export const leadSchema = z.object({
     errorMap: () => ({ message: 'Escolha o tipo de produção que você precisa.' }),
   }),
 
+  tipoOutro: z
+    .string()
+    .trim()
+    .max(160, 'Descrição muito longa — resuma em até 160 caracteres.')
+    .optional(),
+
   quantidade: z
     .string()
     .trim()
@@ -42,9 +48,7 @@ export const leadSchema = z.object({
       return num >= 30;
     }, 'Nosso pedido mínimo de confecção é de 30 peças. Por favor, informe 30 ou mais.'),
 
-  prazo: z.enum(PRAZOS, {
-    errorMap: () => ({ message: 'Escolha o prazo que você tem em mente.' }),
-  }),
+  prazo: z.string().optional(),
 
   personalizacao: z
     .array(z.enum(PERSONALIZACOES))

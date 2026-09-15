@@ -41,7 +41,7 @@ function linhasEmail(lead: Lead, id: string, anexo?: Anexo): string {
       : 'Sem UTM (acesso direto ou orgânico)';
 
   return [
-    `NOVO ORÇAMENTO — ${lead.tipo}`,
+    `NOVO ORÇAMENTO — ${lead.tipo}${lead.tipoOutro ? ` (${lead.tipoOutro})` : ''}`,
     `Protocolo: ${id}`,
     '',
     `Nome: ${lead.nome}`,
@@ -51,7 +51,6 @@ function linhasEmail(lead: Lead, id: string, anexo?: Anexo): string {
     `Cidade: ${lead.cidade}`,
     '',
     `Quantidade: ${lead.quantidade}`,
-    `Prazo: ${lead.prazo}`,
     `Personalização: ${lead.personalizacao.join(', ')}`,
     '',
     `Mensagem: ${lead.mensagem || '—'}`,

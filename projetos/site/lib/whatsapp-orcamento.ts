@@ -2,8 +2,9 @@ import { empresa } from '@/data/empresa';
 
 export type DadosOrcamento = {
   tipo: string;
+  tipoOutro?: string;
   quantidade: string;
-  prazo: string;
+  prazo?: string;
   personalizacao: string[];
   nome: string;
   organizacao: string;
@@ -19,20 +20,24 @@ export type DadosOrcamento = {
  */
 export function gerarMensagemOrcamento(
   dados: Partial<DadosOrcamento>,
-  temArquivo = false,
+  nomeArquivo?: string,
 ): string {
   const personalizacoesStr =
     dados.personalizacao && dados.personalizacao.length > 0
       ? dados.personalizacao.join(', ')
       : 'Não definido';
 
+  const tipoFormatado =
+    dados.tipo === 'Outro' && dados.tipoOutro && dados.tipoOutro.trim().length > 0
+      ? `Outro (${dados.tipoOutro.trim()})`
+      : dados.tipo || 'A definir';
+
   const linhas: string[] = [
     'Olá, Arte e Moda! Gostaria de um orçamento pelo site:',
     '',
     '📋 *DETALHES DO PEDIDO*',
-    `• *Tipo:* ${dados.tipo || 'A definir'}`,
+    `• *Tipo:* ${tipoFormatado}`,
     `• *Quantidade:* ${dados.quantidade || 'A definir'}`,
-    `• *Prazo desejado:* ${dados.prazo || 'A definir'}`,
     `• *Personalização:* ${personalizacoesStr}`,
     '',
     '👤 *DADOS PARA CONTATO*',
@@ -47,10 +52,11 @@ export function gerarMensagemOrcamento(
     linhas.push('', '💬 *OBSERVAÇÕES ADICIONAIS*', dados.mensagem.trim());
   }
 
-  if (temArquivo) {
+  if (nomeArquivo && nomeArquivo.trim().length > 0) {
     linhas.push(
       '',
-      '📎 *(Selecionei um arquivo de arte/referência no site para enviar aqui no chat)*',
+      `📎 *ARTE / REFERÊNCIA:* ${nomeArquivo.trim()}`,
+      '*(Segue a foto/arquivo da arte em anexo nesta conversa)*',
     );
   }
 
@@ -62,8 +68,8 @@ export function gerarMensagemOrcamento(
  */
 export function criarLinkWhatsappOrcamento(
   dados: Partial<DadosOrcamento>,
-  temArquivo = false,
+  nomeArquivo?: string,
 ): string {
-  const mensagem = gerarMensagemOrcamento(dados, temArquivo);
+  const mensagem = gerarMensagemOrcamento(dados, nomeArquivo);
   return `https://wa.me/${empresa.contato.whatsapp}?text=${encodeURIComponent(mensagem)}`;
 }

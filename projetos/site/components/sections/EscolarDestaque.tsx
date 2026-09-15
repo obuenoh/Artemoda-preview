@@ -34,7 +34,7 @@ const pontos = [
  */
 export function EscolarDestaque() {
   return (
-    <section className="fabric bg-navy-deep">
+    <section id="escolas" className="fabric bg-navy-deep">
       <div className="container-am section-y">
         <StitchedPanel className="px-6 py-10 md:px-12 md:py-16">
           <div className="grid gap-12 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:gap-16">
