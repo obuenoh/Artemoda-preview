@@ -7,6 +7,7 @@ import { Eyebrow } from '@/components/ui/Eyebrow';
 import { Reveal } from '@/components/ui/Reveal';
 import { StitchedPanel } from '@/components/ui/Stitch';
 import { whatsappLink, mensagensWhatsapp } from '@/data/empresa';
+import { assetUrl } from '@/lib/assets';
 
 const pontos = [
   {
@@ -137,7 +138,7 @@ export function EscolarDestaque() {
                       aria-hidden={!ativo}
                     >
                       <Image
-                        src={foto.src}
+                        src={assetUrl(foto.src)}
                         alt={`Uniforme escolar — ${foto.escola}`}
                         fill
                         sizes="(max-width: 1024px) 100vw, 45vw"

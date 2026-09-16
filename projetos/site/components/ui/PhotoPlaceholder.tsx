@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { assetUrl } from '@/lib/assets';
 
 const ratios = {
   '3:2': 'aspect-[3/2]',
@@ -72,11 +73,13 @@ export function Foto({
   priority?: boolean;
   sizes?: string;
 }) {
+  const imgSrc = assetUrl(src);
+
   return (
     <div
       className={`relative overflow-hidden rounded-sm border border-hairline ${ratios[proporcao]} ${className}`}
     >
-      <Image src={src} alt={alt} fill sizes={sizes} priority={priority} className="object-cover" />
+      <Image src={imgSrc} alt={alt} fill sizes={sizes} priority={priority} className="object-cover" />
     </div>
   );
 }
