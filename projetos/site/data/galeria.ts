@@ -12,10 +12,40 @@ export type ItemGaleria = {
  * nenhum componente precisa ser tocado.
  */
 export const galeria: ItemGaleria[] = [
-  { id: 'g1', descricao: 'Chão de fábrica — mesa de corte', proporcao: '3:2' },
-  { id: 'g2', descricao: 'Kit de uniforme escolar completo', proporcao: '3:2' },
-  { id: 'g3', descricao: 'Detalhe de bordado em polo corporativa', proporcao: '3:2' },
-  { id: 'g4', descricao: 'Peças de streetwear produzidas em private label', proporcao: '3:2' },
-  { id: 'g5', descricao: 'Costura em máquina reta — equipe trabalhando', proporcao: '3:2' },
-  { id: 'g6', descricao: 'Etiqueta e acabamento interno da peça', proporcao: '3:2' },
+  {
+    id: 'g1',
+    descricao: 'Chão de fábrica — mesa de corte industrial',
+    proporcao: '3:2',
+    src: '/images/fabrica-mesa-corte.jpg',
+  },
+  {
+    id: 'g2',
+    descricao: 'Linha de costura e montagem — equipe em operação',
+    proporcao: '3:2',
+    src: '/images/fabrica-linha-costura.jpg',
+  },
+  {
+    id: 'g3',
+    descricao: 'Bordado industrial Tajima de alta definição',
+    proporcao: '3:2',
+    src: '/images/fabrica-bordado-industrial.jpg',
+  },
+  {
+    id: 'g4',
+    descricao: 'Estamparia e aplicação de estampa DTF em prensa térmica',
+    proporcao: '3:2',
+    src: '/images/fabrica-estamparia-dtf.jpg',
+  },
+  {
+    id: 'g5',
+    descricao: 'Revisão de qualidade, costura e acabamento a vapor',
+    proporcao: '3:2',
+    src: '/images/fabrica-revisao-acabamento.jpg',
+  },
+  {
+    id: 'g6',
+    descricao: 'Lotes de peças finalizadas e prontas para expedição',
+    proporcao: '3:2',
+    src: '/images/fabrica-pecas-expedicao.jpg',
+  },
 ];

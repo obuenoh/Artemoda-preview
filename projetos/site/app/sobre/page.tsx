@@ -5,7 +5,7 @@ import { SectionHeading } from '@/components/ui/SectionHeading';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { Reveal } from '@/components/ui/Reveal';
 import { SeamStitch } from '@/components/ui/Stitch';
-import { PhotoPlaceholder } from '@/components/ui/PhotoPlaceholder';
+import { PhotoPlaceholder, Foto } from '@/components/ui/PhotoPlaceholder';
 import { Diferenciais } from '@/components/sections/Diferenciais';
 import { CtaForm } from '@/components/sections/CtaForm';
 import { metadados } from '@/lib/seo';
@@ -71,28 +71,28 @@ export default function SobrePage() {
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2 lg:sticky lg:top-28 lg:self-start">
-                <PhotoPlaceholder
-                  descricao="Chão de fábrica — visão geral"
+                <Foto
+                  src="/images/fabrica-linha-costura.jpg"
+                  alt="Chão de fábrica — visão geral"
                   proporcao="4:5"
-                  tone="light"
                   sizes="(max-width: 1024px) 50vw, 25vw"
                 />
-                <PhotoPlaceholder
-                  descricao="Mesa de corte"
+                <Foto
+                  src="/images/fabrica-mesa-corte.jpg"
+                  alt="Mesa de corte"
                   proporcao="4:5"
-                  tone="light"
                   sizes="(max-width: 1024px) 50vw, 25vw"
                 />
-                <PhotoPlaceholder
-                  descricao="Equipe costurando"
+                <Foto
+                  src="/images/fabrica-bordado-industrial.jpg"
+                  alt="Bordado industrial e personalização"
                   proporcao="4:5"
-                  tone="light"
                   sizes="(max-width: 1024px) 50vw, 25vw"
                 />
-                <PhotoPlaceholder
-                  descricao="Acabamento e conferência"
+                <Foto
+                  src="/images/fabrica-revisao-acabamento.jpg"
+                  alt="Acabamento e conferência"
                   proporcao="4:5"
-                  tone="light"
                   sizes="(max-width: 1024px) 50vw, 25vw"
                 />
               </div>

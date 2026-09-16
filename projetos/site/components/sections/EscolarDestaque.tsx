@@ -1,8 +1,11 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { Reveal } from '@/components/ui/Reveal';
 import { StitchedPanel } from '@/components/ui/Stitch';
-import { PhotoPlaceholder } from '@/components/ui/PhotoPlaceholder';
 import { whatsappLink, mensagensWhatsapp } from '@/data/empresa';
 
 const pontos = [
@@ -28,11 +31,51 @@ const pontos = [
   },
 ];
 
+const fotosEscola = [
+  {
+    id: 'phoenix',
+    src: '/images/escola-phoenix.jpg',
+    escola: 'Escola Phoenix',
+    descricao: 'Polo piquet azul marinho, jaqueta com zíper dourado e calça com brasão bordado',
+    badge: 'Kit Oficial Escola Phoenix',
+  },
+  {
+    id: 'emilia',
+    src: '/images/colegio-emilia.jpg',
+    escola: 'Colégio Emília',
+    descricao: 'Jaqueta collegiate verde floresta, polo com gola contrastante e bermuda tailored',
+    badge: 'Kit Oficial Colégio Emília',
+  },
+  {
+    id: 'grade',
+    src: '/images/escolar-grade-oficina.jpg',
+    escola: 'Grade Completa na Linha de Produção',
+    descricao: 'Moletons flanelados, agasalhos e camisetas produzidos sob demanda contínua',
+    badge: 'Confecção Própria em SP',
+  },
+];
+
 /**
  * Bloco dedicado — escola e o publico mais lucrativo e o que mais volta.
- * Painel aplicado com pesponto no perimetro, igual bolso chapado.
+ * Painel aplicado com pesponto no perimetro e carrossel de fotos reais.
  */
 export function EscolarDestaque() {
+  const [slideAtual, setSlideAtual] = useState(0);
+  const [pausado, setPausado] = useState(false);
+
+  const mudarSlide = useCallback((direcao: number) => {
+    setSlideAtual((prev) => (prev + direcao + fotosEscola.length) % fotosEscola.length);
+  }, []);
+
+  // Passagem automática das fotos a cada 4.5 segundos
+  useEffect(() => {
+    if (pausado) return;
+    const timer = setInterval(() => {
+      mudarSlide(1);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, [pausado, mudarSlide]);
+
   return (
     <section id="escolas" className="fabric bg-navy-deep">
       <div className="container-am section-y">
@@ -64,19 +107,102 @@ export function EscolarDestaque() {
               </ul>
 
               <div className="mt-12 flex flex-col gap-3 sm:flex-row">
-                <Button href="/uniformes-escolares">Ver uniforme escolar</Button>
+                <Button href="/uniformes-escolares/">Ver uniforme escolar</Button>
                 <Button href={whatsappLink(mensagensWhatsapp.escolares)} variant="outline-light">
                   Falar com a equipe
                 </Button>
               </div>
             </div>
 
+            {/* Carrossel de fotos reais passando */}
             <Reveal delay={0.1}>
-              <PhotoPlaceholder
-                descricao="Kit escolar completo"
-                proporcao="4:5"
-                sizes="(max-width: 1024px) 100vw, 40vw"
-              />
+              <div
+                className="relative aspect-[3/4] w-full overflow-hidden rounded-sm border border-gold/40 bg-navy-raised shadow-2xl"
+                onMouseEnter={() => setPausado(true)}
+                onMouseLeave={() => setPausado(false)}
+                aria-roledescription="carousel"
+                aria-label="Fotos de uniformes escolares produzidos pela Arte e Moda"
+              >
+                {/* Slides com transição de opacidade suave */}
+                {fotosEscola.map((foto, index) => {
+                  const ativo = index === slideAtual;
+                  return (
+                    <div
+                      key={foto.id}
+                      className={`absolute inset-0 transition-all duration-700 ease-in-out ${
+                        ativo
+                          ? 'opacity-100 scale-100 pointer-events-auto'
+                          : 'opacity-0 scale-105 pointer-events-none'
+                      }`}
+                      aria-hidden={!ativo}
+                    >
+                      <Image
+                        src={foto.src}
+                        alt={`Uniforme escolar — ${foto.escola}`}
+                        fill
+                        sizes="(max-width: 1024px) 100vw, 45vw"
+                        priority={index === 0}
+                        className="object-cover"
+                      />
+                      {/* Gradiente de proteção de contraste na base */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-navy-deep/90 via-navy-deep/20 to-transparent" />
+                    </div>
+                  );
+                })}
+
+                {/* Controles de navegação anterior / próxima */}
+                <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => mudarSlide(-1)}
+                    aria-label="Foto anterior"
+                    className="flex h-9 w-9 items-center justify-center rounded-sm border border-cream/30 bg-navy-deep/80 text-cream backdrop-blur-sm transition-all hover:border-gold hover:bg-gold hover:text-ink"
+                  >
+                    <span aria-hidden="true" className="text-sm">‹</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => mudarSlide(1)}
+                    aria-label="Próxima foto"
+                    className="flex h-9 w-9 items-center justify-center rounded-sm border border-cream/30 bg-navy-deep/80 text-cream backdrop-blur-sm transition-all hover:border-gold hover:bg-gold hover:text-ink"
+                  >
+                    <span aria-hidden="true" className="text-sm">›</span>
+                  </button>
+                </div>
+
+                {/* Legenda elegante com o nome da escola e especificações */}
+                <div className="absolute inset-x-4 bottom-4 z-10 rounded-sm border border-gold/30 bg-navy-deep/90 p-4.5 backdrop-blur-md transition-all duration-500">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="inline-block font-sans text-[0.625rem] font-semibold uppercase tracking-[0.2em] text-gold">
+                      {fotosEscola[slideAtual].badge}
+                    </span>
+                    <span className="font-sans text-[0.625rem] font-mono text-muted-on-dark">
+                      0{slideAtual + 1} / 0{fotosEscola.length}
+                    </span>
+                  </div>
+                  <h4 className="mt-1.5 font-display-mid text-[1.125rem] text-cream">
+                    {fotosEscola[slideAtual].escola}
+                  </h4>
+                  <p className="mt-1 text-[0.75rem] text-muted-on-dark leading-snug">
+                    {fotosEscola[slideAtual].descricao}
+                  </p>
+
+                  {/* Barras indicadoras com clique */}
+                  <div className="mt-3 flex items-center gap-1.5 pt-2 border-t border-hairline">
+                    {fotosEscola.map((f, i) => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => setSlideAtual(i)}
+                        aria-label={`Ver slide ${i + 1}: ${f.escola}`}
+                        className={`h-1 rounded-full transition-all duration-500 ${
+                          i === slideAtual ? 'w-8 bg-gold' : 'w-2 bg-cream/30 hover:bg-cream/60'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
             </Reveal>
           </div>
         </StitchedPanel>
