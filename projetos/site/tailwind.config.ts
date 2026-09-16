@@ -52,10 +52,12 @@ const config: Config = {
         measure: '64ch',
       },
       borderRadius: {
-        // Cantos praticamente retos. Nada maior que 4px no projeto.
         DEFAULT: '2px',
         sm: '2px',
         md: '4px',
+        lg: '8px',
+        xl: '12px',
+        full: '9999px',
       },
       spacing: {
         section: '6rem', // 96px  (mobile)

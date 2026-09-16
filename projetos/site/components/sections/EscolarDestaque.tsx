@@ -118,7 +118,7 @@ export function EscolarDestaque() {
             {/* Carrossel de fotos reais passando */}
             <Reveal delay={0.1}>
               <div
-                className="relative aspect-[3/4] w-full overflow-hidden rounded-sm border border-gold/40 bg-navy-raised shadow-2xl"
+                className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-gold/40 bg-navy-raised shadow-2xl"
                 onMouseEnter={() => setPausado(true)}
                 onMouseLeave={() => setPausado(false)}
                 aria-roledescription="carousel"
@@ -146,7 +146,7 @@ export function EscolarDestaque() {
                         className="object-cover"
                       />
                       {/* Gradiente de proteção de contraste na base */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-navy-deep/90 via-navy-deep/20 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-navy-deep/95 via-navy-deep/30 to-transparent" />
                     </div>
                   );
                 })}
@@ -157,50 +157,66 @@ export function EscolarDestaque() {
                     type="button"
                     onClick={() => mudarSlide(-1)}
                     aria-label="Foto anterior"
-                    className="flex h-9 w-9 items-center justify-center rounded-sm border border-cream/30 bg-navy-deep/80 text-cream backdrop-blur-sm transition-all hover:border-gold hover:bg-gold hover:text-ink"
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-gold/40 bg-navy-deep/85 text-cream backdrop-blur-md shadow-lg transition-all duration-300 hover:border-gold hover:bg-gold hover:text-ink"
                   >
-                    <span aria-hidden="true" className="text-sm">‹</span>
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
                   </button>
                   <button
                     type="button"
                     onClick={() => mudarSlide(1)}
                     aria-label="Próxima foto"
-                    className="flex h-9 w-9 items-center justify-center rounded-sm border border-cream/30 bg-navy-deep/80 text-cream backdrop-blur-sm transition-all hover:border-gold hover:bg-gold hover:text-ink"
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-gold/40 bg-navy-deep/85 text-cream backdrop-blur-md shadow-lg transition-all duration-300 hover:border-gold hover:bg-gold hover:text-ink"
                   >
-                    <span aria-hidden="true" className="text-sm">›</span>
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
                   </button>
                 </div>
 
-                {/* Legenda elegante com o nome da escola e especificações */}
-                <div className="absolute inset-x-4 bottom-4 z-10 rounded-sm border border-gold/30 bg-navy-deep/90 p-4.5 backdrop-blur-md transition-all duration-500">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="inline-block font-sans text-[0.625rem] font-semibold uppercase tracking-[0.2em] text-gold">
+                {/* Legenda elegante com bordas bonitas, respiro e tipografia espaçada */}
+                <div className="absolute inset-x-3.5 sm:inset-x-5 bottom-3.5 sm:bottom-5 z-10 rounded-lg border border-gold/40 bg-navy-deep/95 sm:bg-navy-deep/90 p-5 sm:p-6 backdrop-blur-md shadow-2xl transition-all duration-500">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/10 px-2.5 py-1 font-sans text-[0.625rem] font-semibold uppercase tracking-[0.18em] text-gold">
+                      <span className="h-1.5 w-1.5 rounded-full bg-gold animate-pulse" />
                       {fotosEscola[slideAtual].badge}
                     </span>
-                    <span className="font-sans text-[0.625rem] font-mono text-muted-on-dark">
-                      0{slideAtual + 1} / 0{fotosEscola.length}
+                    <span className="font-sans text-[0.6875rem] font-mono tracking-wider text-muted-on-dark rounded-full border border-cream/15 bg-navy-raised/80 px-2.5 py-1">
+                      <strong className="text-gold font-semibold">0{slideAtual + 1}</strong>
+                      <span className="mx-1 text-cream/30">/</span>
+                      <span>0{fotosEscola.length}</span>
                     </span>
                   </div>
-                  <h4 className="mt-1.5 font-display-mid text-[1.125rem] text-cream">
+
+                  <h4 className="mt-3 font-display text-[1.25rem] sm:text-[1.375rem] font-normal leading-tight text-cream tracking-wide">
                     {fotosEscola[slideAtual].escola}
                   </h4>
-                  <p className="mt-1 text-[0.75rem] text-muted-on-dark leading-snug">
+
+                  <p className="mt-1.5 text-[0.8125rem] sm:text-[0.875rem] text-cream/80 leading-relaxed">
                     {fotosEscola[slideAtual].descricao}
                   </p>
 
                   {/* Barras indicadoras com clique */}
-                  <div className="mt-3 flex items-center gap-1.5 pt-2 border-t border-hairline">
-                    {fotosEscola.map((f, i) => (
-                      <button
-                        key={f.id}
-                        type="button"
-                        onClick={() => setSlideAtual(i)}
-                        aria-label={`Ver slide ${i + 1}: ${f.escola}`}
-                        className={`h-1 rounded-full transition-all duration-500 ${
-                          i === slideAtual ? 'w-8 bg-gold' : 'w-2 bg-cream/30 hover:bg-cream/60'
-                        }`}
-                      />
-                    ))}
+                  <div className="mt-4 flex items-center justify-between border-t border-hairline pt-3.5">
+                    <div className="flex items-center gap-2">
+                      {fotosEscola.map((f, i) => (
+                        <button
+                          key={f.id}
+                          type="button"
+                          onClick={() => setSlideAtual(i)}
+                          aria-label={`Ver slide ${i + 1}: ${f.escola}`}
+                          className={`h-1.5 rounded-full transition-all duration-500 ${
+                            i === slideAtual
+                              ? 'w-8 bg-gold shadow-[0_0_8px_rgba(181,139,87,0.5)]'
+                              : 'w-2.5 bg-cream/25 hover:bg-cream/50'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="font-sans text-[0.625rem] uppercase tracking-[0.14em] text-muted-on-dark">
+                      Passagem automática
+                    </span>
                   </div>
                 </div>
               </div>

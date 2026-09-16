@@ -72,7 +72,7 @@ export default function UniformesEmpresariaisPage() {
   return (
     <>
       <ViewContent nome="uniformes-empresariais" />
-      <Header simplificado />
+      <Header />
       <main id="conteudo">
         <LandingHero
           eyebrow="Para empresas"

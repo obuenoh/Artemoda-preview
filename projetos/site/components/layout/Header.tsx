@@ -9,15 +9,13 @@ import { Button } from '@/components/ui/Button';
 const nav = [
   { label: 'Soluções', href: '/#solucoes' },
   { label: 'Processo', href: '/#processo' },
-  { label: 'Escolas', href: '/uniformes-escolares/' },
-  { label: 'Empresas', href: '/uniformes-empresariais/' },
-  { label: 'Private label', href: '/private-label/' },
+  { label: 'Escolas', href: '/#escolas' },
+  { label: 'Produção', href: '/#galeria' },
   { label: 'Sobre', href: '/sobre/' },
 ];
 
 /**
- * `simplificado` e o modo das landings de anuncio: sem menu que distraia,
- * so marca e a acao. O trafego pago chega com uma intencao so.
+ * Header de navegação da Arte e Moda.
  */
 export function Header({ simplificado = false }: { simplificado?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
@@ -28,7 +26,9 @@ export function Header({ simplificado = false }: { simplificado?: boolean }) {
     !pathname ||
     pathname === '/' ||
     pathname === '/Artemoda-preview/site' ||
-    pathname === '/Artemoda-preview/site/';
+    pathname === '/Artemoda-preview/site/' ||
+    pathname.endsWith('/site') ||
+    pathname.endsWith('/site/');
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);

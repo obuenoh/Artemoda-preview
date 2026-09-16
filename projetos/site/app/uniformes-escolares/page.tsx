@@ -72,8 +72,7 @@ export default function UniformesEscolaresPage() {
   return (
     <>
       <ViewContent nome="uniformes-escolares" />
-      {/* Menu simplificado: quem vem de anúncio chega com uma intenção só. */}
-      <Header simplificado />
+      <Header />
       <main id="conteudo">
         <LandingHero
           eyebrow="Para escolas particulares"
