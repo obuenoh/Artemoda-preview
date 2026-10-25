@@ -3,13 +3,14 @@
 import { useActionState } from 'react';
 import { criarProdutoAcabado, type Resultado } from '../../acoes';
 import { Campo, ErroGeral } from '@/components/Campo';
+import { semLimpar } from '@/components/enviar';
 
 export function FormPeca() {
   const [estado, acao, pendente] = useActionState<Resultado, FormData>(criarProdutoAcabado, null);
   const e = estado?.campos ?? {};
 
   return (
-    <form action={acao} className="mt-7 flex max-w-[640px] flex-col gap-6">
+    <form onSubmit={semLimpar(acao)} className="mt-7 flex max-w-[640px] flex-col gap-6">
       <Campo id="nome" label="Nome da peça" erro={e.nome} ajuda='Ex.: "Camisa polo Colégio Alfa".'>
         <input id="nome" name="nome" className="campo" autoFocus />
       </Campo>

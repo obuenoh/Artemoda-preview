@@ -17,14 +17,7 @@ export default async function EstoqueLojaPage() {
       <TituloPagina
         titulo="Estoque da loja"
         sub="Peças prontas para vender no balcão — cada uma com seu código"
-        acao={
-          <div className="flex flex-wrap gap-3">
-            <Botao href="/vendas" variante="vazio">
-              Voltar para Vendas
-            </Botao>
-            <Botao href="/vendas/estoque/novo">Nova peça</Botao>
-          </div>
-        }
+        acao={<Botao href="/vendas/estoque/novo">Nova peça</Botao>}
       />
 
       {produtos.length === 0 ? (

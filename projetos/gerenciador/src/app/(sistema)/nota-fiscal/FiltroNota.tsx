@@ -4,6 +4,7 @@ import { useActionState, useState } from 'react';
 import { gerarNotaFiscal, previsualizarRelatorio, type Resultado, type PreviaNota } from './acoes';
 import { Campo, ErroGeral } from '@/components/Campo';
 import { centavosParaReais, dataBR } from '@/lib/numeros';
+import { semLimpar } from '@/components/enviar';
 
 function hojeISO() {
   return new Date().toISOString().slice(0, 10);
@@ -178,7 +179,7 @@ export function FiltroNota({ clientes }: { clientes: { id: string; nome: string 
               Gerar só o relatório
             </a>
 
-            <form action={acao}>
+            <form onSubmit={semLimpar(acao)}>
               <input type="hidden" name="inicio" value={inicio} />
               <input type="hidden" name="fim" value={fim} />
               <input type="hidden" name="clienteId" value={clienteId} />

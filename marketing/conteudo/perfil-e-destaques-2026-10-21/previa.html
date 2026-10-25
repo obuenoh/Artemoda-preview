@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Previa do perfil</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  /* Simula o tamanho real no celular: perfil ~86px, destaque ~64px */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Montserrat', sans-serif; }
+  .tela { width: 400px; padding: 20px 16px 22px; background: #fff; color: #1C1C1C; }
+  .tela.escuro { background: #000; color: #F5F2EC; }
+  .topo { display: flex; align-items: center; gap: 18px; }
+  .topo img { width: 86px; height: 86px; border-radius: 50%; }
+  .nome { font-weight: 600; font-size: 14px; }
+  .bio { font-size: 12px; line-height: 1.45; margin-top: 4px; opacity: .8; }
+  .linha { display: flex; gap: 14px; margin-top: 22px; overflow: hidden; }
+  .item { width: 64px; flex-shrink: 0; text-align: center; }
+  .item img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; outline: 1px solid rgba(128,128,128,.35); outline-offset: 2px; }
+  .item span { display: block; margin-top: 6px; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+</style>
+</head>
+<body>
+<div id="previa">
+  <div class="tela"></div>
+  <div class="tela escuro"></div>
+</div>
+<script>
+  const destaques = [
+    ['destaque-01-orcamento', 'Orçamento'],
+    ['destaque-02-escolar', 'Escolar'],
+    ['destaque-03-empresas', 'Empresas'],
+    ['destaque-04-sua-marca', 'Sua marca'],
+    ['destaque-05-fabrica', 'Fábrica'],
+    ['destaque-06-contato', 'Contato'],
+  ];
+  document.querySelectorAll('.tela').forEach(t => {
+    t.innerHTML = `
+      <div class="topo">
+        <img src="imagens/perfil-arte-e-moda.png">
+        <div><p class="nome">Arte e Moda</p><p class="bio">Uniformes · Private Label · Confecção</p></div>
+      </div>
+      <div class="linha">${destaques.map(([a, t]) =>
+        `<div class="item"><img src="imagens/${a}.png"><span>${t}</span></div>`).join('')}</div>`;
+  });
+</script>
+</body>
+</html>

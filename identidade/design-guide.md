@@ -32,6 +32,16 @@
 
 - Estilo editorial, sofisticado, remetendo à alta confecção e ateliê têxtil.
 - Elemento-assinatura: **pesponto** (traço 6 / intervalo 4, 1px) acompanhando emendas ou perímetros.
+- **Trama de sarja** nos fundos escuros: diagonal a 45° a cada 3px, creme a 4%. Entra no lugar de gradiente colorido.
+- **Risco de giz** antes de sobretítulo: traço dourado de 24px.
+- **Moldura** fina dourada a 28% na capa e no topo do site, como a borda de uma etiqueta.
+
+---
+
+## Arquivos
+
+- Brandbook em PDF e a fonte dele em `identidade/` (ver `identidade/LEIA-ME.md`).
+- Logo em PNG transparente e PDF vetorial em `identidade/logo/`, em todas as versões: para fundo claro, para fundo escuro, uma cor, monograma, ícone do app e avatar do Instagram. Para gráfica, use os PDFs.
 
 ---
 

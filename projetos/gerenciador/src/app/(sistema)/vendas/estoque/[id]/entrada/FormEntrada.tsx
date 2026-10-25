@@ -3,13 +3,14 @@
 import { useActionState } from 'react';
 import { registrarEntradaProducao, type Resultado } from '../../../acoes';
 import { Campo, ErroGeral } from '@/components/Campo';
+import { semLimpar } from '@/components/enviar';
 
 export function FormEntrada({ produtoAcabadoId }: { produtoAcabadoId: string }) {
   const [estado, acao, pendente] = useActionState<Resultado, FormData>(registrarEntradaProducao, null);
   const e = estado?.campos ?? {};
 
   return (
-    <form action={acao} className="mt-6 flex max-w-[420px] flex-col gap-6">
+    <form onSubmit={semLimpar(acao)} className="mt-6 flex max-w-[420px] flex-col gap-6">
       <input type="hidden" name="produtoAcabadoId" value={produtoAcabadoId} />
 
       <Campo id="quantidade" label="Quantas peças chegaram" erro={e.quantidade}>

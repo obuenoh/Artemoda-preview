@@ -39,6 +39,8 @@ model Empresa {
   movimentosProduto MovimentoProdutoAcabado[]
   vendas            Venda[]
   lancamentosCaixa  LancamentoCaixa[]
+  contasPagar       ContaPagar[]
+  contasReceber     ContaReceber[]
   notasFiscais      NotaFiscal[]
   auditoria         Auditoria[]
 }
@@ -127,6 +129,7 @@ model Fornecedor {
   empresa      Empresa       @relation(fields: [empresaId], references: [id])
   tabelasPreco TabelaPreco[]
   compras      Compra[]
+  contasPagar  ContaPagar[]
 
   @@index([empresaId])
 }
@@ -182,11 +185,16 @@ model MateriaPrima {
   fatorConversaoMil Int      @default(1000)
   estoqueMinimoMil  Int      @default(0)
   localizacao       String?
+  /// Retalho: de qual tecido cadastrado ele sobrou. Vazio em tecido inteiro
+  /// e em retalho de tecido que nunca foi cadastrado.
+  retalhoDeId       String?
   ativo             Boolean  @default(true)
   criadoEm          DateTime @default(now())
 
   empresa         Empresa            @relation(fields: [empresaId], references: [id])
   tipoProduto     TipoProduto        @relation(fields: [tipoProdutoId], references: [id])
+  retalhoDe       MateriaPrima?      @relation("Retalhos", fields: [retalhoDeId], references: [id])
+  retalhos        MateriaPrima[]     @relation("Retalhos")
   movimentos      MovimentoEstoque[]
   itensCompra     CompraItem[]
   precos          TabelaPrecoItem[]
@@ -209,9 +217,10 @@ model Cliente {
   ativo             Boolean  @default(true)
   criadoEm          DateTime @default(now())
 
-  empresa      Empresa      @relation(fields: [empresaId], references: [id])
-  vendas       Venda[]
-  notasFiscais NotaFiscal[]
+  empresa       Empresa        @relation(fields: [empresaId], references: [id])
+  vendas        Venda[]
+  notasFiscais  NotaFiscal[]
+  contasReceber ContaReceber[]
 
   @@index([empresaId])
 }
@@ -229,9 +238,10 @@ model Compra {
   observacoes          String?
   criadoEm             DateTime @default(now())
 
-  empresa    Empresa      @relation(fields: [empresaId], references: [id])
-  fornecedor Fornecedor   @relation(fields: [fornecedorId], references: [id])
-  itens      CompraItem[]
+  empresa     Empresa      @relation(fields: [empresaId], references: [id])
+  fornecedor  Fornecedor   @relation(fields: [fornecedorId], references: [id])
+  itens       CompraItem[]
+  contasPagar ContaPagar[]
 
   @@index([empresaId, data])
 }
@@ -384,10 +394,11 @@ model Venda {
   usuarioId        String?
   criadoEm         DateTime @default(now())
 
-  empresa      Empresa           @relation(fields: [empresaId], references: [id])
-  cliente      Cliente?          @relation(fields: [clienteId], references: [id])
-  itens        VendaItem[]
-  notasFiscais NotaFiscalVenda[]
+  empresa       Empresa           @relation(fields: [empresaId], references: [id])
+  cliente       Cliente?          @relation(fields: [clienteId], references: [id])
+  itens         VendaItem[]
+  notasFiscais  NotaFiscalVenda[]
+  contasReceber ContaReceber[]
 
   @@index([empresaId, criadoEm])
   @@index([clienteId])
@@ -406,23 +417,98 @@ model VendaItem {
   @@index([vendaId])
 }
 
-/// Caixa simples: uma linha por entrada/saida de dinheiro. Alimentado
-/// automaticamente quando uma venda e concluida. Nao substitui contas a
-/// pagar/receber (isso e Fase 3) — e so o extrato de caixa.
+// ─────────────────────────────────────────────────── financeiro: caixa
+
+/// O caixa e o mesmo principio do estoque: saldo = soma dos lancamentos,
+/// nunca um campo. Nada aqui e editado ou apagado — erro se corrige com
+/// lancamento novo (estorno ou ajuste) com motivo. Toda escrita passa por
+/// lancarCaixa() em src/lib/financeiro.ts.
 model LancamentoCaixa {
   id            String   @id @default(cuid())
   empresaId     String
   tipo          String // entrada | saida
-  origemTipo    String? // venda | manual
+  /// venda | conta_pagar | conta_receber | manual | abertura | ajuste | estorno
+  origemTipo    String?
   origemId      String?
+  /// Sempre positivo: o `tipo` diz para que lado vai.
   valorCentavos Int
   descricao     String
+  /// Mesma lista de src/lib/financeiro.ts. Vazio em venda, abertura e ajuste.
+  categoria     String?
   data          DateTime @default(now())
   usuarioId     String?
+  criadoEm      DateTime @default(now())
 
   empresa Empresa @relation(fields: [empresaId], references: [id])
 
   @@index([empresaId, data])
+}
+
+/// O que a confeccao deve e quando vence. A conta so guarda a situacao:
+/// quem mexe no dinheiro e o lancamento de caixa criado ao pagar.
+/// Cancelar exige motivo e nao apaga nada.
+model ContaPagar {
+  id                 String    @id @default(cuid())
+  empresaId          String
+  descricao          String
+  categoria          String
+  fornecedorId       String?
+  compraId           String?
+  /// Parcelas da mesma conta (ou meses da mesma conta fixa) dividem o grupo.
+  grupoId            String?
+  parcela            Int       @default(1)
+  totalParcelas      Int       @default(1)
+  /// Conta fixa do mes (aluguel, luz): mostrada como "todo mes", nao "1 de 12".
+  fixaMensal         Boolean   @default(false)
+  valorCentavos      Int
+  /// Gravado ao meio-dia local: data sem hora nao pode virar o dia anterior.
+  vencimento         DateTime
+  situacao           String    @default("aberta") // aberta | paga | cancelada
+  pagoEm             DateTime?
+  valorPagoCentavos  Int?
+  formaPagamento     String?
+  motivoCancelamento String?
+  observacoes        String?
+  usuarioId          String?
+  criadoEm           DateTime  @default(now())
+
+  empresa    Empresa     @relation(fields: [empresaId], references: [id])
+  fornecedor Fornecedor? @relation(fields: [fornecedorId], references: [id])
+  compra     Compra?     @relation(fields: [compraId], references: [id])
+
+  @@index([empresaId, situacao, vencimento])
+  @@index([grupoId])
+}
+
+/// O que entra depois: venda fiado (criada sozinha na venda) e combinado
+/// com cliente, como sinal e restante na entrega. Mesmas regras da conta
+/// a pagar.
+model ContaReceber {
+  id                    String    @id @default(cuid())
+  empresaId             String
+  descricao             String
+  clienteId             String?
+  vendaId               String?
+  grupoId               String?
+  parcela               Int       @default(1)
+  totalParcelas         Int       @default(1)
+  valorCentavos         Int
+  vencimento            DateTime
+  situacao              String    @default("aberta") // aberta | recebida | cancelada
+  recebidoEm            DateTime?
+  valorRecebidoCentavos Int?
+  formaPagamento        String?
+  motivoCancelamento    String?
+  observacoes           String?
+  usuarioId             String?
+  criadoEm              DateTime  @default(now())
+
+  empresa Empresa  @relation(fields: [empresaId], references: [id])
+  cliente Cliente? @relation(fields: [clienteId], references: [id])
+  venda   Venda?   @relation(fields: [vendaId], references: [id])
+
+  @@index([empresaId, situacao, vencimento])
+  @@index([grupoId])
 }
 
 // ────────────────────────────────────────────────────────────── nota fiscal

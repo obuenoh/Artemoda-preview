@@ -18,7 +18,8 @@ export type TipoMovimento =
   | 'saida_producao'
   | 'ajuste_inventario'
   | 'devolucao_fornecedor'
-  | 'perda';
+  | 'perda'
+  | 'entrada_retalho';
 
 export const rotuloMovimento: Record<TipoMovimento, string> = {
   entrada_compra: 'Compra',
@@ -27,6 +28,7 @@ export const rotuloMovimento: Record<TipoMovimento, string> = {
   ajuste_inventario: 'Ajuste de contagem',
   devolucao_fornecedor: 'Devolvido ao fornecedor',
   perda: 'Perda',
+  entrada_retalho: 'Retalho anotado',
 };
 
 type Cliente = PrismaClient | Prisma.TransactionClient;
@@ -148,25 +150,99 @@ export type LinhaEstoque = {
   custoMedioCentavos: number;
   ultimoCustoCentavos: number;
   valorCentavos: number;
+  /**
+   * Ha quantos dias chegou o que esta ha mais tempo no estoque, por ordem
+   * de chegada: o que sai primeiro e o que chegou primeiro. Uma saida nao
+   * "renova" o resto da pilha, e retalho novo anotado em cima de um antigo
+   * nao esconde que o antigo continua ali.
+   */
   diasParado: number | null;
   abaixoDoMinimo: boolean;
   variacaoPct: number | null;
   tipoProdutoId: string;
   tipoProdutoNome: string;
+  retalhoDeId: string | null;
+};
+
+type EstadoComIdade = EstadoAtual & { paradoDesde: Date | null };
+
+/**
+ * Le todos os lancamentos da empresa de uma vez (em vez de duas consultas
+ * por item) e devolve, por item, o mesmo estado de estadoAtual() mais a
+ * data de chegada do lote mais antigo que ainda sobra.
+ */
+async function estadosComIdade(empresaId: string): Promise<Map<string, EstadoComIdade>> {
+  const movimentos = await db.movimentoEstoque.findMany({
+    where: { empresaId },
+    orderBy: [{ criadoEm: 'asc' }, { id: 'asc' }],
+    select: {
+      materiaPrimaId: true,
+      tipo: true,
+      quantidadeMil: true,
+      custoUnitarioCentavos: true,
+      custoMedioAposCentavos: true,
+      saldoAposMil: true,
+      criadoEm: true,
+    },
+  });
+
+  const estados = new Map<string, EstadoComIdade & { lotes: { mil: number; desde: Date }[] }>();
+  for (const m of movimentos) {
+    const e = estados.get(m.materiaPrimaId) ?? {
+      saldoMil: 0,
+      custoMedioCentavos: 0,
+      ultimoCustoCentavos: 0,
+      ultimoMovimentoEm: null,
+      paradoDesde: null,
+      lotes: [],
+    };
+    e.saldoMil = m.saldoAposMil;
+    e.custoMedioCentavos = m.custoMedioAposCentavos;
+    e.ultimoMovimentoEm = m.criadoEm;
+    // So COMPRA conta como "ultima compra" (mesma regra de estadoAtual).
+    if (m.tipo === 'entrada_compra') e.ultimoCustoCentavos = m.custoUnitarioCentavos;
+
+    if (m.quantidadeMil > 0) {
+      e.lotes.push({ mil: m.quantidadeMil, desde: m.criadoEm });
+    } else {
+      let falta = -m.quantidadeMil;
+      while (falta > 0 && e.lotes.length > 0) {
+        const usado = Math.min(falta, e.lotes[0].mil);
+        e.lotes[0].mil -= usado;
+        falta -= usado;
+        if (e.lotes[0].mil === 0) e.lotes.shift();
+      }
+    }
+    estados.set(m.materiaPrimaId, e);
+  }
+
+  for (const e of estados.values()) e.paradoDesde = e.saldoMil > 0 ? (e.lotes[0]?.desde ?? null) : null;
+  return estados;
+}
+
+const SEM_MOVIMENTO: EstadoComIdade = {
+  saldoMil: 0,
+  custoMedioCentavos: 0,
+  ultimoCustoCentavos: 0,
+  ultimoMovimentoEm: null,
+  paradoDesde: null,
 };
 
 /** Posicao de estoque de todos os produtos (tecido e aviamento), por setor. */
 export async function posicaoEstoque(empresaId: string): Promise<LinhaEstoque[]> {
-  const materias = await db.materiaPrima.findMany({
-    where: { empresaId, ativo: true },
-    include: { tipoProduto: true },
-    orderBy: { nome: 'asc' },
-  });
+  const [materias, estados] = await Promise.all([
+    db.materiaPrima.findMany({
+      where: { empresaId, ativo: true },
+      include: { tipoProduto: true },
+      orderBy: { nome: 'asc' },
+    }),
+    estadosComIdade(empresaId),
+  ]);
 
   const linhas: LinhaEstoque[] = [];
 
   for (const mp of materias) {
-    const estado = await estadoAtual(mp.id);
+    const estado = estados.get(mp.id) ?? SEM_MOVIMENTO;
     const valor = valorDe(Math.max(estado.saldoMil, 0), estado.custoMedioCentavos);
 
     const variacao =
@@ -189,17 +265,27 @@ export async function posicaoEstoque(empresaId: string): Promise<LinhaEstoque[]>
       custoMedioCentavos: estado.custoMedioCentavos,
       ultimoCustoCentavos: estado.ultimoCustoCentavos,
       valorCentavos: valor,
-      diasParado: estado.ultimoMovimentoEm
-        ? Math.floor((Date.now() - estado.ultimoMovimentoEm.getTime()) / 86_400_000)
+      diasParado: estado.paradoDesde
+        ? Math.floor((Date.now() - estado.paradoDesde.getTime()) / 86_400_000)
         : null,
       abaixoDoMinimo: mp.estoqueMinimoMil > 0 && estado.saldoMil < mp.estoqueMinimoMil,
       variacaoPct: variacao,
       tipoProdutoId: mp.tipoProdutoId,
       tipoProdutoNome: mp.tipoProduto.nome,
+      retalhoDeId: mp.retalhoDeId,
     });
   }
 
   return linhas;
+}
+
+export const NOME_TIPO_RETALHO = 'Retalho';
+
+/** O setor "Retalho" da empresa, criado na primeira vez que ela anota um. Medido em kg. */
+export async function tipoRetalho(empresaId: string, tx: Cliente = db) {
+  const existente = await tx.tipoProduto.findFirst({ where: { empresaId, nome: NOME_TIPO_RETALHO } });
+  if (existente) return existente;
+  return tx.tipoProduto.create({ data: { empresaId, nome: NOME_TIPO_RETALHO, unidadePadrao: 'kg' } });
 }
 
 /** Tipos de produto (setores) cadastrados pela empresa, para o filtro e o formulario. */

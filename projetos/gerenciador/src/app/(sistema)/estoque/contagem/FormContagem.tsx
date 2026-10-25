@@ -4,6 +4,7 @@ import { useActionState } from 'react';
 import { aplicarContagem, type Resultado } from '../../compras/acoes';
 import { ErroGeral } from '@/components/Campo';
 import { milParaNumero } from '@/lib/numeros';
+import { semLimpar } from '@/components/enviar';
 
 type Linha = {
   id: string;
@@ -18,7 +19,7 @@ export function FormContagem({ linhas, abertura }: { linhas: Linha[]; abertura: 
   const e = estado?.campos ?? {};
 
   return (
-    <form action={acao} className="mt-7">
+    <form onSubmit={semLimpar(acao)} className="mt-7">
       <input type="hidden" name="abertura" value={abertura ? 'sim' : 'nao'} />
 
       <ul className="flex flex-col gap-3">

@@ -5,13 +5,24 @@
  * Clientes e fornecedores aqui são fictícios de propósito: nome real
  * dentro de registro inventado é o tipo de coisa que volta como problema.
  */
+import { randomUUID } from 'node:crypto';
 import { PrismaClient } from '@prisma/client';
 import { criarHash } from '../src/lib/senha';
+import { somarMeses } from '../src/lib/numeros';
+import { parcelasDaCondicao } from '../src/lib/financeiro-listas';
 
 const db = new PrismaClient();
 
 function diasAtras(n: number): Date {
   return new Date(Date.now() - n * 86_400_000);
+}
+
+/** Dia relativo a hoje, ao meio-dia (como o sistema grava vencimento). */
+function dia(n: number): Date {
+  const d = new Date();
+  d.setDate(d.getDate() + n);
+  d.setHours(12, 0, 0, 0);
+  return d;
 }
 
 /** Repete a regra de custo médio do lib/estoque para semear o histórico. */
@@ -106,6 +117,8 @@ async function main() {
   console.log('Limpando dados anteriores…');
   await db.notaFiscalVenda.deleteMany();
   await db.notaFiscal.deleteMany();
+  await db.contaReceber.deleteMany();
+  await db.contaPagar.deleteMany();
   await db.lancamentoCaixa.deleteMany();
   await db.vendaItem.deleteMany();
   await db.venda.deleteMany();
@@ -168,8 +181,8 @@ async function main() {
         chave: 'pagamento_costureiras',
         valor: 'salario_fixo',
         descricao:
-          'Como as costureiras são pagas. Muda se a costura entra no custo da peça ou no rateio das contas do mês. Confirmar com a dona.',
-        pendente: true,
+          'Como as costureiras são pagas: salário fixo (confirmado em 25/10/2026). A costura entra no rateio das contas do mês, não no custo de cada peça.',
+        pendente: false,
       },
       {
         chave: 'regime_tributario',
@@ -227,6 +240,27 @@ async function main() {
       whatsapp: '(11) 99000-5000',
       condicaoPagamento: 'a_vista',
       prazoMedioDias: 3,
+    },
+  });
+
+  const estamparia = await db.fornecedor.create({
+    data: {
+      empresaId: empresa.id,
+      nome: 'Estamparia Ponto Fino',
+      tipos: 'dtf,silk',
+      whatsapp: '(11) 99000-6000',
+      condicaoPagamento: 'a_vista',
+      prazoMedioDias: 5,
+    },
+  });
+  const bordados = await db.fornecedor.create({
+    data: {
+      empresaId: empresa.id,
+      nome: 'Bordados Lírio',
+      tipos: 'bordado',
+      whatsapp: '(11) 99000-7000',
+      condicaoPagamento: '30_60',
+      prazoMedioDias: 8,
     },
   });
 
@@ -377,6 +411,58 @@ async function main() {
     },
   });
 
+  console.log('Abrindo o caixa…');
+  // Mesmo caminho da tela: abertura registrada na auditoria + lancamento.
+  await db.auditoria.create({
+    data: {
+      empresaId: empresa.id, usuarioId: dona.id, entidade: 'caixa', entidadeId: empresa.id,
+      acao: 'abriu', resumo: 'Abriu o caixa com R$ 9.000,00', criadoEm: diasAtras(70),
+    },
+  });
+  await db.lancamentoCaixa.create({
+    data: {
+      empresaId: empresa.id, tipo: 'entrada', origemTipo: 'abertura', valorCentavos: 900_000,
+      descricao: 'Saldo de abertura: a empresa tinha R$ 9.000,00', usuarioId: dona.id, data: diasAtras(70),
+    },
+  });
+
+  /** Conta ja paga: a conta e a saida no caixa nascem juntas, como na tela. */
+  async function contaPaga(dados: {
+    descricao: string; categoria: string; valorCentavos: number; quando: Date;
+    fornecedorId?: string; compraId?: string; grupoId?: string; parcela?: number; totalParcelas?: number; fixaMensal?: boolean;
+  }) {
+    const conta = await db.contaPagar.create({
+      data: {
+        empresaId: empresa.id, descricao: dados.descricao, categoria: dados.categoria,
+        fornecedorId: dados.fornecedorId, compraId: dados.compraId, grupoId: dados.grupoId,
+        parcela: dados.parcela ?? 1, totalParcelas: dados.totalParcelas ?? 1, fixaMensal: dados.fixaMensal ?? false,
+        valorCentavos: dados.valorCentavos, vencimento: dados.quando, situacao: 'paga', pagoEm: dados.quando,
+        valorPagoCentavos: dados.valorCentavos, formaPagamento: 'pix', usuarioId: dona.id,
+      },
+    });
+    await db.lancamentoCaixa.create({
+      data: {
+        empresaId: empresa.id, tipo: 'saida', origemTipo: 'conta_pagar', origemId: conta.id,
+        valorCentavos: dados.valorCentavos, descricao: dados.descricao, categoria: dados.categoria,
+        usuarioId: dona.id, data: dados.quando,
+      },
+    });
+  }
+
+  /** Conta fixa: o primeiro mes ja pago, os outros 11 em aberto. */
+  async function contaFixa(descricao: string, categoria: string, valorCentavos: number, primeiro: Date) {
+    const grupoId = randomUUID();
+    await contaPaga({ descricao, categoria, valorCentavos, quando: primeiro, grupoId, parcela: 1, totalParcelas: 12, fixaMensal: true });
+    for (let i = 1; i < 12; i++) {
+      await db.contaPagar.create({
+        data: {
+          empresaId: empresa.id, descricao, categoria, grupoId, parcela: i + 1, totalParcelas: 12, fixaMensal: true,
+          valorCentavos, vencimento: somarMeses(primeiro, i), usuarioId: dona.id,
+        },
+      });
+    }
+  }
+
   console.log('Cadastrando clientes…');
   const alfa = await db.cliente.create({
     data: {
@@ -409,6 +495,33 @@ async function main() {
       condicaoPagamento: '30',
     },
   });
+
+  console.log('Anotando retalhos…');
+  // Valor do kg pela largura e gramatura de cada malha (o mesmo calculo da
+  // tela). Datas antigas de proposito: e o dinheiro parado que a dona contou.
+  const tipoRetalho = await db.tipoProduto.create({
+    data: { empresaId: empresa.id, nome: 'Retalho', unidadePadrao: 'kg' },
+  });
+  const retalhos = [
+    { de: pv, nome: 'Retalho de Malha PV', cor: 'Azul marinho', kg: 3_200, valorKg: 5_800, dias: 40, local: 'Caixa 1' },
+    { de: pique, nome: 'Retalho de Malha piquê', cor: 'Branco', kg: 2_500, valorKg: 6_900, dias: 210, local: 'Caixa 1' },
+    { de: moletom, nome: 'Retalho de Moletom flanelado', cor: 'Cinza mescla', kg: 4_000, valorKg: 5_370, dias: 400, local: 'Caixa 2' },
+    { de: null, nome: 'Retalho de Helanca', cor: 'Verde bandeira', kg: 2_000, valorKg: 3_000, dias: 250, local: 'Caixa 2' },
+  ];
+  for (const r of retalhos) {
+    const item = await db.materiaPrima.create({
+      data: {
+        empresaId: empresa.id, tipoProdutoId: tipoRetalho.id, nome: r.nome, cor: r.cor, unidade: 'kg',
+        localizacao: r.local, retalhoDeId: r.de?.id ?? null,
+        larguraMil: r.de?.larguraMil ?? null, gramaturaGm2: r.de?.gramaturaGm2 ?? null,
+      },
+    });
+    await lancarEstoque({
+      empresaId: empresa.id, materiaPrimaId: item.id, tipo: 'entrada_retalho',
+      quantidadeMil: r.kg, custoUnitarioCentavos: r.valorKg, origemTipo: 'manual',
+      motivo: 'Retalho anotado — valor estimado', usuarioId: dona.id, quando: diasAtras(r.dias),
+    });
+  }
 
   console.log('Registrando compras e movimentando o estoque…');
 
@@ -452,6 +565,10 @@ async function main() {
     origemTipo: 'compra', origemId: compra1.id, motivo: 'Nota 10421',
     usuarioId: dona.id, quando: diasAtras(64),
   });
+  await contaPaga({
+    descricao: 'Compra Malharia São Bento — nota 10421', categoria: 'tecido_aviamento',
+    valorCentavos: 368_000, quando: diasAtras(64), fornecedorId: malharia.id, compraId: compra1.id,
+  });
 
   await lancarEstoque({
     empresaId: empresa.id, materiaPrimaId: pv.id, tipo: 'saida_producao',
@@ -471,6 +588,12 @@ async function main() {
     origemTipo: 'compra', origemId: compra2.id, motivo: 'Nota 10998',
     usuarioId: dona.id, quando: diasAtras(12),
   });
+  await db.contaPagar.create({
+    data: {
+      empresaId: empresa.id, descricao: 'Compra Malharia São Bento — nota 10998', categoria: 'tecido_aviamento',
+      fornecedorId: malharia.id, compraId: compra2.id, valorCentavos: 68_700, vencimento: dia(18), usuarioId: dona.id,
+    },
+  });
 
   const compra3 = await db.compra.create({
     data: { empresaId: empresa.id, fornecedorId: malharia.id, numeroNf: '11002', data: diasAtras(4) },
@@ -483,6 +606,12 @@ async function main() {
     quantidadeMil: 18_200, custoUnitarioCentavos: 1290,
     origemTipo: 'compra', origemId: compra3.id, motivo: 'Nota 11002',
     usuarioId: dona.id, quando: diasAtras(4),
+  });
+  await db.contaPagar.create({
+    data: {
+      empresaId: empresa.id, descricao: 'Compra Malharia São Bento — nota 11002', categoria: 'tecido_aviamento',
+      fornecedorId: malharia.id, compraId: compra3.id, valorCentavos: 23_478, vencimento: dia(26), usuarioId: dona.id,
+    },
   });
 
   // Elástico e zíper ficam abaixo do mínimo de propósito.
@@ -571,6 +700,21 @@ async function main() {
           usuarioId: vendedora.id, data: dados.quando,
         },
       });
+    } else {
+      // Mesma regra de vendas/acoes.ts: fiado vira conta a receber no prazo do cliente.
+      const cliente = dados.clienteId ? await db.cliente.findUnique({ where: { id: dados.clienteId } }) : null;
+      const condicao = cliente && cliente.condicaoPagamento !== 'a_vista' ? cliente.condicaoPagamento : '30';
+      const parcelas = parcelasDaCondicao(condicao, dados.quando, totalCentavos);
+      const grupoId = parcelas.length > 1 ? randomUUID() : null;
+      for (const [i, p] of parcelas.entries()) {
+        await db.contaReceber.create({
+          data: {
+            empresaId: empresa.id, descricao: `Venda fiado — ${cliente?.nome ?? 'balcão, sem cliente'}`,
+            clienteId: dados.clienteId, vendaId: venda.id, grupoId, parcela: i + 1, totalParcelas: parcelas.length,
+            valorCentavos: p.valorCentavos, vencimento: p.vencimento, usuarioId: vendedora.id,
+          },
+        });
+      }
     }
     return venda;
   }
@@ -617,6 +761,56 @@ async function main() {
     formaPagamento: 'fiado',
     itens: [{ produto: poloM, quantidade: 8 }],
     quando: diasAtras(2),
+  });
+
+  console.log('Contas do mês…');
+  await contaFixa('Aluguel do galpão', 'aluguel', 320_000, dia(-25));
+  await contaFixa('Internet e telefone', 'consumo', 14_990, dia(-20));
+  // Uma vencida de proposito: e o que a tela tem que mostrar primeiro.
+  await db.contaPagar.create({
+    data: { empresaId: empresa.id, descricao: 'Conta de luz', categoria: 'consumo', valorCentavos: 48_630, vencimento: dia(-2), usuarioId: dona.id },
+  });
+  await db.contaPagar.create({
+    data: {
+      empresaId: empresa.id, descricao: 'DTF das polos Colégio Alfa', categoria: 'servico', fornecedorId: estamparia.id,
+      valorCentavos: 84_000, vencimento: dia(3), usuarioId: dona.id,
+    },
+  });
+  const grupoBordado = randomUUID();
+  for (const [i, vencimento] of [dia(12), dia(42)].entries()) {
+    await db.contaPagar.create({
+      data: {
+        empresaId: empresa.id, descricao: 'Bordado do brasão — moletons São Jorge', categoria: 'servico',
+        fornecedorId: bordados.id, grupoId: grupoBordado, parcela: i + 1, totalParcelas: 2,
+        valorCentavos: 63_000, vencimento, usuarioId: dona.id,
+      },
+    });
+  }
+  await db.lancamentoCaixa.create({
+    data: {
+      empresaId: empresa.id, tipo: 'saida', origemTipo: 'manual', categoria: 'divulgacao', valorCentavos: 30_000,
+      descricao: 'Impulsionamento no Instagram', usuarioId: dona.id, data: diasAtras(8),
+    },
+  });
+
+  // Pedido com sinal: metade entrou, o restante fica a receber na entrega.
+  await db.lancamentoCaixa.create({
+    data: {
+      empresaId: empresa.id, tipo: 'entrada', origemTipo: 'manual', categoria: 'sinal', valorCentavos: 120_000,
+      descricao: 'Sinal do pedido Metalúrgica Bertoni', usuarioId: dona.id, data: diasAtras(6),
+    },
+  });
+  await db.contaReceber.create({
+    data: {
+      empresaId: empresa.id, descricao: 'Restante do pedido Metalúrgica Bertoni', clienteId: bertoni.id,
+      valorCentavos: 120_000, vencimento: dia(15), usuarioId: dona.id,
+    },
+  });
+  await db.contaReceber.create({
+    data: {
+      empresaId: empresa.id, descricao: 'Reposição de uniformes — Colégio São Jorge', clienteId: colegioSaoJorge.id,
+      valorCentavos: 38_000, vencimento: dia(-6), usuarioId: dona.id,
+    },
   });
 
   console.log('\nPronto. Entre com:');

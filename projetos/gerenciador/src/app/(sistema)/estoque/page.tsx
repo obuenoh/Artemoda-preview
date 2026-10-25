@@ -36,9 +36,6 @@ export default async function EstoquePage({
         sub="Tecido e aviamento — saldo, custo e tempo parado, por setor"
         acao={
           <div className="flex flex-wrap gap-3">
-            <Botao href="/estoque/parado" variante="vazio">
-              O que está parado
-            </Botao>
             <Botao href="/estoque/contagem" variante="vazio">
               Fazer contagem
             </Botao>

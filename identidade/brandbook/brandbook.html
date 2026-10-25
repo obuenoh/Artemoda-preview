@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brandbook Arte e Moda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=IBM+Plex+Mono:wght@400;500&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /*
+   * Brandbook da Arte e Moda.
+   * A diagramacao segue o BRANDBOOK TRAMA_2026.pdf (so o layout). Cores,
+   * fontes, logo e elementos sao os do site e do gerenciador — os tokens
+   * abaixo espelham projetos/site/tailwind.config.ts e o do gerenciador.
+   * Pagina desenhada em 1280x720; o render.js imprime o PDF.
+   */
+  @page { size: 1280px 720px; margin: 0; }
+
+  :root {
+    --navy: #15263D;
+    --ink: #1C1C1C;
+    --cream: #F5F2EC;
+    --gold: #B58B57;
+    --gray: #707070;
+    /* Derivados, nao cores novas (ver tailwind.config dos dois projetos). */
+    --navy-deep: #182230;
+    --navy-raised: #223248;
+    --cream-alt: #FBF9F5;
+    --cream-escuro: #EDE8DE;
+    /* Semanticas do gerenciador, separadas do acento. */
+    --ok: #3F6B57;
+    --alerta: #9B3B2E;
+
+    --muted-on-light: rgba(28, 28, 28, .68);
+    --muted-on-dark: rgba(245, 242, 236, .72);
+    --hairline: rgba(181, 139, 87, .28);
+    --fio: rgba(28, 28, 28, .13);
+
+    --sans: 'Montserrat', system-ui, sans-serif;
+    --serif: 'Cormorant Garamond', Georgia, serif;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: var(--sans); -webkit-font-smoothing: antialiased; background: var(--navy-deep); }
+
+  @media screen {
+    body { padding: 32px 0; }
+    .pg { margin: 0 auto 32px; }
+  }
+
+  .pg { width: 1280px; height: 720px; position: relative; overflow: hidden; isolation: isolate; break-after: page; }
+  .pg:last-child { break-after: auto; }
+  .abs { position: absolute; }
+
+  .escuro { background: var(--navy); color: var(--cream); }
+  .claro { background: var(--cream); color: var(--ink); }
+
+  /* Trama de sarja do site: diagonal a 45deg a cada 3px, creme a 4%. */
+  .escuro::before, .sarja::before {
+    content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background-image:
+      repeating-linear-gradient(45deg, rgba(245, 242, 236, .04) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(-45deg, rgba(28, 28, 28, .05) 0 1px, transparent 1px 4px);
+  }
+  /* Luz difusa: creme a 7%, nunca cor. A posicao muda por pagina. */
+  .escuro::after {
+    content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(var(--lw, 90%) var(--lh, 70%) at var(--lx, 50%) var(--ly, 0%), rgba(245, 242, 236, .07), transparent 70%);
+  }
+  .plano::after { display: none; }
+
+  /* Moldura hairline do hero do site: a borda da etiqueta. */
+  .moldura { position: absolute; inset: 24px; border: 1px solid var(--hairline); border-radius: 2px; pointer-events: none; }
+
+  /* ---------- Topo de pagina ---------- */
+  .topo {
+    position: absolute; top: 50px; left: 54px; right: 54px; z-index: 2;
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+    font-size: 10px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase;
+  }
+  .topo > :last-child { justify-self: end; }
+  .secao { display: flex; align-items: center; gap: 14px; }
+  .secao i { display: block; width: 32px; height: 1px; background: var(--gold); }
+  .escuro .secao { color: var(--gold); }
+  .claro .secao { color: var(--ink); }
+  .escuro .bb { color: var(--muted-on-dark); }
+  .claro .bb { color: var(--muted-on-light); }
+
+  /* ---------- Tipos ---------- */
+  .rot { font-size: 10px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; }
+  .txt { font-size: 13px; line-height: 1.65; }
+  .escuro .txt, .escuro .fraco { color: var(--muted-on-dark); }
+  .claro .txt, .claro .fraco { color: var(--muted-on-light); }
+  .disp { font-family: var(--serif); font-weight: 300; line-height: 1.05; }
+  .tit { font-size: 20px; font-weight: 600; letter-spacing: 0; }
+  .descritor { font-size: 11px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); white-space: nowrap; }
+  .descritor b { font-weight: 600; margin: 0 .75em; }
+  .leg { font-size: 9.5px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; }
+
+  /* ---------- Marca (igual a components/ui/Logo.tsx) ---------- */
+  .mono {
+    width: var(--t, 40px); height: var(--t, 40px); flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: max(1px, calc(var(--t, 40px) / 80)) solid var(--gold); border-radius: 2px;
+    color: var(--gold); font-family: var(--serif); font-weight: 400;
+    font-size: calc(var(--t, 40px) * .48); line-height: 1; letter-spacing: 0;
+  }
+  .marca { font-family: var(--sans); font-weight: 600; text-transform: uppercase; letter-spacing: .3em; margin-right: -.3em; white-space: nowrap; line-height: 1; }
+  /* Assinatura horizontal: monograma + logotipo, na proporcao do Logo md (40 / 11 / 12). */
+  .assin { display: inline-flex; align-items: center; gap: calc(var(--t, 40px) * .3); }
+  .assin .marca { font-size: calc(var(--t, 40px) * .275); }
+  .uma-cor .mono { border-color: currentColor; color: currentColor; }
+
+  /* ---------- Pesponto: traco 6 / intervalo 4, 1px ---------- */
+  .pesponto { position: absolute; pointer-events: none; overflow: visible; }
+  .pesponto rect { width: calc(100% - 1px); height: calc(100% - 1px); fill: none; stroke: var(--gold); stroke-width: 1; stroke-dasharray: 6 4; }
+  .costura { height: 1px; background: repeating-linear-gradient(to right, var(--gold) 0 6px, transparent 6px 10px); opacity: .75; }
+
+  /* ---------- Cartoes ---------- */
+  .card { position: relative; border-radius: 3px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .card > .leg { position: absolute; left: 22px; bottom: 20px; }
+  .c-navy { background: var(--navy); color: var(--cream); }
+  .c-preto { background: var(--ink); color: var(--cream); }
+  .c-claro { background: var(--cream-alt); color: var(--ink); border: 1px solid var(--fio); }
+  .c-navy > .leg, .c-preto > .leg { color: var(--muted-on-dark); }
+  .c-claro > .leg { color: var(--muted-on-light); }
+
+  /* ---------- Janela de navegador (aplicacoes) ---------- */
+  .janela { position: absolute; background: var(--cream-alt); border: 1px solid var(--fio); border-radius: 4px; overflow: hidden; box-shadow: 0 22px 44px -22px rgba(28, 28, 28, .45); }
+  .janela .barra { height: 22px; display: flex; align-items: center; gap: 6px; padding: 0 12px; border-bottom: 1px solid var(--fio); }
+  .janela .barra b { width: 7px; height: 7px; border-radius: 50%; background: rgba(28, 28, 28, .16); }
+  .janela img { display: block; width: 100%; height: calc(100% - 22px); object-fit: cover; object-position: top; }
+
+  /* ================= Paginas ================= */
+
+  /* Capa e contracapa */
+  .capa .frase { font-family: var(--serif); font-weight: 300; font-size: 22px; letter-spacing: 0; text-transform: none; }
+  .rodape { position: absolute; left: 54px; right: 54px; bottom: 54px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; }
+  .rodape > :last-child { justify-self: end; }
+  .rodape .leg { color: var(--muted-on-dark); }
+
+  /* 06 Paleta */
+  .paleta { position: absolute; left: 54px; right: 54px; top: 150px; height: 506px; display: flex; gap: 10px; }
+  .cor { border-radius: 3px; padding: 24px 22px; display: flex; flex-direction: column; justify-content: space-between; }
+  .cor .pct { font-size: 10px; font-weight: 600; letter-spacing: .12em; }
+  .cor h3 { font-size: 26px; font-weight: 600; letter-spacing: 0; line-height: 1.1; }
+  .cor .papel { font-size: 11.5px; line-height: 1.5; margin: 8px 0 16px; max-width: 26em; }
+  .cor .cod { font-size: 11px; line-height: 1.75; font-variant-numeric: tabular-nums; }
+  .cor.estreita { padding: 24px 18px; }
+  .cor.estreita h3 { font-size: 20px; }
+  .cor.estreita .cod { font-size: 10.5px; }
+
+  /* 07 / 08 Tipografia */
+  .tabela-tipo { position: absolute; }
+  .tabela-tipo .linha { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--fio); min-height: 58px; }
+  .escuro .tabela-tipo .linha { border-bottom-color: rgba(245, 242, 236, .14); }
+  .tabela-tipo .spec { font-size: 9px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; white-space: nowrap; text-align: right; }
+  .claro .tabela-tipo .spec { color: var(--muted-on-light); }
+  .escuro .tabela-tipo .spec { color: var(--muted-on-dark); }
+  .giz { display: inline-flex; align-items: center; gap: 12px; }
+  .giz::before { content: ''; width: 24px; height: 1px; background: var(--gold); }
+
+  /* 09 Elementos */
+  .elementos { position: absolute; left: 85px; top: 352px; width: 560px; display: grid; grid-template-columns: 1fr 1fr; gap: 34px 44px; }
+  .elementos .amostra { height: 16px; margin-bottom: 14px; display: flex; align-items: center; }
+  .elementos .rot { margin-bottom: 8px; }
+
+  /* 10 Interface (classes do gerenciador: .bt, .selo, .campo, .th) */
+  .ui { position: absolute; left: 54px; right: 54px; top: 112px; bottom: 55px; display: grid; grid-template-columns: 448px 345px 1fr; grid-template-rows: 1fr 1fr; gap: 18px; }
+  .ui .card { display: block; padding: 24px; }
+  .rot-ui { font-size: 10px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--muted-on-light); }
+  .bt { white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid; border-radius: 2px; padding: 12px 18px; font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; line-height: 1.4; }
+  .bt-cheio { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+  .bt-vazio { border-color: var(--fio); color: var(--muted-on-light); }
+  .link-ouro { font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); }
+  .selo { display: inline-block; white-space: nowrap; border-radius: 2px; padding: 5px 8px; font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; line-height: 1.4; }
+  .selo-ruim { background: var(--alerta); color: #fff; }
+  .selo-bom { background: var(--ok); color: #fff; }
+  .selo-neutro { border: 1px dashed var(--muted-on-light); color: var(--muted-on-light); }
+  .campo { width: 100%; border: 1px solid var(--fio); border-radius: 2px; background: #fff; padding: 10px 12px; font-size: 14px; color: var(--ink); display: flex; justify-content: space-between; }
+  .status { display: grid; grid-template-columns: 14px 92px 1fr; align-items: baseline; gap: 4px 10px; font-size: 13px; }
+  .status .ponto { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .status .nome { font-weight: 600; }
+  .status .nota { grid-column: 3; font-size: 11px; color: var(--muted-on-light); line-height: 1.45; }
+  .tab { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .tab th { text-align: left; font-size: 9.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--muted-on-light); padding: 0 10px 8px 0; border-bottom: 1px solid var(--fio); white-space: nowrap; }
+  .tab td { padding: 11px 10px 11px 0; border-bottom: 1px solid var(--fio); vertical-align: top; }
+  .tab .sub { display: block; font-size: 11.5px; color: var(--muted-on-light); margin-top: 2px; }
+
+  /* 12-14 Aplicacoes */
+  .cabeca-dir { position: absolute; right: 54px; top: 86px; text-align: right; font-size: 12.5px; line-height: 1.6; color: var(--muted-on-light); }
+  .escuro .cabeca-dir { color: var(--muted-on-dark); }
+  .post { border-radius: 3px; overflow: hidden; border: 1px solid var(--fio); }
+  .post img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+  /* 15 Usos incorretos */
+  .erros { position: absolute; left: 54px; right: 54px; top: 112px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 18px; }
+  .erro .card { height: 236px; }
+  .erro p { font-size: 12px; font-weight: 600; margin: 14px 0 30px; }
+  .x { position: absolute; top: 14px; right: 14px; width: 24px; height: 24px; border-radius: 50%; background: var(--alerta); color: #fff; display: grid; place-items: center; font-size: 13px; line-height: 1; }
+</style>
+</head>
+<body>
+
+<!-- ============ CAPA ============ -->
+<section class="pg escuro capa" style="--ly:-8%; --lw:80%; --lh:75%">
+  <div class="moldura"></div>
+  <div class="topo"><span>Brandbook</span><span class="frase">Excelência em cada detalhe.</span><span>2026</span></div>
+
+  <div class="abs" style="left:0; right:0; top:296px; text-align:center">
+    <div class="marca" style="font-size:66px; color:var(--cream)">Arte e Moda</div>
+    <div class="descritor" style="margin-top:34px">Uniformes<b>·</b>Private Label<b>·</b>Confecção Premium</div>
+  </div>
+
+  <div class="rodape">
+    <span class="leg">Identidade visual</span>
+    <p class="txt" style="font-size:11.5px; text-align:center; width:560px">Este guia reúne a identidade visual da Arte e Moda — logotipo, monograma, cores, tipografia e elementos — e as regras que mantêm tudo coerente, do site ao gerenciador, da etiqueta ao post.</p>
+    <span class="leg">Todos os direitos reservados</span>
+  </div>
+</section>
+
+<!-- ============ 01 LOGOTIPO ============ -->
+<section class="pg escuro" style="--lx:28%; --ly:55%; --lw:55%; --lh:80%">
+  <div class="topo"><span class="secao">01<i></i>Logotipo</span><span></span><span class="bb">Brandbook 2026</span></div>
+
+  <div class="abs" style="left:85px; top:300px">
+    <div class="marca" style="font-size:62px">Arte e Moda</div>
+    <div class="descritor" style="margin-top:30px">Uniformes<b>·</b>Private Label<b>·</b>Confecção Premium</div>
+  </div>
+
+  <div class="abs" style="left:845px; top:218px; width:370px">
+    <p class="rot">Lettering</p>
+    <p class="txt" style="margin-top:10px">ARTE E MODA em Montserrat SemiBold, caixa alta, com +30% de espaço entre as letras. É o espaçamento largo que dá o ar de etiqueta de alfaiataria.</p>
+    <p class="rot" style="margin-top:34px">Assinatura</p>
+    <p class="txt" style="margin-top:10px">“Uniformes · Private Label · Confecção Premium” em Montserrat SemiBold, caixa alta, +22%, em dourado. Acompanha o logotipo em materiais institucionais.</p>
+    <p class="rot" style="margin-top:34px">Regra</p>
+    <p class="txt" style="margin-top:10px">Use sempre os arquivos da pasta identidade/logo/. Não redigite, não distorça e não altere o espaço entre as letras.</p>
+  </div>
+</section>
+
+<!-- ============ 02 MONOGRAMA ============ -->
+<section class="pg claro">
+  <div class="topo"><span class="secao">02<i></i>Monograma</span><span></span><span class="bb">Brandbook 2026</span></div>
+
+  <span class="mono abs" style="--t:250px; left:250px; top:240px">AM</span>
+
+  <h2 class="disp abs" style="left:732px; top:176px; font-size:52px">As iniciais que<br>assinam a marca.</h2>
+  <p class="txt abs" style="left:732px; top:310px; width:410px">O monograma é o AM da marca em Cormorant Garamond, dentro de um quadrado com fio dourado. Funciona sozinho como ícone do gerenciador, foto de perfil, etiqueta e assinatura em peças pequenas.</p>
+
+  <div class="abs" style="left:732px; top:420px; display:flex; gap:34px; align-items:flex-end">
+    <figure style="text-align:center">
+      <div class="sarja" style="position:relative; isolation:isolate; width:116px; height:116px; border-radius:26px; overflow:hidden; background:var(--navy); display:grid; place-items:center; box-shadow:0 16px 30px -14px rgba(28,28,28,.55)"><span class="mono" style="--t:58px">AM</span></div>
+      <figcaption class="leg fraco" style="margin-top:18px">Ícone do app</figcaption>
+    </figure>
+    <figure style="text-align:center">
+      <div style="width:116px; height:116px; border-radius:50%; background:var(--navy); display:grid; place-items:center"><span class="mono" style="--t:56px">AM</span></div>
+      <figcaption class="leg fraco" style="margin-top:18px">Avatar</figcaption>
+    </figure>
+    <figure style="text-align:center; width:116px">
+      <div style="height:116px; display:grid; place-items:end center; padding-bottom:28px"><span class="mono" style="--t:28px">AM</span></div>
+      <figcaption class="leg fraco" style="margin-top:18px">Mínimo 28 px</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============ 03 VERSOES ============ -->
+<section class="pg claro">
+  <div class="topo"><span class="secao">03<i></i>Versões</span><span></span><span class="bb">Brandbook 2026</span></div>
+
+  <div class="abs" style="left:54px; right:54px; top:122px; bottom:55px; display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:1fr 1fr; gap:18px">
+    <div class="card c-navy"><span class="assin" style="--t:60px"><span class="mono">AM</span><span class="marca">Arte e Moda</span></span><span class="leg">Principal · negativo</span></div>
+    <div class="card c-claro"><span class="assin" style="--t:60px"><span class="mono">AM</span><span class="marca">Arte e Moda</span></span><span class="leg">Principal · positivo</span></div>
+    <div class="card c-preto"><span class="assin" style="--t:60px"><span class="mono">AM</span><span class="marca">Arte e Moda</span></span><span class="leg">Sobre preto</span></div>
+    <div class="card c-navy"><span class="mono" style="--t:100px">AM</span><span class="leg">Monograma · sobre azul</span></div>
+    <div class="card c-preto"><span class="mono" style="--t:100px">AM</span><span class="leg">Monograma · sobre preto</span></div>
+    <div class="card c-claro uma-cor" style="color:var(--navy)"><span class="mono" style="--t:100px">AM</span><span class="leg">Monograma · uma cor</span></div>
+  </div>
+</section>
+
+<!-- ============ 04 ASSINATURA HORIZONTAL ============ -->
+<section class="pg escuro plano">
+  <div class="topo"><span class="secao" style="color:var(--cream)">04<i></i>Assinatura horizontal</span><span></span><span class="bb">Brandbook 2026</span></div>
+
+  <div class="abs" style="inset:0; display:flex; align-items:center; justify-content:center; gap:48px">
+    <span class="assin" style="--t:108px"><span class="mono">AM</span><span class="marca">Arte e Moda</span></span>
+    <i style="display:block; width:1px; height:92px; background:rgba(245,242,236,.28)"></i>
+    <div class="descritor" style="font-size:12px; line-height:2.2">Uniformes<br>Private Label<br>Confecção Premium</div>
+  </div>
+</section>
+
+<!-- ============ 05 AREA DE PROTECAO ============ -->
+<section class="pg escuro" style="--lx:30%; --ly:50%; --lw:60%; --lh:80%">
+  <div class="topo"><span class="secao">05<i></i>Área de proteção</span><span></span><span class="bb">Brandbook 2026</span></div>
+
+  <div class="card c-claro abs" style="left:85px; top:172px; width:635px; height:403px">
+    <div style="position:relative; padding:80px; background:rgba(28,28,28,.045); border:1px dashed rgba(112,112,112,.75)">
+      <div style="background:var(--cream-alt); outline:1px solid rgba(112,112,112,.45); line-height:0">
+        <span class="assin" style="--t:80px"><span class="mono">AM</span><span class="marca">Arte e Moda</span></span>
+      </div>
+      <span class="abs disp" style="left:0; top:0; width:80px; height:80px; display:grid; place-items:center; background:rgba(28,28,28,.05); font-style:italic; font-size:22px; color:var(--muted-on-light)">x</span>
+      <span class="abs disp" style="right:0; top:0; width:80px; height:80px; display:grid; place-items:center; background:rgba(28,28,28,.05); font-style:italic; font-size:22px; color:var(--muted-on-light)">x</span>
+      <span class="abs disp" style="left:0; bottom:0; width:80px; height:80px; display:grid; place-items:center; background:rgba(28,28,28,.05); font-style:italic; font-size:22px; color:var(--muted-on-light)">x</span>
+      <span class="abs disp" style="right:0; bottom:0; width:80px; height:80px; display:grid; place-items:center; background:rgba(28,28,28,.05); font-style:italic; font-size:22px; color:var(--muted-on-light)">x</span>
+    </div>
+  </div>
+
+  <div class="abs" style="left:785px; top:214px; width:390px">
+    <h3 class="tit">Área de proteção</h3>
+    <p class="txt" style="margin-top:10px">Nenhum texto, imagem ou borda entra no espaço ao redor da assinatura. A medida <em class="disp" style="font-size:17px">x</em> é a altura do monograma e cresce junto com o logo.</p>
+
+    <h3 class="tit" style="margin-top:34px">Tamanho mínimo</h3>
+    <div id="minimo" style="margin-top:16px; display:inline-flex; align-items:center; gap:12px">
+      <span class="mono" style="--t:32px">AM</span><span class="marca" style="font-size:10px; letter-spacing:.28em">Arte e Moda</span>
+    </div>
+    <p style="margin-top:12px; font-size:11px; line-height:1.6">Assinatura horizontal<br><span class="fraco">Tela: 145 px de largura (o tamanho pequeno do site) · impresso: 35 mm</span></p>
+    <p class="txt" style="margin-top:12px">Abaixo disso, use só o monograma — mínimo de 28 px na tela e 8 mm no impresso.</p>
+    <p style="margin-top:14px; display:inline-block; border:1px dashed var(--muted-on-dark); border-radius:2px; padding:6px 10px; font-size:10.5px; line-height:1.5; color:var(--muted-on-dark)">TODO: confirmar com o parceiro de bordado o tamanho mínimo do monograma bordado.</p>
+  </div>
+</section>
+
+<!-- ============ 06 PALETA ============ -->
+<section class="pg claro">
+  <div class="topo"><span class="secao">06<i></i>Paleta de cores</span><span></span><span class="bb">Brandbook 2026</span></div>
+  <p class="cabeca-dir">A largura de cada cor mostra o quanto ela aparece na marca:<br>o azul marinho e o creme dominam, o dourado entra só como acento.</p>
+
+  <div class="paleta">
+    <div class="cor" style="flex:0 0 368px; background:var(--navy); color:var(--cream)">
+      <span class="pct">40%</span>
+      <div><h3>Azul marinho</h3><p class="papel" style="color:var(--muted-on-dark)">Base. Fundo do site, topo do gerenciador, etiqueta e tag.</p>
+      <p class="cod" style="color:var(--muted-on-dark)">HEX #15263D<br>RGB 21 38 61<br>CMYK 66 38 0 76</p></div>
+    </div>
+    <div class="cor" style="flex:0 0 286px; background:var(--cream-alt); border:1px solid var(--fio); color:var(--ink)">
+      <span class="pct">30%</span>
+      <div><h3>Creme</h3><p class="papel" style="color:var(--muted-on-light)">Fundo claro. Base do gerenciador e das páginas claras.</p>
+      <p class="cod" style="color:var(--muted-on-light)">HEX #F5F2EC<br>RGB 245 242 236<br>CMYK 0 1 4 4</p></div>
+    </div>
+    <div class="cor" style="flex:0 0 178px; background:var(--ink); color:var(--cream)">
+      <span class="pct">15%</span>
+      <div><h3>Preto</h3><p class="papel" style="color:var(--muted-on-dark)">Texto forte.</p>
+      <p class="cod" style="color:var(--muted-on-dark)">HEX #1C1C1C<br>RGB 28 28 28<br>CMYK 0 0 0 89</p></div>
+    </div>
+    <div class="cor estreita" style="flex:0 0 156px; background:var(--gray); color:var(--cream)">
+      <span class="pct">10%</span>
+      <div><h3>Cinza</h3><p class="papel">Só linha e rótulo. Nunca em texto corrido.</p>
+      <p class="cod">HEX #707070<br>RGB 112 112 112<br>CMYK 0 0 0 56</p></div>
+    </div>
+    <div class="cor estreita" style="flex:1 1 auto; background:var(--gold); color:var(--ink)">
+      <span class="pct">5%</span>
+      <div><h3>Dourado</h3><p class="papel">Acento. CTA e monograma.</p>
+      <p class="cod">HEX #B58B57<br>RGB 181 139 87<br>CMYK 0 23 52 29</p></div>
+    </div>
+  </div>
+  <p class="abs fraco" style="left:54px; top:672px; font-size:10.5px">CMYK aproximado, convertido do HEX. Peça prova de cor à gráfica antes de imprimir.</p>
+</section>
+
+<!-- ============ 07 TIPOGRAFIA ============ -->
+<section class="pg claro">
+  <div class="topo"><span class="secao">07<i></i>Tipografia</span><span></span><span class="bb">Brandbook 2026</span></div>
+
+  <div class="abs" style="left:52px; top:118px; font-size:250px; line-height:1; letter-spacing:-.02em"><span style="font-weight:400">A</span><span style="font-weight:700">a</span></div>
+
+  <div class="abs" style="left:470px; top:140px; font-size:27px; line-height:44px">
+    <div style="font-weight:400">Regular</div>
+    <div style="font-weight:500">Medium</div>
+    <div style="font-weight:600">SemiBold</div>
+    <div style="font-weight:700">Bold</div>
+  </div>
+  <p class="abs fraco" style="left:470px; top:340px; font-size:12px; line-height:1.85; white-space:nowrap">Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm<br>Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz<br>0123456789 R$ % @ &amp; ! ?</p>
+
+  <div class="tabela-tipo" style="left:808px; right:54px; top:128px; border-top:1px solid var(--ink)">
+    <div class="linha"><span style="font-size:18px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; white-space:nowrap">Título de seção</span><span class="spec">SemiBold · +14%</span></div>
+    <div class="linha"><span style="font-size:26px; font-weight:700">Título de tela</span><span class="spec">Bold · gerenciador</span></div>
+    <div class="linha"><span style="font-size:15px">Texto corrido, claro e direto.</span><span class="spec">Regular · 17 / 170%</span></div>
+    <div class="linha"><span class="giz rot">Sobretítulo</span><span class="spec">SemiBold · caixa alta · +22%</span></div>
+    <div class="linha"><span style="font-size:32px; font-weight:700; font-variant-numeric:tabular-nums">R$ 1.234,56</span><span class="spec">Valores · Bold</span></div>
+  </div>
+  <div class="abs" style="left:808px; top:476px; width:418px; font-size:11.5px; line-height:1.6">
+    <p style="font-weight:600">Caixa alta sempre com espaçamento largo.</p>
+    <p class="fraco">Texto secundário usa a própria paleta com transparência — preto a 68% no claro, creme a 72% no escuro. Nunca o cinza #707070.</p>
+  </div>
+
+  <div class="abs" style="left:54px; top:606px">
+    <h3 style="font-size:30px; font-weight:600">Montserrat</h3>
+    <p class="fraco" style="font-size:12px; margin-top:6px">Fonte da interface: títulos de seção, rótulos, botões e textos do site, do gerenciador e de todos os materiais.</p>
+  </div>
+</section>
+
+<!-- ============ 08 TIPOGRAFIA DISPLAY ============ -->
+<section class="pg escuro" style="--lx:22%; --ly:45%; --lw:55%; --lh:80%">
+  <div class="topo"><span class="secao">08<i></i>Tipografia display</span><span></span><span class="bb">Brandbook 2026</span></div>
+
+  <div class="abs disp" style="left:50px; top:96px; font-size:270px; line-height:1">AM</div>
+
+  <div class="abs" style="left:490px; top:136px; font-family:var(--serif); font-size:36px; line-height:48px">
+    <div style="font-weight:300">Light</div>
+    <div style="font-weight:400">Regular</div>
+  </div>
+  <p class="abs fraco" style="left:490px; top:256px; font-family:var(--serif); font-size:16.5px; line-height:1.75; white-space:nowrap">Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm<br>Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz<br>0 1 2 3 4 5 6 7 8 9</p>
+
+  <div class="tabela-tipo" style="left:811px; right:54px; top:128px; border-top:1px solid rgba(245,242,236,.7)">
+    <div class="linha"><span class="disp" style="font-size:44px">Uniformes</span><span class="spec">Título · Light · 40 px ou mais</span></div>
+    <div class="linha"><span class="disp" style="font-size:44px">01&nbsp; 02&nbsp; 03</span><span class="spec">Números grandes · Light</span></div>
+    <div class="linha"><span class="disp" style="font-size:30px; font-weight:400">Vestimos propósitos.</span><span class="spec">Citação · Regular</span></div>
+    <div class="linha"><span class="mono" style="--t:36px">AM</span><span class="spec">Monograma · Regular</span></div>
+  </div>
+  <div class="abs" style="left:811px; top:448px; width:415px; font-size:11.5px; line-height:1.6">
+    <p style="font-weight:600">Só em tamanho grande.</p>
+    <p class="fraco">Light a partir de 40 px. Entre 28 e 40 px o peso sobe para Regular. Abaixo de 28 px não se usa a serifa — volta a Montserrat.</p>
+  </div>
+
+  <div class="abs" style="left:54px; top:600px">
+    <h3 class="disp" style="font-size:34px; font-weight:400">Cormorant Garamond</h3>
+    <p class="fraco" style="font-size:12px; margin-top:6px">Fonte display: títulos grandes, números, citações e o monograma.</p>
+  </div>
+</section>
+
+<!-- ============ 09 ELEMENTOS ============ -->
+<section class="pg escuro" style="--lx:74%; --ly:52%; --lw:45%; --lh:75%">
+  <div class="topo"><span class="secao">09<i></i>Elementos</span><span></span><span class="bb">Brandbook 2026</span></div>
+
+  <h2 class="disp abs" style="left:85px; top:228px; font-size:56px">Fio, trama e pesponto.</h2>
+
+  <div class="elementos">
+    <div>
+      <div class="amostra"><div class="costura" style="width:84px"></div></div>
+      <p class="rot">Pesponto</p>
+      <p class="txt">Traço 6 / intervalo 4, 1 px, dourado. Acompanha emenda entre painéis e perímetro de bloco aplicado — nunca solto no meio da tela.</p>
+    </div>
+    <div>
+      <div class="amostra"><div class="sarja" style="position:relative; isolation:isolate; width:84px; height:16px; background:var(--navy-raised); border-radius:2px"></div></div>
+      <p class="rot">Trama de sarja</p>
+      <p class="txt">Diagonal a 45° a cada 3 px, creme a 4%. É a textura dos fundos escuros, no lugar de gradiente colorido.</p>
+    </div>
+    <div>
+      <div class="amostra"><span class="giz rot" style="color:var(--gold)">Sobretítulo</span></div>
+      <p class="rot">Risco de giz</p>
+      <p class="txt">Traço dourado de 24 px antes de todo sobretítulo, como a marca do alfaiate no tecido.</p>
+    </div>
+    <div>
+      <div class="amostra"><div style="width:84px; height:16px; border:1px solid var(--hairline); border-radius:2px"></div></div>
+      <p class="rot">Moldura</p>
+      <p class="txt">Fio dourado a 28% contornando a capa e o topo do site: a borda da etiqueta.</p>
+    </div>
+  </div>
+
+  <div class="abs sarja" style="left:680px; top:172px; width:546px; height:404px; background:var(--navy-raised); border-radius:2px; isolation:isolate">
+    <svg class="pesponto" style="inset:14px; width:calc(100% - 28px); height:calc(100% - 28px); opacity:.55"><rect x=".5" y=".5" rx="2"/></svg>
+    <div class="abs" style="left:44px; right:44px; top:44px; bottom:44px; display:flex; flex-direction:column">
+      <span class="giz rot" style="color:var(--gold)">Orçamento</span>
+      <h3 class="disp" style="font-size:46px; margin-top:auto">Solicite um orçamento.</h3>
+      <p class="leg" style="margin-top:18px; color:var(--muted-on-dark); font-weight:500">Escolar <span style="color:var(--gold); margin:0 .6em">·</span> Empresarial <span style="color:var(--gold); margin:0 .6em">·</span> Private label</p>
+      <div style="margin-top:34px; display:flex; align-items:center; justify-content:space-between">
+        <span class="leg" style="color:var(--muted-on-dark); white-space:nowrap">Pedido mínimo de 30 peças</span>
+        <span style="display:inline-flex; align-items:center; gap:10px; background:var(--gold); color:var(--ink); border-radius:2px; padding:0 20px; height:42px; font-size:10px; font-weight:600; letter-spacing:.18em; text-transform:uppercase; white-space:nowrap">Solicitar orçamento <span style="letter-spacing:0">→</span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 10 INTERFACE ============ -->
+<section class="pg claro">
+  <div class="topo"><span class="secao">10<i></i>Interface</span><span></span><span class="bb">Brandbook 2026</span></div>
+
+  <div class="ui">
+    <div class="card c-claro">
+      <p class="rot-ui">Botões</p>
+      <div style="display:flex; align-items:center; gap:10px; margin-top:14px">
+        <span class="bt bt-cheio">Novo produto</span>
+        <span class="bt bt-vazio">Fazer contagem</span>
+      </div>
+      <p class="fraco" style="font-size:11px; margin-top:12px">Dourado cheio só no botão principal, um por tela. Link de ação: <span class="link-ouro">Extrato →</span></p>
+      <p class="rot-ui" style="margin-top:26px">Selos de status</p>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px">
+        <span class="selo selo-ruim">181 dias</span>
+        <span class="selo selo-bom">Em dia</span>
+        <span class="selo selo-neutro">Rascunho</span>
+        <span class="selo selo-neutro">Loja</span>
+      </div>
+    </div>
+
+    <div class="card c-claro">
+      <p class="rot-ui">Cartão de alerta</p>
+      <div style="margin-top:14px; border:1px solid var(--alerta); border-radius:3px; background:var(--cream-alt); padding:18px 20px">
+        <p class="rot-ui" style="color:var(--ink)">Abaixo do mínimo</p>
+        <p style="font-size:40px; font-weight:700; color:var(--alerta); line-height:1.1; margin-top:8px">3</p>
+        <p class="fraco" style="font-size:13px; margin-top:4px">itens de tecido e aviamento</p>
+        <p class="link-ouro" style="margin-top:16px">Ver o que comprar →</p>
+      </div>
+      <p class="fraco" style="font-size:11px; margin-top:12px; line-height:1.5">O que exige ação lidera a tela.</p>
+    </div>
+
+    <div class="card c-claro">
+      <p class="rot-ui">Cores de status</p>
+      <div class="status" style="margin-top:16px">
+        <span class="ponto" style="background:var(--ok)"></span><span class="nome">Em dia</span><span class="fraco" style="font-size:11px">#3F6B57</span>
+        <span class="ponto" style="background:var(--alerta); margin-top:10px"></span><span class="nome" style="margin-top:10px">Alerta</span><span class="fraco" style="font-size:11px; margin-top:10px">#9B3B2E</span>
+        <span class="nota">Atraso, abaixo do mínimo, preço que subiu.</span>
+        <span class="ponto" style="border:1px dashed var(--muted-on-light); border-radius:2px; margin-top:10px"></span><span class="nome" style="margin-top:10px">Neutro</span><span class="fraco" style="font-size:11px; margin-top:10px">tracejado</span>
+        <span class="nota">O meio-termo vai na forma, não numa terceira cor.</span>
+        <span class="ponto" style="background:var(--gold); margin-top:10px"></span><span class="nome" style="margin-top:10px">Ação</span><span class="fraco" style="font-size:11px; margin-top:10px">#B58B57</span>
+      </div>
+    </div>
+
+    <div class="card c-claro">
+      <p class="rot-ui">Campos</p>
+      <p class="rot-ui" style="margin-top:16px; font-size:9.5px">Nome do produto</p>
+      <div class="campo" style="margin-top:6px; border-color:var(--gold)">Malha piquê</div>
+      <p class="rot-ui" style="margin-top:16px; font-size:9.5px">WhatsApp do cliente</p>
+      <div class="campo" style="margin-top:6px; border-color:var(--alerta)"><span style="color:rgba(28,28,28,.35)">(11)</span></div>
+      <p style="margin-top:6px; font-size:12px; color:var(--alerta); font-weight:500">Informe um WhatsApp com DDD.</p>
+      <p class="fraco" style="font-size:11px; margin-top:10px">O erro diz o que fazer, nunca “campo inválido”.</p>
+    </div>
+
+    <div class="card c-claro" style="grid-column:2 / 4">
+      <p class="rot-ui">Tabela</p>
+      <table class="tab" style="margin-top:14px">
+        <tr><th>Produto</th><th>Setor</th><th>Tem</th><th>Custo médio</th><th>Parado há</th></tr>
+        <tr><td style="font-weight:600">Malha PV<span class="sub">Azul marinho</span></td><td><span class="selo selo-neutro">Tecido</span></td><td style="font-weight:600">128,00 m</td><td>19,45</td><td>13 dias</td></tr>
+        <tr><td style="font-weight:600">Elástico 20 mm<span class="sub">Branco</span></td><td><span class="selo selo-neutro">Elástico</span></td><td style="font-weight:600">8,00 m<span class="sub" style="color:var(--alerta)">mínimo 30,00 m</span></td><td>0,90</td><td><span class="selo selo-ruim">181 dias</span></td></tr>
+      </table>
+      <div style="display:flex; gap:40px; margin-top:16px; font-size:11.5px; line-height:1.55">
+        <p><span class="rot-ui" style="font-size:9.5px">Código de máquina</span><br><span style="font-family:var(--mono); font-size:13px">7891000000029</span><br><span class="fraco">IBM Plex Mono, só em SKU, nº de ordem e código de barras.</span></p>
+        <p><span class="rot-ui" style="font-size:9.5px">Cantos e toque</span><br><span style="font-size:13px; font-weight:600">2 a 3 px · alvo de 44 px</span><br><span class="fraco">Usado em pé, no tablet, na fábrica.</span></p>
+      </div>
+    </div>
+  </div>
+  <p class="abs fraco" style="right:54px; top:672px; font-size:10.5px">Valores ilustrativos.</p>
+</section>
+
+<!-- ============ 11 APLICACAO NO SITE ============ -->
+<section class="pg claro">
+  <div class="topo"><span class="secao">11<i></i>Aplicação no site</span><span></span><span class="bb">Brandbook 2026</span></div>
+  <p class="cabeca-dir">O site é escuro-dominante: azul marinho com trama de sarja,<br>Cormorant nos títulos grandes, dourado só no botão principal e no fio.</p>
+
+  <div class="janela" style="left:54px; top:150px; width:700px; height:460px"><div class="barra"><b></b><b></b><b></b></div><img src="imagens/site-home.jpg" alt=""></div>
+  <div class="janela" style="left:774px; top:150px; width:452px; height:220px"><div class="barra"><b></b><b></b><b></b></div><img src="imagens/site-processo.jpg" alt=""></div>
+  <div class="janela" style="left:774px; top:390px; width:452px; height:220px"><div class="barra"><b></b><b></b><b></b></div><img src="imagens/site-escolas.jpg" alt=""></div>
+
+  <p class="leg abs fraco" style="left:54px; top:640px">Início · computador</p>
+  <p class="leg abs fraco" style="left:774px; top:640px">Como produzimos · Para escolas</p>
+</section>
+
+<!-- ============ 12 APLICACAO NO GERENCIADOR ============ -->
+<section class="pg claro">
+  <div class="topo"><span class="secao">12<i></i>Aplicação no gerenciador</span><span></span><span class="bb">Brandbook 2026</span></div>
+  <p class="cabeca-dir">No sistema a inversão é deliberada: fundo creme e azul só no topo,<br>porque ele é usado em pé, no chão de fábrica, sob luz forte. Telas com dados de exemplo.</p>
+
+  <div class="janela" style="left:54px; top:150px; width:700px; height:460px"><div class="barra"><b></b><b></b><b></b></div><img src="imagens/gerenciador-visao.jpg" alt=""></div>
+  <div class="janela" style="left:774px; top:150px; width:452px; height:220px"><div class="barra"><b></b><b></b><b></b></div><img src="imagens/gerenciador-estoque.jpg" alt=""></div>
+  <div class="janela" style="left:774px; top:390px; width:452px; height:220px"><div class="barra"><b></b><b></b><b></b></div><img src="imagens/gerenciador-vendas.jpg" alt=""></div>
+
+  <p class="leg abs fraco" style="left:54px; top:640px">Visão geral</p>
+  <p class="leg abs fraco" style="left:774px; top:640px">Estoque · Vendas</p>
+</section>
+
+<!-- ============ 13 APLICACAO NO INSTAGRAM ============ -->
+<section class="pg claro">
+  <div class="topo"><span class="secao">13<i></i>Aplicação no Instagram</span><span></span><span class="bb">Brandbook 2026</span></div>
+  <p class="cabeca-dir">Carrossel 4:5 que alterna azul marinho e creme.<br>A capa abre no azul; o fechamento traz o monograma e o pedido de orçamento.</p>
+
+  <div class="abs" style="left:54px; right:54px; top:150px; display:grid; grid-template-columns:repeat(4,1fr); gap:28px">
+    <figure><div class="post" style="height:340px"><img src="imagens/post-01.jpg" alt=""></div><figcaption class="leg fraco" style="margin-top:18px">Capa</figcaption></figure>
+    <figure><div class="post" style="height:340px"><img src="imagens/post-02.jpg" alt=""></div><figcaption class="leg fraco" style="margin-top:18px">Etapa</figcaption></figure>
+    <figure><div class="post" style="height:340px"><img src="imagens/post-04.jpg" alt=""></div><figcaption class="leg fraco" style="margin-top:18px">Destaque</figcaption></figure>
+    <figure><div class="post" style="height:340px"><img src="imagens/post-07.jpg" alt=""></div><figcaption class="leg fraco" style="margin-top:18px">Chamada</figcaption></figure>
+  </div>
+
+  <div class="abs" style="left:54px; right:54px; top:652px; display:flex; gap:48px; font-size:11.5px">
+    <p><b style="font-weight:600">Ordem:</b> <span class="fraco">capa azul · etapas alternam azul e creme · fechamento com CTA</span></p>
+    <p><b style="font-weight:600">Margem:</b> <span class="fraco">80 px nas laterais e moldura a 36 px, no arquivo de 1080 × 1350</span></p>
+    <p><b style="font-weight:600">Texto:</b> <span class="fraco">só o que está confirmado</span></p>
+  </div>
+</section>
+
+<!-- ============ 14 APLICACOES DE MARCA ============ -->
+<section class="pg escuro plano">
+  <div class="topo"><span class="secao">14<i></i>Aplicações de marca</span><span></span><span class="bb">Brandbook 2026</span></div>
+
+  <!-- Etiqueta tecida sobre tecido -->
+  <div class="abs sarja" style="left:54px; top:104px; width:578px; height:528px; background:var(--navy-deep); border-radius:3px; isolation:isolate; overflow:hidden">
+    <div class="abs" style="left:128px; top:196px; width:322px; height:120px; transform:rotate(-5deg); background:var(--navy); border-radius:2px; box-shadow:0 16px 30px -8px rgba(0,0,0,.6);
+      background-image:repeating-linear-gradient(0deg, rgba(245,242,236,.045) 0 1px, transparent 1px 2px), repeating-linear-gradient(90deg, rgba(28,28,28,.12) 0 1px, transparent 1px 2px); display:grid; place-items:center">
+      <svg class="pesponto" style="inset:8px; width:calc(100% - 16px); height:calc(100% - 16px); opacity:.7"><rect x=".5" y=".5"/></svg>
+      <span class="assin" style="--t:46px; color:var(--cream)"><span class="mono">AM</span><span class="marca">Arte e Moda</span></span>
+    </div>
+    <div class="abs" style="left:372px; top:356px; width:84px; height:84px; transform:rotate(7deg); background:var(--navy); border-radius:2px; box-shadow:0 12px 24px -8px rgba(0,0,0,.6);
+      background-image:repeating-linear-gradient(0deg, rgba(245,242,236,.045) 0 1px, transparent 1px 2px), repeating-linear-gradient(90deg, rgba(28,28,28,.12) 0 1px, transparent 1px 2px); display:grid; place-items:center">
+      <svg class="pesponto" style="inset:6px; width:calc(100% - 12px); height:calc(100% - 12px); opacity:.7"><rect x=".5" y=".5"/></svg>
+      <span class="mono" style="--t:38px">AM</span>
+    </div>
+  </div>
+
+  <!-- Tag, verso e cartao -->
+  <div class="abs" style="left:649px; top:104px; width:577px; height:528px; background:linear-gradient(160deg, var(--cream) 0%, var(--cream-escuro) 100%); border-radius:3px; overflow:hidden">
+    <div class="abs" style="left:146px; top:-20px; width:1.5px; height:118px; background:rgba(28,28,28,.4); transform:rotate(-4deg); transform-origin:bottom"></div>
+    <div class="abs sarja" style="left:62px; top:84px; width:172px; height:276px; transform:rotate(-7deg); background:var(--navy); border-radius:4px; isolation:isolate; box-shadow:0 24px 40px -16px rgba(28,28,28,.6); display:flex; flex-direction:column; align-items:center; color:var(--cream)">
+      <span style="margin-top:22px; width:14px; height:14px; border-radius:50%; background:var(--cream-escuro); box-shadow:inset 0 1px 2px rgba(28,28,28,.35)"></span>
+      <svg class="pesponto" style="inset:10px; width:calc(100% - 20px); height:calc(100% - 20px); opacity:.55"><rect x=".5" y=".5" rx="2"/></svg>
+      <span class="mono" style="--t:62px; margin-top:58px">AM</span>
+      <span class="marca" style="font-size:9px; margin-top:20px">Arte e Moda</span>
+    </div>
+    <div class="abs" style="left:300px; top:66px; width:222px; height:150px; transform:rotate(5deg); background:var(--cream-alt); border-radius:3px; box-shadow:0 18px 34px -16px rgba(28,28,28,.45); padding:18px 20px; color:var(--ink)">
+      <span class="marca" style="font-size:8.5px">Arte e Moda</span>
+      <div style="margin-top:16px; font-size:9px; line-height:2.1; letter-spacing:.16em; text-transform:uppercase">
+        <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--fio)"><span style="color:var(--muted-on-light)">Composição</span><span style="color:var(--muted-on-light); letter-spacing:0; text-transform:none">[por peça]</span></div>
+        <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--fio)"><span style="color:var(--muted-on-light)">Tamanho</span><span style="color:var(--muted-on-light); letter-spacing:0; text-transform:none">[por peça]</span></div>
+        <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--fio)"><span style="color:var(--muted-on-light)">Cuidados</span><span style="color:var(--muted-on-light); letter-spacing:0; text-transform:none">[por peça]</span></div>
+      </div>
+    </div>
+    <div class="abs" style="left:286px; top:300px; width:240px; height:140px; transform:rotate(-3deg); background:var(--cream-alt); border-radius:3px; box-shadow:0 18px 34px -16px rgba(28,28,28,.45); padding:20px 22px; color:var(--ink); display:flex; flex-direction:column">
+      <span class="assin" style="--t:26px"><span class="mono">AM</span><span class="marca">Arte e Moda</span></span>
+      <div style="margin-top:auto">
+        <p style="font-size:12.5px; font-weight:600">[Nome Sobrenome]</p>
+        <p style="font-size:10.5px; color:var(--muted-on-light)">[Cargo]</p>
+        <p style="font-size:9.5px; margin-top:6px; color:var(--muted-on-light)">(11) 94747-3375 · @arteemoda.br</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="leg abs" style="left:54px; top:652px">Etiqueta tecida</p>
+  <p class="leg abs fraco" style="left:432px; width:200px; top:652px; text-align:right">Uniformes e peças</p>
+  <p class="leg abs" style="left:649px; top:652px">Tag e cartão</p>
+  <p class="leg abs fraco" style="right:54px; top:652px">Papelaria</p>
+</section>
+
+<!-- ============ 15 USOS INCORRETOS ============ -->
+<section class="pg claro">
+  <div class="topo"><span class="secao">15<i></i>Usos incorretos</span><span></span><span class="bb">Brandbook 2026</span></div>
+
+  <div class="erros">
+    <div class="erro"><div class="card c-claro"><span class="assin" style="--t:52px; transform:scale(1.5, .78)"><span class="mono">AM</span><span class="marca">Arte e Moda</span></span><span class="x">✕</span></div><p>Não distorcer nem esticar</p></div>
+    <div class="erro"><div class="card c-claro"><span class="assin" style="--t:52px"><span class="mono" style="border-color:#2F6FDB; color:#2F6FDB">AM</span><span class="marca" style="color:#C7432C">Arte e Moda</span></span><span class="x">✕</span></div><p>Não usar cores fora da paleta</p></div>
+    <div class="erro"><div class="card c-claro"><span class="assin" style="--t:52px; filter:drop-shadow(3px 5px 3px rgba(0,0,0,.45))"><span class="mono">AM</span><span class="marca">Arte e Moda</span></span><span class="x">✕</span></div><p>Não aplicar sombra ou efeitos</p></div>
+    <div class="erro"><div class="card c-claro" style="background:url(imagens/fabrica-linha-costura.jpg) center / cover"><span class="assin" style="--t:52px; color:var(--cream)"><span class="mono">AM</span><span class="marca">Arte e Moda</span></span><span class="x">✕</span></div><p>Não usar sobre fundo poluído</p></div>
+    <div class="erro"><div class="card" style="background:var(--gold)"><span class="assin uma-cor" style="--t:52px; color:var(--navy)"><span class="mono">AM</span><span class="marca">Arte e Moda</span></span><span class="x">✕</span></div><p>Não usar dourado como fundo</p></div>
+    <div class="erro"><div class="card c-claro"><span style="font-family:'Snell Roundhand', 'Brush Script MT', cursive; font-size:46px">Arte e Moda</span><span class="x">✕</span></div><p>Não redigitar em outra fonte</p></div>
+  </div>
+</section>
+
+<!-- ============ CONTRACAPA ============ -->
+<section class="pg escuro" style="--ly:-8%; --lw:80%; --lh:75%">
+  <div class="moldura"></div>
+  <h2 class="disp abs" style="left:0; right:0; top:262px; text-align:center; font-size:64px; line-height:1.12">Vestimos propósitos.<br>Fortalecemos marcas.</h2>
+  <div class="rodape" style="align-items:center">
+    <span class="leg" style="color:var(--muted-on-dark)">Arte e Moda · São Paulo</span>
+    <span class="mono" style="--t:44px">AM</span>
+    <span class="leg" style="color:var(--muted-on-dark)">Brandbook 2026</span>
+  </div>
+</section>
+
+</body>
+</html>

@@ -8,13 +8,14 @@ const opcoes = [
   { valor: 'hoje', rotulo: 'Hoje' },
   { valor: '7d', rotulo: '7 dias' },
   { valor: '30d', rotulo: '30 dias' },
+  { valor: 'mes', rotulo: 'Este mês' },
 ];
 
-export function SeletorPeriodo() {
+export function SeletorPeriodo({ padrao = 'hoje' }: { padrao?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const atual = searchParams.get('periodo') ?? 'hoje';
+  const atual = searchParams.get('periodo') ?? padrao;
 
   const [aberto, setAberto] = useState(atual === 'personalizado');
   const [inicio, setInicio] = useState(searchParams.get('inicio') ?? '');

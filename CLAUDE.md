@@ -20,6 +20,10 @@ Pra qualquer tarefa visual (carrossel, post, landing page), consultar `identidad
 
 Não é necessário listar o que foi lido nem confirmar a leitura. Apenas usar o contexto naturalmente.
 
+### Salvar no GitHub: sempre
+
+Regra do usuário (25/10/2026): **toda alteração feita no projeto vai para o GitHub assim que termina**. Commit e push a cada mudança concluída, sem esperar pedido e sem deixar acumular, pelo fluxo da skill `/salvar`. Nunca subir `.env`, chave ou senha, nem o banco do app (`projetos/gerenciador/prisma/dev.db`), que vai ter dados reais da empresa.
+
 ### Fluxo de trabalho com Skills
 
 Antes de executar qualquer tarefa, verificar se existe skill relevante em `.claude/skills/`. Se encontrar, seguir as instruções da skill. Se não encontrar, executar a tarefa normalmente.
@@ -65,8 +69,10 @@ Monorepo com dois projetos Next.js independentes, da mesma marca:
 
 ```
 projetos/site/          Site institucional  → porta 3000  (captação de leads)
-projetos/gerenciador/   Sistema de gestão   → porta 3100  (uso interno da dona)
+projetos/gerenciador/   App de gestão       → porta 3100  (uso interno da dona)
 ```
+
+Na conversa com o usuário e com a dona, o gerenciador se chama **app**. A pasta continua `projetos/gerenciador`.
 
 Cada um tem o próprio `package.json` e o próprio `node_modules`. **Rode `npm` sempre de dentro da pasta do projeto**, nunca da raiz.
 
@@ -89,6 +95,8 @@ Fontes: **Montserrat** (interface, títulos em caixa alta com tracking largo) e 
 Duas regras que já estão no código e precisam continuar valendo:
 - **Dourado é acento, não preenchimento.** Preenchimento sólido em dourado existe só no CTA primário e no monograma. Em qualquer outro lugar é traço de 1px ou tipografia pequena.
 - **`#707070` não vai em texto corrido.** Reprova contraste AA nos dois fundos (4,43:1 no creme, 3,08:1 no navy). É cor de linha e label. Texto secundário usa alpha da própria paleta: `rgba(28,28,28,.68)` no claro, `rgba(245,242,236,.72)` no escuro.
+
+Arquivos da marca ficam em `identidade/` (ver `identidade/LEIA-ME.md`): brandbook em PDF e a fonte dele, e a logo em PNG transparente e PDF vetorial em `identidade/logo/`, gerada por `logo/exportar.js` a partir da mesma logo do site.
 
 ---
 
@@ -117,7 +125,7 @@ Next.js App Router + TypeScript + Tailwind + Framer Motion. Existe para receber 
 
 ---
 
-## 6. projetos/gerenciador — gestão interna
+## 6. projetos/gerenciador — o app de gestão interna
 
 Next.js App Router + TypeScript + Tailwind + Prisma. **SQLite hoje**, para rodar sem depender de conta externa. O schema foi escrito para portar: nenhum `enum` do Prisma, tudo inteiro. Trocar o provider é a migração.
 
@@ -128,6 +136,8 @@ Quem usa não é usuária de software. **Se uma tela precisa de treinamento, ela
 Nada faz `UPDATE` em quantidade. Correção vira lançamento novo de ajuste, com motivo obrigatório e autor. Toda escrita de estoque passa por `lancar()` em `src/lib/estoque.ts` — não escreva em `MovimentoEstoque` direto de lugar nenhum.
 Cada lançamento congela o saldo e o custo médio **depois** dele, para o extrato ser auditável e a consulta barata.
 
+O caixa segue a mesma regra: o saldo é a soma de `LancamentoCaixa`, e toda escrita passa por `lancarCaixa()` em `src/lib/financeiro.ts`. Conta a pagar e a receber só guarda a situação; quem mexe no dinheiro é o lançamento criado ao pagar ou receber. Errou: cancelar ou desfazer, com motivo. Desfazer gera estorno no caixa. Nada é apagado. O saldo do extrato é recalculado na leitura, não congelado, porque pagamento pode entrar com data passada.
+
 ### Custo médio ponderado
 Recalculado a cada entrada. Saída não mexe no médio — sai valorizada pelo médio vigente. "Última compra" considera **só `entrada_compra`**: estoque de abertura e ajuste entram com valor estimado, e tratá-los como preço de compra faz a coluna mentir justamente onde ela serve para flagrar aumento de fornecedor.
 
@@ -137,11 +147,33 @@ Recalculado a cada entrada. Saída não mexe no médio — sai valorizada pelo m
 - Toda página e toda server action começam com `exigirUsuario()` ou `exigirPapel()`. Papéis: `dona` (tudo), `producao` (sem financeiro), `vendas`.
 - Mensagem de erro diz o que fazer: "Informe um WhatsApp com DDD", nunca "campo inválido".
 - Ordene por urgência, não por data. O que exige ação lidera a lista.
+- Dinheiro só a dona vê: o Financeiro e os totais da Visão Geral usam `exigirPapel('dona')`. Valor em reais na tela usa `<Dinheiro>` (`src/components/Valores.tsx`), que respeita o botão **Ocultar valores**. A escolha fica no cookie `am_valores` e vale para o app todo. O botão aparece em cada tela que tem valor, e a tela de vender no balcão não oculta nada.
+- Formulário envia com `onSubmit={semLimpar(acao)}` (`src/components/enviar.ts`), nunca `action={acao}`. No React 19 o formulário é limpo quando a ação termina, mesmo quando volta com erro, e ela perderia tudo o que digitou.
+- Data vinda de campo (`2026-10-24`) vira `Date` por `dataDoCampo()` (meio-dia local). `new Date('2026-10-24')` é meia-noite UTC e cai no dia anterior no Brasil.
+- Constante usada no servidor não pode morar em arquivo `'use client'`: lá ela vira referência, não valor. Listas puras do financeiro ficam em `src/lib/financeiro-listas.ts` justamente para servir aos dois lados.
+- `<select>` com opção "Escolha..." usa `<option value="">`, **sem `disabled`**. O navegador não envia campo cuja opção escolhida está desabilitada, e a validação devolve "Required" em inglês no lugar da mensagem que diz o que fazer.
+- "Parado há" é por **ordem de chegada** (`posicaoEstoque` em `src/lib/estoque.ts`): conta o lote mais antigo que ainda sobra. Saída e entrada nova não zeram a idade do resto da pilha.
 
 ### O que existe hoje
-Cadastros (fornecedor com preço versionado, tecido/aviamento por setor, cliente), compras com rateio de frete, estoque de matéria-prima com custo médio e contagem, **Vendas** (bipagem de código de barras, baixa automática do estoque de peça pronta, caixa alimentado pela venda) e **Nota Fiscal** em modo rascunho (relatório de período com desconto, nota salva mas nunca transmitida).
+Cadastros (fornecedor com preço versionado, tecido/aviamento por setor, cliente), compras com rateio de frete, estoque de matéria-prima com custo médio e contagem, **Vendas** com três abas (Vender com bipagem de código de barras e baixa automática do estoque de peça pronta, Resumo com rankings e gráfico por período, Estoque da loja) e **Nota Fiscal** em modo rascunho (relatório de período com desconto, nota salva mas nunca transmitida).
 
-Ainda faltam: ficha técnica e ordem de produção (custo real por peça), contas a pagar e fluxo de caixa completo (hoje só a entrada automática de venda), e a emissão fiscal de verdade.
+**Financeiro** (desde 24/10/2026, só a dona):
+- **Caixa:** saldo de abertura, conferência com ajuste, previsão de 5 semanas com aviso do dia em que o saldo fica negativo, extrato do mês.
+- **A pagar:** parcelado e conta fixa mensal. A compra de tecido gera a conta pela condição do fornecedor.
+- **A receber:** a venda fiado gera a conta pela condição do cliente.
+
+**Visão Geral** (desde 25/10/2026): "Precisa de você" (o que pede ação, com o botão que resolve), três números e o gráfico de 30 dias. Muda por papel; produção não vê valor em reais.
+
+**Estoque em três abas** (desde 25/10/2026):
+- **Tecido e aviamento:** o cadastro aceita "já tem na prateleira" (quantidade e valor estimado), que entra como estoque inicial.
+- **Retalhos:** setor `Retalho`, medido em kg, ligado ao tecido de origem por `retalhoDeId`. O valor do kg é sugerido pela largura e gramatura (`metrosPorKgMil`), e o botão "Saiu" registra uso, venda, doação ou descarte.
+- **O que está parado:** total em reais, por tempo parado e por tipo.
+
+Ainda faltam:
+- ficha técnica e ordem de produção (custo real por peça);
+- a estrutura em três frentes pedida pela dona (Fábrica, Loja, E-commerce), com o plano em `_memoria/estrategia.md` e `_memoria/empresa.md`;
+- a emissão fiscal de verdade;
+- hospedagem na internet (escolhido: Neon + Render, com `TZ=America/Sao_Paulo`, porque "hoje" e "vencida" dependem do fuso do servidor).
 Na Nota Fiscal: **nunca emitir NF-e direto na SEFAZ.** Usar API homologada, isolada atrás de uma interface única — até lá, todo registro fica com `status: "rascunho"` e a tela deixa isso explícito para quem usa.
 
 ### Produto acabado tem razão próprio
@@ -152,8 +184,8 @@ Na Nota Fiscal: **nunca emitir NF-e direto na SEFAZ.** Usar API homologada, isol
 
 ### Decisões ainda em aberto
 Estão gravadas na tabela `Configuracao` marcadas como pendentes — não chumbadas no código. Assumimos um palpite para não travar:
-1. **Como as costureiras são pagas** — assumido salário fixo. Define se a costura entra no custo da peça ou no rateio do mês. Se entrar nos dois, cada peça paga a costura duas vezes.
-2. **Compra em kg e uso em metro** — assumido mesma unidade.
+1. **Como as costureiras são pagas:** **respondido em 25/10/2026, salário fixo.** A costura entra no rateio do mês, não no custo da peça. Se entrar nos dois, cada peça paga a costura duas vezes.
+2. **Compra em kg e uso em metro:** "depende muito", sem fator fixo. Onde precisar converter, o app usa a largura e a gramatura do cadastro do tecido; sem elas, pede o valor.
 Com o contador, falta o regime tributário e os CFOPs para a nota sair do rascunho.
 
 ---
@@ -186,3 +218,14 @@ Entrar no gerenciador: `dona@arteemoda.com.br` / `arteemoda` (dados de exemplo; 
 
 Mora na branch `gh-pages` (saída de build, não código).
 Ver `scripts/` para regenerar via `montar-painel.mjs` e `reescrever.mjs`.
+O `/painel/` está desatualizado desde 24/10/2026 (sem Financeiro e sem a Visão Geral nova). Regenerar só com ok do usuário: publicar é público.
+
+---
+
+## 9. Outras pastas
+
+```
+identidade/            brandbook, logo/ (arquivos oficiais), design-guide.md, marca.json
+marketing/conteudo/    posts gerados pelas skills; _render/ tem o Playwright que vira HTML em PNG
+_memoria/              empresa, preferências e estratégia (lidos no começo de toda conversa)
+```

@@ -11,13 +11,18 @@ não código. Cada item abaixo diz exatamente onde entra.
 A marca está aplicada **tipograficamente** (monograma AM em dourado dentro de uma
 caixa hairline + wordmark em Montserrat). Não recriei nem redesenhei a logo — o
 arquivo não foi entregue.
+> Atualização 25/10/2026: essa mesma logo foi exportada em PNG transparente e PDF
+> vetorial em `identidade/logo/` (todas as versões). Se a dona tiver um arquivo de
+> logo original diferente, ele substitui; se não, estes podem ir para `public/`.
 - **Onde:** `components/ui/Logo.tsx`
 - **Precisa:** versão clara (fundo escuro) e escura (fundo claro), em SVG ou PNG
   com fundo transparente. Jogar em `public/` e trocar o bloco do monograma por
   `<Image>` — a caixa já está reservada na proporção certa.
 
 ### Manual de marca em PDF
-Foi citado como anexo, mas não chegou. Trabalhei com as specs do briefing
+Foi citado como anexo, mas não chegou.
+> Atualização 25/10/2026: um brandbook novo, feito a partir do que está no site e no
+> app, está em `identidade/`. Se o manual original existir, vale reconciliar. Trabalhei com as specs do briefing
 (paleta, tipografia, assinaturas). Se o PDF tiver regra que eu não conheço
 (espaçamento mínimo da logo, versão reduzida, aplicação em fundo fotográfico),
 vale reconciliar.

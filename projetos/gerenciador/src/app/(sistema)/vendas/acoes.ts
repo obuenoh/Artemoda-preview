@@ -1,5 +1,6 @@
 'use server';
 
+import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
@@ -7,6 +8,7 @@ import { db } from '@/lib/db';
 import { exigirPapel, registrarAuditoria } from '@/lib/sessao';
 import { reaisParaCentavos } from '@/lib/numeros';
 import { lancarProduto, buscarPorSku } from '@/lib/produtos';
+import { lancarCaixa, parcelasDaCondicao } from '@/lib/financeiro';
 
 export type Resultado = { erro?: string; campos?: Record<string, string> } | null;
 
@@ -127,10 +129,9 @@ export async function finalizarVenda(dados: {
         );
       }
 
-      // Fiado ainda não entrou no caixa — vira contas a receber na Fase 3.
       if (dados.formaPagamento !== 'fiado') {
-        await tx.lancamentoCaixa.create({
-          data: {
+        await lancarCaixa(
+          {
             empresaId: usuario.empresaId,
             tipo: 'entrada',
             origemTipo: 'venda',
@@ -139,7 +140,37 @@ export async function finalizarVenda(dados: {
             descricao: dados.canal === 'loja' ? 'Venda na loja' : 'Venda de produção',
             usuarioId: usuario.id,
           },
-        });
+          tx,
+        );
+      } else {
+        // Fiado nao entrou no caixa: vira conta a receber, no prazo que o
+        // cliente costuma pagar. Cliente "a vista" que levou fiado ganha 30 dias.
+        const cliente = dados.clienteId
+          ? await tx.cliente.findFirst({
+              where: { id: dados.clienteId, empresaId: usuario.empresaId },
+              select: { nome: true, condicaoPagamento: true },
+            })
+          : null;
+        const condicao = cliente && cliente.condicaoPagamento !== 'a_vista' ? cliente.condicaoPagamento : '30';
+        const parcelas = parcelasDaCondicao(condicao, venda.criadoEm, totalCentavos);
+        const grupoId = parcelas.length > 1 ? randomUUID() : null;
+
+        for (const [i, p] of parcelas.entries()) {
+          await tx.contaReceber.create({
+            data: {
+              empresaId: usuario.empresaId,
+              descricao: `Venda fiado — ${cliente?.nome ?? 'balcão, sem cliente'}`,
+              clienteId: dados.clienteId,
+              vendaId: venda.id,
+              grupoId,
+              parcela: i + 1,
+              totalParcelas: parcelas.length,
+              valorCentavos: p.valorCentavos,
+              vencimento: p.vencimento,
+              usuarioId: usuario.id,
+            },
+          });
+        }
       }
 
       return venda.id;
@@ -156,6 +187,7 @@ export async function finalizarVenda(dados: {
 
     revalidatePath('/vendas');
     revalidatePath('/vendas/estoque');
+    revalidatePath('/financeiro', 'layout');
     revalidatePath('/');
     return { ok: true, vendaId };
   } catch (e) {

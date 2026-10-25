@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { exigirPapel, registrarAuditoria } from '@/lib/sessao';
 import { numeroParaMil, reaisParaCentavos } from '@/lib/numeros';
+import { lancar } from '@/lib/estoque';
 
 export type Resultado = { erro?: string; campos?: Record<string, string> } | null;
 
@@ -209,6 +210,29 @@ export async function criarCliente(_e: Resultado, form: FormData): Promise<Resul
   redirect('/clientes');
 }
 
+// ──────────────────────────────────────────── ja tem na prateleira
+
+type EstoqueInicial = { ok: { quantidadeMil: number; custo: number } | null } | { campos: Record<string, string> };
+
+/**
+ * "Ja tem na prateleira?" no proprio cadastro: quem anota o que ja existe
+ * nao precisa cadastrar e depois fazer o estoque de abertura. Os dois
+ * campos sao opcionais, mas andam juntos — quantidade sem valor nao entra,
+ * porque e o valor que diz quanto dinheiro esta parado.
+ */
+function lerEstoqueInicial(bruto: Record<string, string>): EstoqueInicial {
+  const q = (bruto.quantidadeInicial ?? '').trim();
+  const v = (bruto.valorInicial ?? '').trim();
+  if (!q && !v) return { ok: null };
+  const quantidadeMil = numeroParaMil(q);
+  const custo = reaisParaCentavos(v);
+  const campos: Record<string, string> = {};
+  if (quantidadeMil === null || quantidadeMil <= 0) campos.quantidadeInicial = 'Informe quanto tem, como 25 ou 3,5.';
+  if (custo === null || custo <= 0) campos.valorInicial = 'Informe quanto vale cada um, mesmo que seja um palpite.';
+  if (Object.keys(campos).length > 0 || quantidadeMil === null || custo === null) return { campos };
+  return { ok: { quantidadeMil, custo } };
+}
+
 // ────────────────────────────────────────────────────────────── tecido
 
 const tecidoSchema = z.object({
@@ -245,21 +269,42 @@ export async function criarTecido(_e: Resultado, form: FormData): Promise<Result
     };
   }
 
+  const inicial = lerEstoqueInicial(bruto);
+  if ('campos' in inicial) return { erro: 'Confira os campos marcados.', campos: inicial.campos };
+
   const tipo = await tipoProdutoTecido(usuario.empresaId);
 
-  const mp = await db.materiaPrima.create({
-    data: {
-      empresaId: usuario.empresaId,
-      tipoProdutoId: tipo.id,
-      nome: parsed.data.nome,
-      composicao: parsed.data.composicao || null,
-      cor: parsed.data.cor || null,
-      unidade: parsed.data.unidade,
-      localizacao: parsed.data.localizacao || null,
-      larguraMil: largura,
-      gramaturaGm2: bruto.gramatura ? Number(bruto.gramatura) || null : null,
-      estoqueMinimoMil: minimo,
-    },
+  const mp = await db.$transaction(async (tx) => {
+    const criado = await tx.materiaPrima.create({
+      data: {
+        empresaId: usuario.empresaId,
+        tipoProdutoId: tipo.id,
+        nome: parsed.data.nome,
+        composicao: parsed.data.composicao || null,
+        cor: parsed.data.cor || null,
+        unidade: parsed.data.unidade,
+        localizacao: parsed.data.localizacao || null,
+        larguraMil: largura,
+        gramaturaGm2: bruto.gramatura ? Number(bruto.gramatura) || null : null,
+        estoqueMinimoMil: minimo,
+      },
+    });
+    if (inicial.ok) {
+      await lancar(
+        {
+          empresaId: usuario.empresaId,
+          materiaPrimaId: criado.id,
+          tipo: 'entrada_inicial',
+          quantidadeMil: inicial.ok.quantidadeMil,
+          custoUnitarioCentavos: inicial.ok.custo,
+          origemTipo: 'manual',
+          motivo: 'Já estava na prateleira — valor estimado no cadastro',
+          usuarioId: usuario.id,
+        },
+        tx,
+      );
+    }
+    return criado;
   });
 
   await registrarAuditoria({
@@ -310,7 +355,8 @@ export async function criarTipoProduto(_e: Resultado, form: FormData): Promise<R
 }
 
 const produtoEstoqueSchema = z.object({
-  tipoProdutoId: z.string().min(1, 'Escolha o tipo do produto.'),
+  // Sem required_error, campo que nao chega vira "Required" em ingles na tela.
+  tipoProdutoId: z.string({ required_error: 'Escolha o tipo do produto.' }).min(1, 'Escolha o tipo do produto.'),
   nome: z.string().trim().min(2, 'Informe o nome do produto.'),
   cor: z.string().optional(),
   unidade: z.enum(['metro', 'kg', 'unidade']),
@@ -342,19 +388,40 @@ export async function criarProdutoEstoque(_e: Resultado, form: FormData): Promis
 
   const largura = tipo.mostrarCamposTecido && bruto.largura ? numeroParaMil(bruto.largura) : null;
 
-  const mp = await db.materiaPrima.create({
-    data: {
-      empresaId: usuario.empresaId,
-      tipoProdutoId: tipo.id,
-      nome: parsed.data.nome,
-      cor: parsed.data.cor || null,
-      unidade: parsed.data.unidade,
-      localizacao: parsed.data.localizacao || null,
-      composicao: tipo.mostrarCamposTecido ? (bruto.composicao || null) : null,
-      larguraMil: largura,
-      gramaturaGm2: tipo.mostrarCamposTecido && bruto.gramatura ? Number(bruto.gramatura) || null : null,
-      estoqueMinimoMil: minimo,
-    },
+  const inicial = lerEstoqueInicial(bruto);
+  if ('campos' in inicial) return { erro: 'Confira os campos marcados.', campos: inicial.campos };
+
+  const mp = await db.$transaction(async (tx) => {
+    const criado = await tx.materiaPrima.create({
+      data: {
+        empresaId: usuario.empresaId,
+        tipoProdutoId: tipo.id,
+        nome: parsed.data.nome,
+        cor: parsed.data.cor || null,
+        unidade: parsed.data.unidade,
+        localizacao: parsed.data.localizacao || null,
+        composicao: tipo.mostrarCamposTecido ? (bruto.composicao || null) : null,
+        larguraMil: largura,
+        gramaturaGm2: tipo.mostrarCamposTecido && bruto.gramatura ? Number(bruto.gramatura) || null : null,
+        estoqueMinimoMil: minimo,
+      },
+    });
+    if (inicial.ok) {
+      await lancar(
+        {
+          empresaId: usuario.empresaId,
+          materiaPrimaId: criado.id,
+          tipo: 'entrada_inicial',
+          quantidadeMil: inicial.ok.quantidadeMil,
+          custoUnitarioCentavos: inicial.ok.custo,
+          origemTipo: 'manual',
+          motivo: 'Já estava na prateleira — valor estimado no cadastro',
+          usuarioId: usuario.id,
+        },
+        tx,
+      );
+    }
+    return criado;
   });
 
   await registrarAuditoria({

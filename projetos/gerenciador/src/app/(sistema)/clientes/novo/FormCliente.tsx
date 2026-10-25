@@ -3,13 +3,14 @@
 import { useActionState } from 'react';
 import { criarCliente, type Resultado } from '../../cadastros-acoes';
 import { Campo, ErroGeral } from '@/components/Campo';
+import { semLimpar } from '@/components/enviar';
 
 export function FormCliente() {
   const [estado, acao, pendente] = useActionState<Resultado, FormData>(criarCliente, null);
   const e = estado?.campos ?? {};
 
   return (
-    <form action={acao} className="mt-7 flex max-w-[640px] flex-col gap-6">
+    <form onSubmit={semLimpar(acao)} className="mt-7 flex max-w-[640px] flex-col gap-6">
       <Campo id="nome" label="Nome" erro={e.nome}>
         <input id="nome" name="nome" className="campo" autoFocus />
       </Campo>

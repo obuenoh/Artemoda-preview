@@ -1,0 +1,512 @@
+{
+  "nome": "Arte e Moda",
+  "ano": 2026,
+  "slogan": "Uniforme feito por quem *costura*.",
+  "encerramento": "Uniforme feito por quem *costura*.",
+  "descritor": "Uniformes · Private label · Fábrica própria em São Paulo",
+  "descricao_capa": "Logotipo, monograma, cores, tipografia e elementos da Arte e Moda, com as regras que mantêm tudo coerente, do site ao gerenciador, da etiqueta ao post.",
+  "capa_simbolo": false,
+  "capa_tamanho": 86,
+  "capa_moldura": true,
+  "textura": "sarja",
+  "sumario_texto": "{n} partes, do monograma à etiqueta costurada na peça. Cada página mostra uma decisão e como aplicá-la.",
+  "wordmark": {
+    "texto": "Arte e Moda",
+    "caixa": "maiuscula",
+    "tracking": 0.3,
+    "peso": 600,
+    "lockup": {
+      "simbolo_em": 3.636,
+      "espaco_em": 1.091
+    }
+  },
+  "logotipo_sem_simbolo": true,
+  "logotipo_tamanho": 78,
+  "logotipo_notas": [
+    {
+      "rotulo": "Lettering",
+      "texto": "ARTE E MODA em Montserrat SemiBold, caixa alta, com +30% de espaço entre as letras. É o espaçamento largo que dá o ar de etiqueta de alfaiataria."
+    },
+    {
+      "rotulo": "Descritor",
+      "texto": "\"Uniformes · Private label · Fábrica própria em São Paulo\" em Montserrat SemiBold, caixa alta, em dourado. Fato no lugar de adjetivo; acompanha a logo em materiais institucionais."
+    },
+    {
+      "rotulo": "Regra",
+      "texto": "Use sempre os arquivos da pasta identidade/logo/. Não redigite, não distorça e não altere o espaço entre as letras."
+    }
+  ],
+  "simbolo": {
+    "titulo_secao": "Monograma",
+    "viewBox": "0 0 80 80",
+    "grade": 8,
+    "svg": "<rect x='0.5' y='0.5' width='79' height='79' rx='0.5' fill='none' stroke='currentColor' stroke-width='1'/><text x='40' y='40' text-anchor='middle' dominant-baseline='central' font-family='Cormorant Garamond' font-weight='400' font-size='38.4' fill='currentColor'>AM</text>",
+    "avatar": {
+      "fundo": "#15263D",
+      "cor": "#B58B57"
+    },
+    "cor_destaque": "#B58B57",
+    "conceito": {
+      "titulo": "As iniciais que *assinam*\na marca.",
+      "texto": "O monograma é o AM da marca em Cormorant Garamond, dentro de um quadrado de fio dourado: a etiqueta que fecha a peça. Sozinho, é o ícone do gerenciador, a foto de perfil, a etiqueta e a assinatura em peças pequenas."
+    },
+    "construcao_titulo": "Medido *como* etiqueta.",
+    "construcao_notas": [
+      {
+        "rotulo": "Quadrado",
+        "texto": "Lado t. O fio tem t/80, com mínimo de 1 px, e cantos de 2 px."
+      },
+      {
+        "rotulo": "Iniciais",
+        "texto": "AM em Cormorant Garamond Regular, a 48% de t, centrado no quadrado."
+      },
+      {
+        "rotulo": "Assinatura",
+        "texto": "O nome vem a 0,3 t do monograma, em Montserrat SemiBold a 27,5% de t, caixa alta, +30% entre as letras."
+      }
+    ]
+  },
+  "versoes": [
+    {
+      "legenda": "Principal · negativo",
+      "fundo": "#15263D",
+      "texto": "#F5F2EC",
+      "simbolo": "#B58B57",
+      "tamanho": 20,
+      "luz": true
+    },
+    {
+      "legenda": "Principal · positivo",
+      "fundo": "#FBFAF8",
+      "texto": "#1C1C1C",
+      "simbolo": "#B58B57",
+      "tamanho": 20
+    },
+    {
+      "legenda": "Sobre preto",
+      "fundo": "#1C1C1C",
+      "texto": "#F5F2EC",
+      "simbolo": "#B58B57",
+      "tamanho": 20
+    },
+    {
+      "legenda": "Uma cor · azul",
+      "fundo": "#F5F2EC",
+      "texto": "#15263D",
+      "simbolo": "#15263D",
+      "tamanho": 20
+    },
+    {
+      "legenda": "Uma cor · creme",
+      "fundo": "#15263D",
+      "texto": "#F5F2EC",
+      "simbolo": "#F5F2EC",
+      "tamanho": 20
+    },
+    {
+      "legenda": "Monograma · sobre azul",
+      "tipo": "simbolo",
+      "fundo": "#15263D",
+      "simbolo": "#B58B57",
+      "tamanho": 130
+    }
+  ],
+  "horizontal_titulo": "Assinatura horizontal",
+  "horizontal_fundo": "escura",
+  "horizontal_tamanho": 30,
+  "horizontal_cores": [
+    "#F5F2EC",
+    "#B58B57"
+  ],
+  "horizontal_cor_descritor": "#B58B57",
+  "horizontal_texto": "A assinatura completa: monograma, nome e, à direita de um fio, o descritor em três linhas. Use em capas, apresentações e no rodapé de documentos.",
+  "protecao": {
+    "tamanho": 30,
+    "cor_simbolo": "#B58B57",
+    "texto": "Nenhum texto, imagem ou borda entra no espaço ao redor da assinatura. A medida x é a altura do monograma e cresce junto com a logo.",
+    "minimo": "Assinatura horizontal: 145 px de largura em tela ou 35 mm impresso. Abaixo disso, use só o monograma: mínimo de 28 px na tela e 8 mm impresso.",
+    "minimo_logo_px": 145,
+    "minimo_simbolo_px": 28
+  },
+  "cores": [
+    {
+      "nome": "Azul marinho",
+      "hex": "#15263D",
+      "uso": 40,
+      "papel": "Base: fundo do site, topo do gerenciador, etiqueta e tag"
+    },
+    {
+      "nome": "Creme",
+      "hex": "#F5F2EC",
+      "uso": 30,
+      "papel": "Fundo claro: base do gerenciador e das páginas claras"
+    },
+    {
+      "nome": "Preto",
+      "hex": "#1C1C1C",
+      "uso": 15,
+      "papel": "Texto forte"
+    },
+    {
+      "nome": "Cinza",
+      "hex": "#707070",
+      "uso": 10,
+      "papel": "Só linha e rótulo, nunca texto corrido"
+    },
+    {
+      "nome": "Dourado",
+      "hex": "#B58B57",
+      "uso": 5,
+      "papel": "Acento: botão principal, monograma e fio"
+    }
+  ],
+  "papeis": {
+    "escuro": "Azul marinho",
+    "claro": "Creme",
+    "acento": "Dourado",
+    "profundo": "Dourado escuro",
+    "secundario": "Cinza texto azul",
+    "tinta": "Preto"
+  },
+  "paleta_texto": "A largura de cada cor mostra o quanto ela aparece: o azul marinho e o creme dominam, o dourado entra só como acento.",
+  "apoio": {
+    "cabecalho": "Cores de apoio",
+    "titulo": "Contraste sem *ruído*.",
+    "texto": "Tons funcionais para o que a paleta principal não resolve: dourado como texto sobre o creme, texto secundário que passa no contraste e o status do gerenciador. Não entram em fundos grandes.",
+    "cores": [
+      {
+        "nome": "Verde",
+        "hex": "#3F6B57",
+        "papel": "Status em dia, no gerenciador"
+      },
+      {
+        "nome": "Vermelho",
+        "hex": "#9B3B2E",
+        "papel": "Alerta: abaixo do mínimo, atraso"
+      },
+      {
+        "nome": "Dourado escuro",
+        "hex": "#7E5D33",
+        "papel": "Dourado em texto sobre o creme (5,4:1)"
+      },
+      {
+        "nome": "Cinza texto claro",
+        "hex": "#5E5B57",
+        "papel": "Texto secundário no creme (6,0:1)"
+      },
+      {
+        "nome": "Cinza texto azul",
+        "hex": "#A9B1BC",
+        "papel": "Texto secundário no azul (7,1:1)"
+      }
+    ],
+    "combinacoes": [
+      {
+        "texto": "Creme",
+        "fundo": "Azul marinho"
+      },
+      {
+        "texto": "Preto",
+        "fundo": "Creme"
+      },
+      {
+        "texto": "Dourado",
+        "fundo": "Azul marinho"
+      },
+      {
+        "texto": "Dourado escuro",
+        "fundo": "Creme"
+      },
+      {
+        "texto": "Cinza texto azul",
+        "fundo": "Azul marinho"
+      },
+      {
+        "texto": "Cinza texto claro",
+        "fundo": "Creme"
+      }
+    ]
+  },
+  "tipografia": {
+    "principal": {
+      "familia": "Montserrat",
+      "pesos": [
+        400,
+        500,
+        600,
+        700
+      ],
+      "italico": false
+    },
+    "destaque": {
+      "familia": "Cormorant Garamond",
+      "estilo": "italic",
+      "pesos": [
+        300,
+        400
+      ],
+      "romano": true,
+      "amostra": "Cormorant Garamond"
+    },
+    "titulos": "destaque",
+    "peso_titulo": 300,
+    "hierarquia": [
+      {
+        "amostra": "Uniformes",
+        "spec": "Cormorant Light · 40 px ou mais",
+        "tamanho": 40,
+        "familia": "destaque",
+        "peso": 300
+      },
+      {
+        "amostra": "Título de seção",
+        "spec": "Montserrat SemiBold · caixa alta · +14%",
+        "tamanho": 14,
+        "peso": 600,
+        "css": "text-transform:uppercase;letter-spacing:.14em;"
+      },
+      {
+        "amostra": "Título de tela",
+        "spec": "Montserrat Bold · gerenciador",
+        "tamanho": 20,
+        "peso": 700
+      },
+      {
+        "amostra": "Texto corrido, claro e direto.",
+        "spec": "Montserrat Regular · 17/170%",
+        "tamanho": 15
+      },
+      {
+        "amostra": "Sobretítulo",
+        "spec": "Montserrat SemiBold · caixa alta · +22%",
+        "tamanho": 11,
+        "rotulo": true,
+        "peso": 600
+      },
+      {
+        "amostra": "R$ 1.234,56",
+        "spec": "Montserrat Bold · valores",
+        "tamanho": 26,
+        "peso": 700,
+        "tabular": true
+      }
+    ],
+    "regra_titulo": "Caixa alta sempre com espaçamento largo.",
+    "regra_texto": "Cormorant só a partir de 28 px: Light acima de 40, Regular entre 28 e 40, e o itálico dele em uma palavra por título. Texto secundário usa os cinzas de apoio, nunca o #707070.",
+    "nota": "Montserrat na interface e nos títulos de seção; Cormorant Garamond nos títulos grandes, nos números e no monograma."
+  },
+  "forma": {
+    "raio_cartao": 4,
+    "raio_pilula": 2
+  },
+  "elementos": {
+    "titulo": "Fio, trama e *pesponto*.",
+    "itens": [
+      {
+        "rotulo": "Pesponto",
+        "texto": "Traço 6, intervalo 4, 1 px, dourado. Acompanha emenda entre painéis e perímetro de bloco aplicado, nunca solto no meio da tela."
+      },
+      {
+        "rotulo": "Trama de sarja",
+        "texto": "Diagonal a 45° a cada 3 px, creme a 4%. É a textura dos fundos escuros, no lugar de gradiente colorido."
+      },
+      {
+        "rotulo": "Risco de giz",
+        "texto": "Traço dourado de 24 px antes de todo sobretítulo, como a marca do alfaiate no tecido."
+      },
+      {
+        "rotulo": "Moldura",
+        "texto": "Fio dourado a 28% contornando a capa e o topo do site: a borda da etiqueta."
+      },
+      {
+        "rotulo": "Cantos",
+        "texto": "Retos, com 2 a 4 px no máximo. A marca é etiqueta e régua, não botão de aplicativo."
+      },
+      {
+        "rotulo": "Selo",
+        "texto": "O monograma fecha peças e materiais pequenos: etiqueta, avatar, rodapé."
+      }
+    ],
+    "demo": {
+      "rotulo": "Orçamento",
+      "titulo": "Uniforme escolar e empresarial",
+      "frase": "Solicite um *orçamento*.",
+      "pilulas": [
+        "Escolar",
+        "Empresarial",
+        "Private label"
+      ],
+      "rodape": "Pedido mínimo de 30 peças",
+      "botao": "Solicitar orçamento",
+      "pesponto": true
+    }
+  },
+  "componentes": {
+    "titulo": "Interface *de fábrica*.",
+    "texto": "O gerenciador é usado em pé, no chão de fábrica: ícones de linha fina, botões retos e o dourado cheio só no botão principal, um por tela.",
+    "icones": [
+      "grade",
+      "camadas",
+      "pessoas",
+      "busca",
+      "mais",
+      "calendario",
+      "check",
+      "relogio",
+      "sacola",
+      "telefone",
+      "local",
+      "mensagem",
+      "estrela",
+      "config",
+      "seta",
+      "coracao"
+    ],
+    "icones_ativos": [
+      "camadas",
+      "sacola"
+    ],
+    "pilulas": [
+      "Tecido",
+      "Rascunho",
+      "Em dia",
+      "181 dias"
+    ],
+    "botao_primario": "Novo produto",
+    "botao_secundario": "Fazer contagem",
+    "busca": "Buscar produto ou código"
+  },
+  "tom": {
+    "titulo": "Credibilidade vem do *fato*.",
+    "pilares": [
+      {
+        "nome": "Formal e próximo",
+        "texto": "Trata por Sr. ou Sra. e o nome. Frases curtas, sem exclamação e sem intimidade forçada."
+      },
+      {
+        "nome": "Fato antes de adjetivo",
+        "texto": "Fábrica própria, corte e costura internos, o que foi combinado e entregue. Nada de superlativo que não se prova."
+      },
+      {
+        "nome": "Linguagem de confecção",
+        "texto": "Fala de modelagem, grade, tecido e prazo. Sem jargão de agência nem de contabilidade."
+      }
+    ],
+    "assim": [
+      "Bom dia, Sra. Marta. Segue o orçamento solicitado.",
+      "O corte e a costura são feitos na nossa fábrica, em São Paulo.",
+      "O pedido mínimo é de 30 peças."
+    ],
+    "nao_assim": [
+      "Vamos juntos nessa!!",
+      "O melhor uniforme de São Paulo.",
+      "Oi, querida! Tudo certinho?"
+    ]
+  },
+  "interface": {
+    "cabecalho": "Aplicação no site e no gerenciador",
+    "titulo": "A marca *em uso*.",
+    "texto": "No site, a marca é escura: azul marinho com trama de sarja, Cormorant nos títulos e dourado só no botão principal. No gerenciador, o fundo é creme e o azul fica no topo, porque a tela é usada em pé, sob luz forte.",
+    "telas": [
+      {
+        "img": "brandbook/imagens/site-home.jpg",
+        "legenda": "Site · início"
+      },
+      {
+        "img": "brandbook/imagens/gerenciador-visao.jpg",
+        "legenda": "Gerenciador · visão geral (dados de exemplo)"
+      },
+      {
+        "img": "brandbook/imagens/site-processo.jpg",
+        "legenda": "Site · como produzimos"
+      }
+    ],
+    "mobile": [
+      {
+        "img": "brandbook/imagens/site-celular.jpg",
+        "legenda": "Site · celular"
+      }
+    ]
+  },
+  "imagens_extras": [
+    "brandbook/imagens/post-01.jpg",
+    "brandbook/imagens/post-02.jpg",
+    "brandbook/imagens/post-04.jpg",
+    "brandbook/imagens/post-07.jpg",
+    "brandbook/imagens/fabrica-linha-costura.jpg"
+  ],
+  "aplicacoes_titulo": "Aplicações de marca",
+  "aplicacoes": [
+    {
+      "tipo": "etiqueta",
+      "legenda": "Etiqueta tecida · uniformes e peças"
+    },
+    {
+      "tipo": "tag",
+      "legenda": "Tag · uniforme",
+      "titulo": "Polo *escolar*",
+      "campos": [
+        [
+          "Composição",
+          "[por peça]"
+        ],
+        [
+          "Tamanho",
+          "[por peça]"
+        ],
+        [
+          "Cuidados",
+          "[por peça]"
+        ]
+      ]
+    },
+    {
+      "tipo": "sacola",
+      "legenda": "Sacola · loja",
+      "texto": "Loja · varejo e atacado"
+    },
+    {
+      "tipo": "cartao",
+      "legenda": "Cartão"
+    },
+    {
+      "tipo": "icone",
+      "legenda": "Ícone do gerenciador e avatar"
+    },
+    {
+      "tipo": "post",
+      "legenda": "Post 4:5"
+    }
+  ],
+  "cartao": {
+    "nome": "[Nome Sobrenome]",
+    "cargo": "[Cargo]"
+  },
+  "mockup_escala": 0.55,
+  "post_rotulo": "Uniforme escolar",
+  "post_texto": "Uniforme feito por quem *costura*.",
+  "post_rodape": "Arte e Moda · São Paulo",
+  "paginas_extras": [
+    {
+      "titulo": "Aplicação no Instagram",
+      "fundo": "clara",
+      "depois_de": "Aplicação no site e no gerenciador",
+      "html": "<p style='position:absolute;right:72px;top:96px;width:520px;text-align:right;font-size:14px;line-height:1.6;color:var(--sec-claro)'>Carrossel 4:5 que alterna azul marinho e creme. A capa abre no azul; o fechamento traz o monograma e o pedido de orçamento.</p><div style='position:absolute;left:72px;right:72px;top:170px;display:flex;justify-content:space-between'><div><div style='width:330px;height:412px;border-radius:4px;overflow:hidden;box-shadow:0 0 0 1px rgba(28,28,28,.1)'><img src='img/post-01.jpg' style='width:100%;height:100%;object-fit:cover;display:block' alt=''></div><p class='rotulo' style='margin-top:14px;font-size:10px;color:var(--sec-claro)'>Capa</p></div><div><div style='width:330px;height:412px;border-radius:4px;overflow:hidden;box-shadow:0 0 0 1px rgba(28,28,28,.1)'><img src='img/post-02.jpg' style='width:100%;height:100%;object-fit:cover;display:block' alt=''></div><p class='rotulo' style='margin-top:14px;font-size:10px;color:var(--sec-claro)'>Etapa</p></div><div><div style='width:330px;height:412px;border-radius:4px;overflow:hidden;box-shadow:0 0 0 1px rgba(28,28,28,.1)'><img src='img/post-04.jpg' style='width:100%;height:100%;object-fit:cover;display:block' alt=''></div><p class='rotulo' style='margin-top:14px;font-size:10px;color:var(--sec-claro)'>Destaque</p></div><div><div style='width:330px;height:412px;border-radius:4px;overflow:hidden;box-shadow:0 0 0 1px rgba(28,28,28,.1)'><img src='img/post-07.jpg' style='width:100%;height:100%;object-fit:cover;display:block' alt=''></div><p class='rotulo' style='margin-top:14px;font-size:10px;color:var(--sec-claro)'>Chamada</p></div></div><div style='position:absolute;left:72px;right:72px;bottom:56px;display:grid;grid-template-columns:repeat(3,1fr);gap:40px'><p style='font-size:13px;line-height:1.6;color:var(--sec-claro)'><span style='color:var(--tinta);font-weight:600'>Ordem:</span> capa azul, etapas alternando azul e creme, fechamento com o pedido de orçamento.</p><p style='font-size:13px;line-height:1.6;color:var(--sec-claro)'><span style='color:var(--tinta);font-weight:600'>Margem:</span> 80 px nas laterais e moldura a 36 px, no arquivo de 1080 × 1350.</p><p style='font-size:13px;line-height:1.6;color:var(--sec-claro)'><span style='color:var(--tinta);font-weight:600'>Texto:</span> só o que está confirmado. Onde falta o fato, o post espera.</p></div>"
+    },
+    {
+      "titulo": "Usos incorretos",
+      "fundo": "clara",
+      "depois_de": "Aplicações de marca",
+      "html": "<div style='position:absolute;left:72px;right:72px;top:118px;display:grid;grid-template-columns:repeat(3,1fr);column-gap:18px;row-gap:30px'><div><div class='cartao' style='height:300px;background:#FBFAF8;box-shadow:inset 0 0 0 1px rgba(28,28,28,.08);display:grid;place-items:center'><div style='display:inline-flex;align-items:center;gap:1.09em;font-size:16px;line-height:1;transform:scale(1.55,.8)'><svg style='width:3.636em;height:3.636em;color:#B58B57;flex:none'><use href='#simbolo'/></svg><span style='font-family:var(--f-principal);font-weight:600;text-transform:uppercase;letter-spacing:.3em;margin-right:-.3em;color:#1C1C1C;white-space:nowrap'>Arte e Moda</span></div><span style='position:absolute;top:14px;right:14px;width:26px;height:26px;border-radius:50%;border:1.5px solid #9B3B2E;color:#9B3B2E;display:grid;place-items:center;font-size:15px;line-height:1'>×</span></div><p style='margin-top:12px;font-size:14px;color:var(--tinta)'>Não distorcer nem esticar</p></div><div><div class='cartao' style='height:300px;background:#FBFAF8;box-shadow:inset 0 0 0 1px rgba(28,28,28,.08);display:grid;place-items:center'><div style='display:inline-flex;align-items:center;gap:1.09em;font-size:16px;line-height:1;'><svg style='width:3.636em;height:3.636em;color:#2F6FDB;flex:none'><use href='#simbolo'/></svg><span style='font-family:var(--f-principal);font-weight:600;text-transform:uppercase;letter-spacing:.3em;margin-right:-.3em;color:#C0392B;white-space:nowrap'>Arte e Moda</span></div><span style='position:absolute;top:14px;right:14px;width:26px;height:26px;border-radius:50%;border:1.5px solid #9B3B2E;color:#9B3B2E;display:grid;place-items:center;font-size:15px;line-height:1'>×</span></div><p style='margin-top:12px;font-size:14px;color:var(--tinta)'>Não usar cores fora da paleta</p></div><div><div class='cartao' style='height:300px;background:#FBFAF8;box-shadow:inset 0 0 0 1px rgba(28,28,28,.08);display:grid;place-items:center'><div style='display:inline-flex;align-items:center;gap:1.09em;font-size:16px;line-height:1;-webkit-text-stroke:1px #1C1C1C'><svg style='width:3.636em;height:3.636em;color:#B58B57;flex:none'><use href='#simbolo'/></svg><span style='font-family:var(--f-principal);font-weight:600;text-transform:uppercase;letter-spacing:.3em;margin-right:-.3em;color:transparent;white-space:nowrap'>Arte e Moda</span></div><span style='position:absolute;top:14px;right:14px;width:26px;height:26px;border-radius:50%;border:1.5px solid #9B3B2E;color:#9B3B2E;display:grid;place-items:center;font-size:15px;line-height:1'>×</span></div><p style='margin-top:12px;font-size:14px;color:var(--tinta)'>Não contornar nem aplicar efeitos</p></div><div><div class='cartao' style='height:300px;background:#444;background-image:url(\"img/fabrica-linha-costura.jpg\");background-size:cover;background-position:center;box-shadow:inset 0 0 0 1px rgba(28,28,28,.08);display:grid;place-items:center'><div style='display:inline-flex;align-items:center;gap:1.09em;font-size:16px;line-height:1;'><svg style='width:3.636em;height:3.636em;color:#B58B57;flex:none'><use href='#simbolo'/></svg><span style='font-family:var(--f-principal);font-weight:600;text-transform:uppercase;letter-spacing:.3em;margin-right:-.3em;color:#F5F2EC;white-space:nowrap'>Arte e Moda</span></div><span style='position:absolute;top:14px;right:14px;width:26px;height:26px;border-radius:50%;border:1.5px solid #9B3B2E;color:#9B3B2E;display:grid;place-items:center;font-size:15px;line-height:1'>×</span></div><p style='margin-top:12px;font-size:14px;color:var(--tinta)'>Não usar sobre fundo poluído</p></div><div><div class='cartao' style='height:300px;background:#B58B57;box-shadow:inset 0 0 0 1px rgba(28,28,28,.08);display:grid;place-items:center'><div style='display:inline-flex;align-items:center;gap:1.09em;font-size:16px;line-height:1;'><svg style='width:3.636em;height:3.636em;color:#15263D;flex:none'><use href='#simbolo'/></svg><span style='font-family:var(--f-principal);font-weight:600;text-transform:uppercase;letter-spacing:.3em;margin-right:-.3em;color:#15263D;white-space:nowrap'>Arte e Moda</span></div><span style='position:absolute;top:14px;right:14px;width:26px;height:26px;border-radius:50%;border:1.5px solid #9B3B2E;color:#9B3B2E;display:grid;place-items:center;font-size:15px;line-height:1'>×</span></div><p style='margin-top:12px;font-size:14px;color:var(--tinta)'>Não usar dourado como fundo</p></div><div><div class='cartao' style='height:300px;background:#FBFAF8;box-shadow:inset 0 0 0 1px rgba(28,28,28,.08);display:grid;place-items:center'><span style='font-family:var(--f-destaque);font-style:italic;font-weight:600;font-size:54px;color:#1C1C1C'>Arte e Moda</span><span style='position:absolute;top:14px;right:14px;width:26px;height:26px;border-radius:50%;border:1.5px solid #9B3B2E;color:#9B3B2E;display:grid;place-items:center;font-size:15px;line-height:1'>×</span></div><p style='margin-top:12px;font-size:14px;color:var(--tinta)'>Não redigitar em outra fonte</p></div></div>"
+    }
+  ],
+  "leia_me_extra": "Os arquivos oficiais da logo (PNG e PDF vetorial, todas as versões) continuam em `logo/`, gerados por `logo/exportar.js`. Os SVGs de `arquivos/` usam texto em Cormorant Garamond: para gráfica, use os PDFs de `logo/`.",
+  "assumido": [
+    "Frase \"Uniforme feito por quem costura.\" e descritor \"Fábrica própria em São Paulo\" escolhidos nesta revisão, no lugar de \"Excelência em cada detalhe\" e \"Confecção premium\"",
+    "Cores de apoio (dourado escuro e cinzas de texto) propostas nesta revisão para passar no contraste AA; verde e vermelho vêm do gerenciador",
+    "Proporção de uso das cores mantida do guia anterior (40/30/15/10/5)",
+    "Tamanho mínimo do monograma bordado: confirmar com o parceiro de bordado",
+    "Campos da tag e dados do cartão são marcadores [entre colchetes] até haver conteúdo real",
+    "Telas do gerenciador com dados de exemplo"
+  ]
+}

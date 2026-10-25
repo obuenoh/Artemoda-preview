@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Perfil e destaques</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400&family=Montserrat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  /*
+   * Desenhado em metade do tamanho e renderizado com deviceScaleFactor 2.
+   * Perfil: 540x540 -> 1080x1080. Destaque: 540x960 -> 1080x1920.
+   * O Instagram recorta um circulo no centro: icone e pesponto ficam dentro dele.
+   */
+  :root {
+    --navy: #15263D;
+    --cream: #F5F2EC;
+    --gold: #B58B57;
+    --muted-on-dark: rgba(245, 242, 236, .72);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #888; font-family: 'Montserrat', sans-serif; }
+
+  .arte {
+    position: relative;
+    overflow: hidden;
+    background: var(--navy);
+    color: var(--cream);
+    isolation: isolate;
+  }
+  /* Trama de sarja e vinheta, iguais ao site */
+  .arte::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image:
+      repeating-linear-gradient(45deg, rgba(245,242,236,.04) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(-45deg, rgba(28,28,28,.05) 0 1px, transparent 1px 4px);
+  }
+  .arte::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(70% 70% at 50% 45%, rgba(245,242,236,.07) 0%, transparent 70%);
+  }
+
+  /* ---------- Foto de perfil ---------- */
+  .perfil { width: 540px; height: 540px; display: flex; align-items: center; justify-content: center; }
+  .perfil .mono {
+    width: 270px; height: 270px;
+    border: 4px solid var(--gold);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 400; font-size: 146px; line-height: 1; letter-spacing: -.01em;
+    color: var(--gold);
+    padding-top: 6px;
+  }
+
+  /* ---------- Capa de destaque ---------- */
+  .destaque { width: 540px; height: 960px; }
+  .destaque .marca {
+    position: absolute; top: 56px; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .destaque .marca .mono {
+    width: 28px; height: 28px; border: 1px solid var(--gold); border-radius: 2px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', Georgia, serif; font-size: 14px; color: var(--gold);
+  }
+  .destaque .marca .word { font-weight: 600; font-size: 8.5px; letter-spacing: .3em; text-transform: uppercase; }
+  .destaque svg.anel { position: absolute; left: 0; top: 210px; width: 540px; height: 540px; overflow: visible; }
+  .destaque svg.icone { position: absolute; left: 135px; top: 345px; width: 270px; height: 270px; color: var(--gold); }
+  .destaque .titulo {
+    position: absolute; bottom: 92px; left: 0; right: 0; text-align: center;
+    font-weight: 600; font-size: 12px; letter-spacing: .32em; text-transform: uppercase; color: var(--cream);
+  }
+  .destaque .sub {
+    position: absolute; bottom: 70px; left: 0; right: 0; text-align: center;
+    font-weight: 500; font-size: 8.5px; letter-spacing: .22em; text-transform: uppercase; color: var(--muted-on-dark);
+  }
+</style>
+</head>
+<body>
+
+<!-- Foto de perfil (Instagram e TikTok) -->
+<div class="arte perfil" data-arquivo="perfil-arte-e-moda.png">
+  <div class="mono">AM</div>
+</div>
+
+<!--
+  Capas de destaque. Icones copiados de projetos/site/components/icons/AtelierIcons.tsx
+  (grade 24, traco 1). O marcador do Contato e novo, no mesmo desenho.
+-->
+<template id="anel">
+  <svg class="anel" viewBox="0 0 540 540">
+    <circle cx="270" cy="270" r="224" fill="none" stroke="#B58B57" stroke-width="3" stroke-dasharray="18 12" opacity=".9"/>
+  </svg>
+</template>
+
+<div class="arte destaque" data-arquivo="destaque-01-orcamento.png">
+  <div class="marca"><span class="mono">AM</span><span class="word">Arte e Moda</span></div>
+  <!-- fita metrica: sob medida -->
+  <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 8.5h18v7H3z"/><path d="M6.5 8.5v3M9.5 8.5v4.5M12.5 8.5v3M15.5 8.5v4.5M18.5 8.5v3"/>
+  </svg>
+  <p class="titulo">Orçamento</p>
+  <p class="sub">Pedido mínimo de 30 peças</p>
+</div>
+
+<div class="arte destaque" data-arquivo="destaque-02-escolar.png">
+  <div class="marca"><span class="mono">AM</span><span class="word">Arte e Moda</span></div>
+  <!-- agulha com linha: uniformes -->
+  <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 3.5 8.5 15"/><path d="m6 17.5-1.6 2.9 2.9-1.6"/><path d="M18.2 5.3a1.6 1.6 0 1 0 0-.1"/><path d="M17 6.5c-2.6.4-4.6 1-6.4 3.2-1.8 2.2-4 2.6-6 1.6"/>
+  </svg>
+  <p class="titulo">Escolar</p>
+  <p class="sub">Uniforme escolar</p>
+</div>
+
+<div class="arte destaque" data-arquivo="destaque-03-empresas.png">
+  <div class="marca"><span class="mono">AM</span><span class="word">Arte e Moda</span></div>
+  <!-- etiqueta costurada: o nome da empresa preso na peca -->
+  <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 6.5h14v11H5z"/><path d="M5 9h14M5 15h14"/><path d="M8 11.5h8M8 13h5" stroke-dasharray="2 2"/>
+  </svg>
+  <p class="titulo">Empresas</p>
+  <p class="sub">Uniforme empresarial</p>
+</div>
+
+<div class="arte destaque" data-arquivo="destaque-04-sua-marca.png">
+  <div class="marca"><span class="mono">AM</span><span class="word">Arte e Moda</span></div>
+  <!-- tesoura: private label (Studio no site) -->
+  <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6.5 4 17 18.5M17.5 4 7 18.5"/><circle cx="6" cy="19.5" r="2"/><circle cx="18" cy="19.5" r="2"/>
+  </svg>
+  <p class="titulo">Sua marca</p>
+  <p class="sub">Private label</p>
+</div>
+
+<div class="arte destaque" data-arquivo="destaque-05-fabrica.png">
+  <div class="marca"><span class="mono">AM</span><span class="word">Arte e Moda</span></div>
+  <!-- dedal: a costura feita aqui dentro -->
+  <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M7.5 20.5V11a4.5 4.5 0 0 1 9 0v9.5z"/><path d="M6.5 20.5h11"/><path d="M9.6 8.6h.01M12 8h.01M14.4 8.6h.01M9.6 11.4h.01M12 10.8h.01M14.4 11.4h.01M9.6 14.2h.01M12 13.6h.01M14.4 14.2h.01"/>
+  </svg>
+  <p class="titulo">Fábrica</p>
+  <p class="sub">Fabricação própria</p>
+</div>
+
+<div class="arte destaque" data-arquivo="destaque-06-contato.png">
+  <div class="marca"><span class="mono">AM</span><span class="word">Arte e Moda</span></div>
+  <!-- marcador de lugar com botao de costura: onde estamos -->
+  <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 21.5s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11z"/><circle cx="12" cy="10.5" r="3"/><path d="M11 9.5h.01M13 9.5h.01M11 11.5h.01M13 11.5h.01"/>
+  </svg>
+  <p class="titulo">Contato</p>
+  <p class="sub">Penha de França · São Paulo</p>
+</div>
+
+<script>
+  // Pesponto em volta do icone, no perimetro do circulo que o Instagram recorta
+  const anel = document.getElementById('anel');
+  document.querySelectorAll('.destaque').forEach(d => d.prepend(anel.content.cloneNode(true)));
+</script>
+</body>
+</html>

@@ -3,6 +3,7 @@
 import { useActionState } from 'react';
 import { criarFornecedor, type Resultado } from '../../cadastros-acoes';
 import { Campo, ErroGeral } from '@/components/Campo';
+import { semLimpar } from '@/components/enviar';
 
 const tipos = [
   { v: 'tecido', r: 'Vende tecido' },
@@ -19,7 +20,7 @@ export function FormFornecedor() {
   const e = estado?.campos ?? {};
 
   return (
-    <form action={acao} className="mt-7 flex max-w-[640px] flex-col gap-6">
+    <form onSubmit={semLimpar(acao)} className="mt-7 flex max-w-[640px] flex-col gap-6">
       <Campo id="nome" label="Nome" erro={e.nome}>
         <input id="nome" name="nome" className="campo" autoFocus />
       </Campo>

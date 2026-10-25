@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { exigirUsuario } from '@/lib/sessao';
 import { centavosParaReais, dataBR } from '@/lib/numeros';
-import { TituloPagina, Botao } from '@/components/Ui';
+import { TituloPagina } from '@/components/Ui';
 import { PontoDeVenda } from './PontoDeVenda';
 
 export const metadata = { title: 'Vendas' };
@@ -29,11 +29,6 @@ export default async function VendasPage() {
       <TituloPagina
         titulo="Vendas"
         sub="Bipe o código de barras ou digite o SKU — o estoque desconta sozinho"
-        acao={
-          <Botao href="/vendas/estoque" variante="vazio">
-            Estoque da loja
-          </Botao>
-        }
       />
 
       <PontoDeVenda clientes={clientes} />

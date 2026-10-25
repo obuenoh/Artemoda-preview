@@ -3,12 +3,14 @@
 import { useActionState, useState } from 'react';
 import { criarProdutoEstoque, criarTipoProduto, type Resultado } from '../../cadastros-acoes';
 import { Campo, ErroGeral } from '@/components/Campo';
+import { semLimpar } from '@/components/enviar';
 
 type Tipo = { id: string; nome: string; unidadePadrao: string; mostrarCamposTecido: boolean };
 
 export function FormProduto({ tipos: tiposIniciais }: { tipos: Tipo[] }) {
   const [tipos, setTipos] = useState(tiposIniciais);
-  const [tipoId, setTipoId] = useState(tiposIniciais[0]?.id ?? '');
+  // Comeca vazio: pre-escolher o primeiro da lista ja fez linha de costura cair em "Agulha".
+  const [tipoId, setTipoId] = useState('');
   const [criandoTipo, setCriandoTipo] = useState(false);
 
   const [estado, acao, pendente] = useActionState<Resultado, FormData>(criarProdutoEstoque, null);
@@ -39,7 +41,7 @@ export function FormProduto({ tipos: tiposIniciais }: { tipos: Tipo[] }) {
         )}
       </div>
 
-      <form action={acao} className="mt-6 flex max-w-[640px] flex-col gap-6">
+      <form onSubmit={semLimpar(acao)} className="mt-6 flex max-w-[640px] flex-col gap-6">
         <Campo id="tipoProdutoId" label="Tipo do produto" erro={e.tipoProdutoId}>
           <select
             id="tipoProdutoId"
@@ -48,6 +50,9 @@ export function FormProduto({ tipos: tiposIniciais }: { tipos: Tipo[] }) {
             value={tipoId}
             onChange={(ev) => setTipoId(ev.target.value)}
           >
+            <option value="">
+              Escolha o tipo
+            </option>
             {tipos.map((t) => (
               <option key={t.id} value={t.id}>
                 {t.nome}
@@ -105,6 +110,18 @@ export function FormProduto({ tipos: tiposIniciais }: { tipos: Tipo[] }) {
           <Campo id="localizacao" label="Onde fica" opcional ajuda="Ex.: prateleira 3.">
             <input id="localizacao" name="localizacao" className="campo" />
           </Campo>
+          <fieldset className="rounded border border-dashed border-fio-ouro p-4 sm:col-span-2">
+            <legend className="rotulo-campo px-1">Já tem na prateleira? (opcional)</legend>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Campo id="quantidadeInicial" label="Quanto tem agora" erro={e.quantidadeInicial} ajuda="Na medida escolhida acima: metro, quilo ou unidade.">
+                <input id="quantidadeInicial" name="quantidadeInicial" inputMode="decimal" className="campo" placeholder="0" />
+              </Campo>
+              <Campo id="valorInicial" label="Quanto vale cada um" erro={e.valorInicial} ajuda="O metro, o quilo ou a unidade. Se não souber o exato, um palpite serve.">
+                <input id="valorInicial" name="valorInicial" inputMode="decimal" className="campo" placeholder="0,00" />
+              </Campo>
+            </div>
+            <p className="miudo mt-3">Preenchendo, o item já entra no estoque com valor, sem precisar do estoque de abertura depois.</p>
+          </fieldset>
         </div>
 
         <ErroGeral erro={estado?.erro} />

@@ -3,6 +3,7 @@
 import { useActionState, useState } from 'react';
 import { novaTabelaPreco, type Resultado } from '../../cadastros-acoes';
 import { Campo, ErroGeral } from '@/components/Campo';
+import { semLimpar } from '@/components/enviar';
 
 export function FormPreco({
   fornecedorId,
@@ -16,7 +17,7 @@ export function FormPreco({
   const e = estado?.campos ?? {};
 
   return (
-    <form action={acao} className="mt-5 flex flex-col gap-5">
+    <form onSubmit={semLimpar(acao)} className="mt-5 flex flex-col gap-5">
       <input type="hidden" name="fornecedorId" value={fornecedorId} />
       <input type="hidden" name="tipo" value={tipo} />
 
@@ -41,7 +42,7 @@ export function FormPreco({
         <div className="grid gap-5 sm:grid-cols-2">
           <Campo id="materiaPrimaId" label="Qual tecido" erro={e.materiaPrimaId}>
             <select id="materiaPrimaId" name="materiaPrimaId" className="campo" defaultValue="">
-              <option value="" disabled>
+              <option value="">
                 Escolha o tecido
               </option>
               {tecidos.map((t) => (

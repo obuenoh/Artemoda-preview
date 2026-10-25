@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import { exigirPapel } from '@/lib/sessao';
+import { campoDeData } from '@/lib/numeros';
 import { TituloPagina, Vazio, Botao } from '@/components/Ui';
 import { FormCompra } from './FormCompra';
 
@@ -56,14 +57,14 @@ export default async function NovaCompraPage({
         sub="O frete é dividido entre os itens pelo sistema — você não precisa calcular"
       />
       <FormCompra
-        fornecedores={vendedores.map((f) => ({ id: f.id, nome: f.nome }))}
+        fornecedores={vendedores.map((f) => ({ id: f.id, nome: f.nome, condicao: f.condicaoPagamento }))}
         tecidos={tecidos.map((t) => ({
           id: t.id,
           nome: `${t.nome}${t.cor ? ` · ${t.cor}` : ''}`,
           unidade: t.unidade,
         }))}
         tecidoInicial={tecido ?? ''}
-        hoje={new Date().toISOString().slice(0, 10)}
+        hoje={campoDeData(new Date())}
       />
     </>
   );

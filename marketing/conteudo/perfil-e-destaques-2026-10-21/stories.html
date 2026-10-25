@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Stories dos destaques</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /*
+   * Story 540x960 renderizado em 2x (1080x1920).
+   * Faixa segura do Instagram: topo ate ~125px (barra de progresso e nome)
+   * e base a partir de ~800px (campo de mensagem). Nada importante ali.
+   * Texto copiado das landings e do FAQ do site, passado para o tom formal.
+   */
+  :root {
+    --navy: #15263D;
+    --ink: #1C1C1C;
+    --cream: #F5F2EC;
+    --gold: #B58B57;
+    --muted-on-light: rgba(28, 28, 28, .68);
+    --muted-on-dark: rgba(245, 242, 236, .72);
+    --hairline-light: rgba(28, 28, 28, .14);
+    --numeral: rgba(181, 139, 87, .55);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #888; font-family: 'Montserrat', sans-serif; }
+
+  .story {
+    position: relative;
+    width: 540px;
+    height: 960px;
+    overflow: hidden;
+    background: var(--cream);
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Pala azul-marinho com trama de sarja */
+  .pala {
+    position: relative;
+    isolation: isolate;
+    background: var(--navy);
+    color: var(--cream);
+    padding: 138px 40px 38px;
+  }
+  .pala::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image:
+      repeating-linear-gradient(45deg, rgba(245,242,236,.04) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(-45deg, rgba(28,28,28,.05) 0 1px, transparent 1px 4px);
+  }
+  .eyebrow {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 600; font-size: 10px; letter-spacing: .24em; text-transform: uppercase; color: var(--gold);
+  }
+  .eyebrow::before { content: ''; display: block; width: 22px; height: 1px; background: var(--gold); }
+  h1 {
+    margin-top: 16px;
+    font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 300;
+    font-size: 44px; line-height: 1.06; letter-spacing: -.01em;
+    font-variant-numeric: lining-nums;
+    max-width: 11em;
+  }
+
+  /* Pesponto na emenda entre pala e corpo */
+  .emenda { position: absolute; left: 24px; right: 24px; top: 7px; height: 3px; }
+  .emenda svg { display: block; width: 100%; height: 3px; overflow: visible; }
+
+  .corpo { position: relative; flex: 1; padding: 30px 40px 206px; display: flex; flex-direction: column; justify-content: center; }
+
+  /* Lista de pontos (sem numero: nao e sequencia) */
+  .item { padding: 18px 0; border-top: 1px solid var(--hairline-light); }
+  .emenda + .item { border-top: 0; padding-top: 4px; }
+  .item h2 { font-weight: 600; font-size: 12.5px; line-height: 1.35; letter-spacing: .12em; text-transform: uppercase; }
+  .item p { margin-top: 7px; font-size: 16.5px; line-height: 1.45; color: var(--muted-on-light); text-wrap: pretty; }
+
+  /* Passos numerados (sequencia real) */
+  .passo { display: flex; gap: 18px; padding: 18px 0; border-top: 1px solid var(--hairline-light); }
+  .emenda + .passo { border-top: 0; padding-top: 4px; }
+  .num {
+    flex-shrink: 0; width: 46px;
+    font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 300;
+    font-size: 44px; line-height: .8; color: var(--numeral); font-variant-numeric: lining-nums;
+  }
+  .passo h2 { font-weight: 600; font-size: 12.5px; line-height: 1.35; letter-spacing: .12em; text-transform: uppercase; }
+  .passo p { margin-top: 7px; font-size: 16.5px; line-height: 1.45; color: var(--muted-on-light); text-wrap: pretty; }
+
+  /* Etapas da fabrica: linha compacta */
+  .etapa { display: flex; align-items: center; gap: 16px; padding: 16px 0; border-top: 1px solid var(--hairline-light); }
+  .emenda + .etapa { border-top: 0; padding-top: 2px; }
+  .etapa .num { font-size: 44px; width: 46px; }
+  .etapa h2 { flex: 1; font-weight: 600; font-size: 12.5px; letter-spacing: .12em; text-transform: uppercase; }
+  .tag {
+    border: 1px solid var(--gold); border-radius: 2px; padding: 4px 8px;
+    font-weight: 600; font-size: 8px; letter-spacing: .18em; text-transform: uppercase; color: var(--gold);
+  }
+
+  /* Contato */
+  .dado { padding: 18px 0; border-top: 1px solid var(--hairline-light); }
+  .emenda + .dado { border-top: 0; padding-top: 4px; }
+  .dado .rot { font-weight: 600; font-size: 10px; letter-spacing: .22em; text-transform: uppercase; color: var(--muted-on-light); }
+  .dado .val { margin-top: 6px; font-size: 19px; line-height: 1.4; font-weight: 500; }
+
+  .cta {
+    align-self: flex-start; margin-top: 26px;
+    background: var(--gold); color: var(--navy);
+    border-radius: 2px; padding: 15px 22px;
+    font-weight: 600; font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase;
+  }
+
+  /* Rodape acima da faixa do campo de mensagem */
+  .rodape {
+    position: absolute; left: 40px; right: 40px; top: 772px;
+    display: flex; align-items: center; gap: 12px;
+    padding-top: 14px; border-top: 1px solid var(--hairline-light);
+  }
+  .mono {
+    width: 26px; height: 26px; flex-shrink: 0;
+    border: 1px solid var(--gold); border-radius: 2px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', Georgia, serif; font-size: 13px; color: var(--gold);
+  }
+  .rodape p { font-weight: 500; font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted-on-light); }
+</style>
+</head>
+<body>
+
+<template id="emenda">
+  <div class="emenda">
+    <svg>
+      <line x1="0" y1="1.5" x2="100%" y2="1.5" stroke="#B58B57" stroke-width="1" stroke-dasharray="6 4" opacity=".75"/>
+      <circle cx="0" cy="1.5" r="1.5" fill="#B58B57" opacity=".6"/>
+      <circle cx="100%" cy="1.5" r="1.5" fill="#B58B57" opacity=".6"/>
+    </svg>
+  </div>
+</template>
+
+<!-- 1. ORCAMENTO -->
+<div class="story" data-arquivo="story-01-orcamento.png">
+  <div class="pala">
+    <p class="eyebrow">Orçamento</p>
+    <h1>Como solicitar um orçamento.</h1>
+  </div>
+  <div class="corpo">
+    <div class="passo">
+      <span class="num">01</span>
+      <div><h2>Informe quantidade e modelos</h2><p>Pedido mínimo de 30 peças.</p></div>
+    </div>
+    <div class="passo">
+      <span class="num">02</span>
+      <div><h2>Envie a arte ou a logo</h2><p>PDF, AI, EPS, SVG ou PNG em alta. Se tiver apenas uma foto da logo, avaliamos o que é possível.</p></div>
+    </div>
+    <div class="passo">
+      <span class="num">03</span>
+      <div><h2>Receba a proposta</h2><p>Prazo e condições de pagamento são definidos no orçamento, conforme o volume.</p></div>
+    </div>
+    <span class="cta">WhatsApp (11) 94747-3375</span>
+  </div>
+  <div class="rodape"><span class="mono">AM</span><p>Atendemos escolas, empresas e marcas</p></div>
+</div>
+
+<!-- 2. ESCOLAR -->
+<div class="story" data-arquivo="story-02-escolar.png">
+  <div class="pala">
+    <p class="eyebrow">Para escolas</p>
+    <h1>O uniforme da escola inteira, feito na nossa fábrica.</h1>
+  </div>
+  <div class="corpo">
+    <div class="item"><h2>O kit inteiro na mesma produção</h2><p>Camiseta, agasalho, short e calça do mesmo tecido e do mesmo lote de cor.</p></div>
+    <div class="item"><h2>Grade do 2 ao 16</h2><p>Modelagem própria para o corpo da criança pequena e do adolescente.</p></div>
+    <div class="item"><h2>Reposição igual à primeira remessa</h2><p>Guardamos a modelagem e a ficha do tecido de cada escola.</p></div>
+    <div class="item"><h2>Material para aprovação</h2><p>Amostra física, tabela de medidas e proposta para a direção e a comissão de pais.</p></div>
+  </div>
+  <div class="rodape"><span class="mono">AM</span><p>Orçamento pelo WhatsApp (11) 94747-3375</p></div>
+</div>
+
+<!-- 3. EMPRESAS -->
+<div class="story" data-arquivo="story-03-empresas.png">
+  <div class="pala">
+    <p class="eyebrow">Para empresas</p>
+    <h1>Uniforme corporativo com a costura feita aqui dentro.</h1>
+  </div>
+  <div class="corpo">
+    <div class="item"><h2>A peça certa para cada função</h2><p>Camisa, polo, jaleco e conjunto operacional para escritório, loja, cozinha e operação.</p></div>
+    <div class="item"><h2>Bordado ou silk</h2><p>Indicamos a técnica peça a peça, conforme o tecido e o uso.</p></div>
+    <div class="item"><h2>Peça piloto antes do volume</h2><p>Tecido, cor, caimento e aplicação aprovados antes de a produção começar.</p></div>
+    <div class="item"><h2>Nota fiscal e proposta formal</h2><p>A documentação que o setor de compras precisa para cadastrar o fornecedor.</p></div>
+  </div>
+  <div class="rodape"><span class="mono">AM</span><p>Orçamento pelo WhatsApp (11) 94747-3375</p></div>
+</div>
+
+<!-- 4. SUA MARCA -->
+<div class="story" data-arquivo="story-04-sua-marca.png">
+  <div class="pala">
+    <p class="eyebrow">Private label</p>
+    <h1>A sua marca, costurada na nossa confecção.</h1>
+  </div>
+  <div class="corpo">
+    <div class="item"><h2>Do piloto à grade</h2><p>Desenvolvemos a peça piloto, ajustamos e só depois produzimos a grade.</p></div>
+    <div class="item"><h2>Sua etiqueta na peça</h2><p>Etiqueta, tag e acabamento interno com a identidade da sua marca.</p></div>
+    <div class="item"><h2>Modelagem a partir da referência</h2><p>Traga a peça que deseja reproduzir ou o desenho.</p></div>
+    <div class="item"><h2>A partir de 30 peças</h2><p>Uma marca nova pode começar com uma produção pequena.</p></div>
+  </div>
+  <div class="rodape"><span class="mono">AM</span><p>Orçamento pelo WhatsApp (11) 94747-3375</p></div>
+</div>
+
+<!-- 5. FABRICA -->
+<div class="story" data-arquivo="story-05-fabrica.png">
+  <div class="pala">
+    <p class="eyebrow">Fabricação própria</p>
+    <h1>Do tecido à entrega, em seis etapas.</h1>
+  </div>
+  <div class="corpo">
+    <div class="etapa"><span class="num">01</span><h2>Briefing e modelagem</h2></div>
+    <div class="etapa"><span class="num">02</span><h2>Escolha do tecido</h2></div>
+    <div class="etapa"><span class="num">03</span><h2>Corte e costura</h2><span class="tag">Na nossa confecção</span></div>
+    <div class="etapa"><span class="num">04</span><h2>Personalização</h2><span class="tag">Parceiros</span></div>
+    <div class="etapa"><span class="num">05</span><h2>Controle de qualidade</h2></div>
+    <div class="etapa"><span class="num">06</span><h2>Entrega</h2><span class="tag">Todo o Brasil</span></div>
+  </div>
+  <div class="rodape"><span class="mono">AM</span><p>Penha de França · São Paulo</p></div>
+</div>
+
+<!-- 6. CONTATO -->
+<div class="story" data-arquivo="story-06-contato.png">
+  <div class="pala">
+    <p class="eyebrow">Contato</p>
+    <h1>Fale com a Arte e Moda.</h1>
+  </div>
+  <div class="corpo">
+    <div class="dado"><p class="rot">WhatsApp</p><p class="val">(11) 94747-3375</p></div>
+    <div class="dado"><p class="rot">E-mail</p><p class="val">artemodaunifo@gmail.com</p></div>
+    <div class="dado"><p class="rot">Endereço</p><p class="val">Av. Amador Bueno da Veiga, 2743<br>Penha de França · São Paulo, SP</p></div>
+    <div class="dado"><p class="rot">Instagram</p><p class="val">@arteemoda.br</p></div>
+  </div>
+  <div class="rodape"><span class="mono">AM</span><p>Entregamos para todo o Brasil</p></div>
+</div>
+
+<script>
+  const emenda = document.getElementById('emenda');
+  document.querySelectorAll('.corpo').forEach(c => c.prepend(emenda.content.cloneNode(true)));
+</script>
+</body>
+</html>

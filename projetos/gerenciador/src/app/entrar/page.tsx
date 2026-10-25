@@ -3,6 +3,7 @@
 import { useActionState } from 'react';
 import { entrar } from './acoes';
 import { Monograma } from '@/components/Marca';
+import { semLimpar } from '@/components/enviar';
 
 export default function EntrarPage() {
   const [erro, acao, pendente] = useActionState(entrar, null);
@@ -21,7 +22,7 @@ export default function EntrarPage() {
           <h1 className="font-display text-2xl">Entrar no sistema</h1>
           <p className="mt-2 text-sm fraco">Use o e-mail e a senha que combinamos.</p>
 
-          <form action={acao} className="mt-7 flex flex-col gap-5">
+          <form onSubmit={semLimpar(acao)} className="mt-7 flex flex-col gap-5">
             <div>
               <label htmlFor="email" className="rotulo-campo">
                 E-mail

@@ -9,6 +9,7 @@ import type { Papel } from '@/lib/sessao';
 const itens: { href: string; rotulo: string; papeis: Papel[] }[] = [
   { href: '/', rotulo: 'Visão Geral', papeis: ['dona', 'producao', 'vendas'] },
   { href: '/vendas', rotulo: 'Vendas', papeis: ['dona', 'vendas'] },
+  { href: '/financeiro', rotulo: 'Financeiro', papeis: ['dona'] },
   { href: '/nota-fiscal', rotulo: 'Nota Fiscal', papeis: ['dona'] },
   { href: '/tecidos', rotulo: 'Tecidos', papeis: ['dona', 'producao'] },
   { href: '/estoque', rotulo: 'Estoque', papeis: ['dona', 'producao'] },
@@ -38,18 +39,18 @@ export function Navegacao({
       <div className="mx-auto flex max-w-[1240px] items-center gap-4 px-4 py-2.5 md:px-6">
         <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="Início">
           <Monograma tamanho={26} />
-          <span className="hidden text-[10px] font-semibold uppercase tracking-[0.24em] sm:inline">
+          <span className="hidden text-[10px] font-semibold uppercase tracking-[0.24em] sm:inline lg:hidden 2xl:inline">
             Arte e Moda
           </span>
         </Link>
 
         <nav aria-label="Seções" className="hidden flex-1 lg:block">
-          <ul className="flex flex-wrap gap-1">
+          <ul className="flex flex-wrap gap-0.5">
             {visiveis.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={`compacto inline-flex items-center rounded-sm px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] transition-colors ${
+                  className={`compacto inline-flex items-center rounded-sm px-2.5 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] transition-colors ${
                     ativo(item.href)
                       ? 'bg-gold text-navy-deep'
                       : 'text-[color:var(--texto-claro)] hover:text-gold'

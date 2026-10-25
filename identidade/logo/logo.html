@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Logo Arte e Moda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400&family=Montserrat:wght@600&display=swap" rel="stylesheet">
+<style>
+  /*
+   * Fonte dos arquivos de logo. Mesma geometria de projetos/site/components/ui/Logo.tsx
+   * (proporcao do tamanho md: monograma 40, logotipo 11, espaco 12, tracking .3em).
+   * Cada versao vira PNG transparente e PDF vetorial pelo exportar.js.
+   */
+  :root { --navy: #15263D; --ink: #1C1C1C; --cream: #F5F2EC; --gold: #B58B57; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: transparent; }
+  body { padding: 40px; display: flex; flex-direction: column; align-items: flex-start; gap: 40px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  .mono {
+    width: var(--t); height: var(--t); flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: max(1px, calc(var(--t) / 80)) solid var(--gold); border-radius: 2px;
+    color: var(--gold); font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400;
+    font-size: calc(var(--t) * .48); line-height: 1;
+  }
+  .marca { font-family: 'Montserrat', sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: .3em; margin-right: -.3em; white-space: nowrap; line-height: 1; }
+  .assin { display: inline-flex; align-items: center; gap: calc(var(--t) * .3); }
+  .assin .marca { font-size: calc(var(--t) * .275); }
+  .uma-cor .mono { border-color: currentColor; color: currentColor; }
+
+  .icone { width: 1024px; height: 1024px; background: var(--navy); display: grid; place-items: center; }
+  .avatar { width: 1080px; height: 1080px; background: var(--navy); display: grid; place-items: center; }
+</style>
+</head>
+<body>
+  <span data-v="assinatura-horizontal_para-fundo-escuro" class="assin" style="--t:160px; color:var(--cream)"><span class="mono">AM</span><span class="marca">Arte e Moda</span></span>
+  <span data-v="assinatura-horizontal_para-fundo-claro" class="assin" style="--t:160px; color:var(--ink)"><span class="mono">AM</span><span class="marca">Arte e Moda</span></span>
+  <span data-v="assinatura-horizontal_uma-cor-azul" class="assin uma-cor" style="--t:160px; color:var(--navy)"><span class="mono">AM</span><span class="marca">Arte e Moda</span></span>
+  <span data-v="assinatura-horizontal_uma-cor-creme" class="assin uma-cor" style="--t:160px; color:var(--cream)"><span class="mono">AM</span><span class="marca">Arte e Moda</span></span>
+  <span data-v="logotipo_para-fundo-escuro" class="marca" style="font-size:64px; color:var(--cream)">Arte e Moda</span>
+  <span data-v="logotipo_para-fundo-claro" class="marca" style="font-size:64px; color:var(--ink)">Arte e Moda</span>
+  <span data-v="monograma_dourado" class="mono" style="--t:256px">AM</span>
+  <span data-v="monograma_uma-cor-azul" class="uma-cor" style="color:var(--navy); line-height:0"><span class="mono" style="--t:256px">AM</span></span>
+  <span data-v="monograma_uma-cor-creme" class="uma-cor" style="color:var(--cream); line-height:0"><span class="mono" style="--t:256px">AM</span></span>
+  <div data-v="icone-do-app" class="icone"><span class="mono" style="--t:512px">AM</span></div>
+  <div data-v="avatar-instagram" class="avatar"><span class="mono" style="--t:540px">AM</span></div>
+</body>
+</html>

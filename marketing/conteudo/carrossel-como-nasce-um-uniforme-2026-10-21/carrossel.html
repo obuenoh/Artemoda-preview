@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Como nasce um uniforme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /*
+   * Slide desenhado em 540x675 e renderizado com deviceScaleFactor 2
+   * (sai 1080x1350). Assim o pesponto continua 1px de desenho, como no
+   * site, e nao some no celular.
+   */
+  :root {
+    --navy: #15263D;
+    --ink: #1C1C1C;
+    --cream: #F5F2EC;
+    --gold: #B58B57;
+    --gray: #707070;
+    --muted-on-light: rgba(28, 28, 28, .68);
+    --muted-on-dark: rgba(245, 242, 236, .72);
+    --hairline: rgba(181, 139, 87, .28);
+    --numeral: rgba(181, 139, 87, .40);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #888; font-family: 'Montserrat', sans-serif; }
+
+  .slide {
+    position: relative;
+    width: 540px;
+    height: 675px;
+    overflow: hidden;
+    padding: 34px 40px 36px;
+    display: flex;
+    flex-direction: column;
+    isolation: isolate;
+  }
+  .navy { background: var(--navy); color: var(--cream); }
+  .cream { background: var(--cream); color: var(--ink); }
+
+  /* Trama de sarja, igual ao site */
+  .navy::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image:
+      repeating-linear-gradient(45deg, rgba(245,242,236,.04) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(-45deg, rgba(28,28,28,.05) 0 1px, transparent 1px 4px);
+  }
+  .navy::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(120% 80% at 50% 0%, rgba(245,242,236,.06) 0%, transparent 60%);
+  }
+
+  /* Topo: marca + contador */
+  .top { display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1; }
+  .logo { display: inline-flex; align-items: center; gap: 10px; }
+  .mono {
+    width: 30px; height: 30px;
+    border: 1px solid var(--gold);
+    border-radius: 2px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 400; font-size: 15px; line-height: 1;
+    color: var(--gold);
+  }
+  .word { font-weight: 600; font-size: 8.5px; letter-spacing: .3em; text-transform: uppercase; }
+  .counter { font-weight: 500; font-size: 8px; letter-spacing: .22em; }
+  .navy .counter { color: var(--muted-on-dark); }
+  .cream .counter { color: var(--muted-on-light); }
+
+  /* Tipografia */
+  .display { font-variant-numeric: lining-nums; font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 300; letter-spacing: -.01em; }
+  .eyebrow {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 600; font-size: 9px; letter-spacing: .22em; text-transform: uppercase; color: var(--gold);
+  }
+  .eyebrow::before { content: ''; display: block; width: 22px; height: 1px; background: var(--gold); }
+  .title {
+    font-weight: 600; font-size: 21px; line-height: 1.3; letter-spacing: .08em; text-transform: uppercase;
+  }
+  .body { font-weight: 400; font-size: 15px; line-height: 1.6; text-wrap: pretty; }
+  .navy .body { color: var(--muted-on-dark); }
+  .cream .body { color: var(--muted-on-light); }
+  .label { font-weight: 500; font-size: 8.5px; line-height: 1.4; letter-spacing: .22em; text-transform: uppercase; }
+  .navy .label { color: var(--muted-on-dark); }
+  .cream .label { color: var(--muted-on-light); }
+  .dot { color: var(--gold); margin: 0 7px; }
+  .selo {
+    display: inline-block; align-self: flex-start;
+    border: 1px solid var(--gold); border-radius: 2px;
+    padding: 6px 11px;
+    font-weight: 600; font-size: 8.5px; letter-spacing: .22em; text-transform: uppercase; color: var(--gold);
+  }
+  .numeral { font-variant-numeric: lining-nums; font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 300; line-height: .8; color: var(--numeral); }
+
+  /* Pesponto: traco 6 / intervalo 4, 1px, furo de agulha nas pontas */
+  svg.stitch { display: block; overflow: visible; }
+
+  /* Moldura de etiqueta (capa e fechamento) */
+  .frame { position: absolute; inset: 18px; border: 1px solid var(--hairline); border-radius: 2px; pointer-events: none; }
+
+  /* ---------- 1. Capa ---------- */
+  .s1 .center { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 0 6px; }
+  .s1 h1 { font-size: 72px; line-height: 1.0; max-width: 6.5em; }
+  .s1 .eyebrow { margin-top: 26px; }
+  .s1 .body { margin-top: 16px; max-width: 25em; }
+  .s1 .foot { padding: 0 6px 4px; }
+  .s1 .foot .label { margin-top: 14px; }
+
+  /* ---------- 2. Numero grande ---------- */
+  .s2 .numeral { font-size: 260px; margin: 34px 0 0 -10px; }
+  .s2 .text { margin-top: auto; }
+  .s2 .title { margin-top: 18px; }
+  .s2 .body { margin-top: 12px; max-width: 25em; }
+
+  /* ---------- 3. Trilho (numero + pesponto vertical) ---------- */
+  .s3 .rail-wrap { flex: 1; display: flex; gap: 26px; margin-top: 54px; }
+  .s3 .rail { display: flex; flex-direction: column; align-items: center; }
+  .s3 .numeral { font-size: 150px; }
+  .s3 .rail svg { flex: 1; margin-top: 18px; }
+  .s3 .text { padding-top: 18px; display: flex; flex-direction: column; }
+  .s3 .text .body { margin-top: 16px; max-width: 17em; }
+  .s3 .text .label { margin-top: auto; }
+
+  /* ---------- 4. Bloco aplicado com pesponto no perimetro ---------- */
+  .s4 .block-wrap { flex: 1; display: flex; align-items: center; }
+  .s4 .block { position: relative; width: 100%; padding: 36px 32px 34px; }
+  .s4 .block svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .s4 .label { margin-bottom: 18px; }
+  .s4 blockquote { font-size: 40px; line-height: 1.22; margin-top: 22px; color: var(--ink); }
+  .s4 .body { margin-top: 20px; max-width: 24em; }
+
+  /* ---------- 5. Trio de tecnicas ---------- */
+  .s5 .head { margin-top: 56px; }
+  .s5 .title { margin-top: 14px; }
+  .s5 .list { margin-top: 30px; }
+  .s5 .row { display: flex; align-items: baseline; justify-content: space-between; padding: 15px 0; border-top: 1px solid var(--hairline); }
+  .s5 .row:last-child { border-bottom: 1px solid var(--hairline); }
+  .s5 .row .display { font-size: 38px; line-height: 1; color: var(--cream); }
+  .s5 .row .label { color: var(--gold); }
+  .s5 .body { margin-top: auto; max-width: 24em; }
+
+  /* ---------- 6. Dois paineis com emenda ---------- */
+  .s6 .panels { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  .s6 .panel { display: flex; gap: 22px; align-items: flex-start; }
+  .s6 .panel .numeral { font-size: 92px; flex-shrink: 0; width: 86px; }
+  .s6 .panel .body { margin-top: 10px; }
+  .s6 .seam { margin: 34px 0; }
+
+  /* ---------- 7. Fechamento ---------- */
+  .s7 .center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .s7 .mono { width: 54px; height: 54px; font-size: 27px; }
+  .s7 .word { margin-top: 14px; font-size: 10px; letter-spacing: .32em; }
+  .s7 h2 { font-size: 50px; line-height: 1.05; margin-top: 46px; }
+  .s7 .body { margin-top: 18px; max-width: 22em; }
+  .s7 .cta {
+    margin-top: 34px;
+    background: var(--gold); color: var(--navy);
+    border-radius: 2px; padding: 15px 26px;
+    font-weight: 600; font-size: 10px; letter-spacing: .2em; text-transform: uppercase;
+  }
+  .s7 .label { margin-top: 18px; }
+</style>
+</head>
+<body>
+
+<!-- 1. CAPA -->
+<div class="slide navy s1">
+  <div class="frame"></div>
+  <div class="top" style="padding: 0 6px;">
+    <span class="logo"><span class="mono">AM</span><span class="word">Arte e Moda</span></span>
+    <span class="counter">01 / 07</span>
+  </div>
+  <div class="center">
+    <h1 class="display">Como nasce um uniforme</h1>
+    <p class="eyebrow">Uniformes · Private Label</p>
+    <p class="body">Seis etapas, da modelagem à entrega. Corte e costura na nossa confecção, em São Paulo.</p>
+  </div>
+  <div class="foot">
+    <svg class="stitch" width="100%" height="3">
+      <line x1="0" y1="1.5" x2="100%" y2="1.5" stroke="#B58B57" stroke-width="1" stroke-dasharray="6 4" opacity=".75"/>
+      <circle cx="0" cy="1.5" r="1.5" fill="#B58B57" opacity=".6"/>
+      <circle cx="100%" cy="1.5" r="1.5" fill="#B58B57" opacity=".6"/>
+    </svg>
+    <p class="label">Fabricação própria<span class="dot">·</span>São Paulo<span class="dot">·</span>@arteemoda.br</p>
+  </div>
+</div>
+
+<!-- 2. ETAPA 01 -->
+<div class="slide cream s2">
+  <div class="top">
+    <span class="logo"><span class="mono">AM</span><span class="word">Arte e Moda</span></span>
+    <span class="counter">02 / 07</span>
+  </div>
+  <div class="numeral">01</div>
+  <div class="text">
+    <svg class="stitch" width="100%" height="3">
+      <line x1="0" y1="1.5" x2="100%" y2="1.5" stroke="#B58B57" stroke-width="1" stroke-dasharray="6 4" opacity=".55"/>
+    </svg>
+    <h2 class="title">Briefing e modelagem</h2>
+    <p class="body">Entendemos a necessidade, o uso da peça e a grade de tamanhos. A modelagem sai daqui, ajustada ao corpo de quem vai vestir.</p>
+  </div>
+</div>
+
+<!-- 3. ETAPA 02 -->
+<div class="slide navy s3">
+  <div class="top">
+    <span class="logo"><span class="mono">AM</span><span class="word">Arte e Moda</span></span>
+    <span class="counter">03 / 07</span>
+  </div>
+  <div class="rail-wrap">
+    <div class="rail">
+      <div class="numeral">02</div>
+      <svg class="stitch" width="3" height="100%">
+        <line x1="1.5" y1="0" x2="1.5" y2="100%" stroke="#B58B57" stroke-width="1" stroke-dasharray="6 4" opacity=".75"/>
+        <circle cx="1.5" cy="0" r="1.5" fill="#B58B57" opacity=".6"/>
+        <circle cx="1.5" cy="100%" r="1.5" fill="#B58B57" opacity=".6"/>
+      </svg>
+    </div>
+    <div class="text">
+      <h2 class="title">Escolha<br>do tecido</h2>
+      <p class="body">Compramos o tecido direto da fábrica. Apresentamos o que cada opção oferece em conforto, durabilidade e custo.</p>
+      <p class="label">Etapa 02 de 06</p>
+    </div>
+  </div>
+</div>
+
+<!-- 4. ETAPA 03, DESTAQUE -->
+<div class="slide cream s4">
+  <div class="top">
+    <span class="logo"><span class="mono">AM</span><span class="word">Arte e Moda</span></span>
+    <span class="counter">04 / 07</span>
+  </div>
+  <div class="block-wrap">
+    <div class="block">
+      <svg class="stitch">
+        <rect x="0" y="0" width="100%" height="100%" fill="none" stroke="#B58B57" stroke-width="1" stroke-dasharray="6 4" opacity=".75"/>
+        <circle cx="0" cy="0" r="1.5" fill="#B58B57" opacity=".6"/>
+        <circle cx="100%" cy="0" r="1.5" fill="#B58B57" opacity=".6"/>
+        <circle cx="0" cy="100%" r="1.5" fill="#B58B57" opacity=".6"/>
+        <circle cx="100%" cy="100%" r="1.5" fill="#B58B57" opacity=".6"/>
+      </svg>
+      <p class="label">03<span class="dot">·</span>Corte e costura</p>
+      <p class="selo">Feito na nossa confecção</p>
+      <blockquote class="display">Corte e costura com a nossa equipe.<br>Sem intermediário.</blockquote>
+      <p class="body">A peça não é terceirizada por inteiro: ela é cortada e costurada aqui.</p>
+    </div>
+  </div>
+</div>
+
+<!-- 5. ETAPA 04 -->
+<div class="slide navy s5">
+  <div class="top">
+    <span class="logo"><span class="mono">AM</span><span class="word">Arte e Moda</span></span>
+    <span class="counter">05 / 07</span>
+  </div>
+  <div class="head">
+    <p class="eyebrow">Etapa 04</p>
+    <h2 class="title">Personalização</h2>
+  </div>
+  <div class="list">
+    <div class="row"><span class="display">DTF</span></div>
+    <div class="row"><span class="display">Silk screen</span></div>
+    <div class="row"><span class="display">Bordado</span></div>
+  </div>
+  <p class="body">Feitos com parceiros especializados. A técnica é escolhida peça a peça, conforme o tecido e a arte.</p>
+</div>
+
+<!-- 6. ETAPAS 05 E 06 -->
+<div class="slide cream s6">
+  <div class="top">
+    <span class="logo"><span class="mono">AM</span><span class="word">Arte e Moda</span></span>
+    <span class="counter">06 / 07</span>
+  </div>
+  <div class="panels">
+    <div class="panel">
+      <div class="numeral">05</div>
+      <div>
+        <h2 class="title">Controle de qualidade</h2>
+        <p class="body">Costura, acabamento, medidas e aplicação, conferidos peça a peça. O que não passa, não sai.</p>
+      </div>
+    </div>
+    <svg class="stitch seam" width="100%" height="3">
+      <line x1="0" y1="1.5" x2="100%" y2="1.5" stroke="#B58B57" stroke-width="1" stroke-dasharray="6 4" opacity=".75"/>
+      <circle cx="0" cy="1.5" r="1.5" fill="#B58B57" opacity=".6"/>
+      <circle cx="100%" cy="1.5" r="1.5" fill="#B58B57" opacity=".6"/>
+    </svg>
+    <div class="panel">
+      <div class="numeral">06</div>
+      <div>
+        <h2 class="title">Entrega</h2>
+        <p class="body">Embalado por tamanho e conferido antes de sair. Entregamos para todo o Brasil.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 7. FECHAMENTO -->
+<div class="slide navy s7">
+  <div class="frame"></div>
+  <div class="top" style="padding: 0 6px;">
+    <span></span>
+    <span class="counter">07 / 07</span>
+  </div>
+  <div class="center">
+    <span class="mono">AM</span>
+    <span class="word">Arte e Moda</span>
+    <h2 class="display">Solicite um orçamento.</h2>
+    <p class="body">Uniforme escolar, uniforme empresarial e private label. Pedido mínimo de 30 peças.</p>
+    <span class="cta">WhatsApp (11) 94747-3375</span>
+    <p class="label">@arteemoda.br</p>
+  </div>
+</div>
+
+</body>
+</html>

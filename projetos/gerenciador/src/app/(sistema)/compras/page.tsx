@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 import { exigirUsuario } from '@/lib/sessao';
-import { centavosParaReais, milFormatado, dataBR, valorDe } from '@/lib/numeros';
+import { centavosParaReais, milFormatado, dataBR, dataCurtaBR, valorDe } from '@/lib/numeros';
 import { TituloPagina, Vazio, Botao } from '@/components/Ui';
 
 export const metadata = { title: 'Compras' };
@@ -10,7 +10,11 @@ export default async function ComprasPage() {
 
   const compras = await db.compra.findMany({
     where: { empresaId: usuario.empresaId },
-    include: { fornecedor: true, itens: { include: { materiaPrima: true } } },
+    include: {
+      fornecedor: true,
+      itens: { include: { materiaPrima: true } },
+      contasPagar: { select: { situacao: true, vencimento: true }, orderBy: { vencimento: 'asc' } },
+    },
     orderBy: { data: 'desc' },
     take: 50,
   });
@@ -48,7 +52,10 @@ export default async function ComprasPage() {
                       {c.numeroNf ? ` · nota ${c.numeroNf}` : ' · sem nota informada'}
                     </p>
                   </div>
-                  <p className="text-lg font-bold">{centavosParaReais(total)}</p>
+                  <div className="text-right">
+                    <p className="text-lg font-bold">{centavosParaReais(total)}</p>
+                    {usuario.papel === 'dona' && <SituacaoPagamento contas={c.contasPagar} />}
+                  </div>
                 </div>
 
                 <ul className="mt-3 flex flex-col gap-1 border-t border-fio pt-3">
@@ -79,5 +86,17 @@ export default async function ComprasPage() {
         </ul>
       )}
     </>
+  );
+}
+
+/** So para a dona: se a compra ja foi paga ou quando vence o proximo pagamento. */
+function SituacaoPagamento({ contas }: { contas: { situacao: string; vencimento: Date }[] }) {
+  if (contas.length === 0) return <p className="miudo">sem pagamento registrado</p>;
+  const aberta = contas.find((c) => c.situacao === 'aberta');
+  if (!aberta) return <p className="miudo">paga</p>;
+  return (
+    <p className="miudo">
+      a pagar · vence {dataCurtaBR(aberta.vencimento)}
+    </p>
   );
 }

@@ -24,8 +24,8 @@ function nomeArquivo(url) {
 }
 
 // ── 1. crawl ────────────────────────────────────────────────────────────
-const fila = ['/', '/vendas', '/nota-fiscal', '/tecidos', '/estoque',
-              '/compras', '/fornecedores', '/clientes'];
+const fila = ['/', '/vendas', '/financeiro', '/financeiro/pagar', '/financeiro/receber',
+              '/nota-fiscal', '/tecidos', '/estoque', '/compras', '/fornecedores', '/clientes'];
 const vistos = new Set();
 const paginas = new Map(); // url -> html cru
 

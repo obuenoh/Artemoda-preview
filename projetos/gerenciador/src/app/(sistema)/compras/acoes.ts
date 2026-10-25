@@ -1,18 +1,21 @@
 'use server';
 
+import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { exigirPapel, registrarAuditoria } from '@/lib/sessao';
-import { numeroParaMil, reaisParaCentavos, custoUnitario, valorDe } from '@/lib/numeros';
+import { numeroParaMil, reaisParaCentavos, custoUnitario, valorDe, dataDoCampo, campoDeData } from '@/lib/numeros';
 import { lancar, estadoAtual } from '@/lib/estoque';
+import { lancarCaixa, parcelasDaCondicao } from '@/lib/financeiro';
 
 export type Resultado = { erro?: string; campos?: Record<string, string> } | null;
 
 /**
- * Uma compra e um fato: entra tecido e entra custo. O rateio do frete e
- * calculado pelo sistema, por valor — ela nunca digita isso ("nao pedir o
- * que da para calcular sozinho").
+ * Uma compra e um fato: entra tecido, entra custo e nasce o que pagar. O
+ * rateio do frete e calculado pelo sistema, por valor — ela nunca digita
+ * isso ("nao pedir o que da para calcular sozinho"). O mesmo vale para o
+ * vencimento: sai da condicao cadastrada no fornecedor.
  */
 export async function registrarCompra(_e: Resultado, form: FormData): Promise<Resultado> {
   const usuario = await exigirPapel('dona', 'producao');
@@ -23,10 +26,23 @@ export async function registrarCompra(_e: Resultado, form: FormData): Promise<Re
   const frete = reaisParaCentavos(String(form.get('frete') ?? '0')) ?? 0;
   const outros = reaisParaCentavos(String(form.get('outrosCustos') ?? '0')) ?? 0;
   const observacoes = String(form.get('observacoes') ?? '').trim();
+  const pagamento = String(form.get('pagamento') ?? '');
+  const dataCompra = dataDoCampo(data);
 
   const campos: Record<string, string> = {};
   if (!fornecedorId) campos.fornecedorId = 'Escolha de quem você comprou.';
-  if (!data) campos.data = 'Informe o dia da compra.';
+  if (!dataCompra) campos.data = 'Informe o dia da compra.';
+  if (pagamento !== 'na_hora' && pagamento !== 'a_prazo') {
+    campos.pagamento = 'Diga se já pagou ou se vai pagar depois.';
+  }
+
+  const fornecedor = fornecedorId
+    ? await db.fornecedor.findFirst({
+        where: { id: fornecedorId, empresaId: usuario.empresaId },
+        select: { nome: true, condicaoPagamento: true },
+      })
+    : null;
+  if (fornecedorId && !fornecedor) campos.fornecedorId = 'Esse fornecedor não foi encontrado. Escolha de novo.';
 
   // Itens chegam como arrays paralelos.
   const ids = form.getAll('itemMateriaPrimaId').map(String);
@@ -58,7 +74,9 @@ export async function registrarCompra(_e: Resultado, form: FormData): Promise<Re
   if (itens.length === 0 && Object.keys(campos).length === 0) {
     return { erro: 'Adicione pelo menos um tecido nesta compra.' };
   }
-  if (Object.keys(campos).length > 0) return { erro: 'Confira os campos marcados.', campos };
+  if (Object.keys(campos).length > 0 || !dataCompra || !fornecedor) {
+    return { erro: 'Confira os campos marcados.', campos };
+  }
 
   const totalMercadoria = itens.reduce(
     (s, i) => s + valorDe(i.quantidadeMil, i.valorUnitarioCentavos),
@@ -72,7 +90,7 @@ export async function registrarCompra(_e: Resultado, form: FormData): Promise<Re
         empresaId: usuario.empresaId,
         fornecedorId,
         numeroNf: numeroNf || null,
-        data: new Date(data),
+        data: dataCompra,
         freteCentavos: frete,
         outrosCustosCentavos: outros,
         observacoes: observacoes || null,
@@ -114,6 +132,67 @@ export async function registrarCompra(_e: Resultado, form: FormData): Promise<Re
       );
     }
 
+    // O que pagar: na hora sai do caixa no dia da compra; a prazo vira
+    // conta(s) com o vencimento da condicao do fornecedor.
+    const totalCompra = totalMercadoria + custosExtras;
+    const descricao = `Compra ${fornecedor.nome}${numeroNf ? ` — nota ${numeroNf}` : ''}`;
+
+    if (pagamento === 'na_hora') {
+      // Compra de hoje sai do caixa na hora de agora (ordem do extrato).
+      const pagoEm = campoDeData(dataCompra) === campoDeData(new Date()) ? new Date() : dataCompra;
+      const conta = await tx.contaPagar.create({
+        data: {
+          empresaId: usuario.empresaId,
+          descricao,
+          categoria: 'tecido_aviamento',
+          fornecedorId,
+          compraId: compra.id,
+          valorCentavos: totalCompra,
+          vencimento: dataCompra,
+          situacao: 'paga',
+          pagoEm,
+          valorPagoCentavos: totalCompra,
+          usuarioId: usuario.id,
+        },
+      });
+      await lancarCaixa(
+        {
+          empresaId: usuario.empresaId,
+          tipo: 'saida',
+          valorCentavos: totalCompra,
+          descricao,
+          categoria: 'tecido_aviamento',
+          origemTipo: 'conta_pagar',
+          origemId: conta.id,
+          data: pagoEm,
+          usuarioId: usuario.id,
+        },
+        tx,
+      );
+    } else {
+      // Fornecedor cadastrado "a vista" que vendeu a prazo: 30 dias.
+      const condicao = fornecedor.condicaoPagamento === 'a_vista' ? '30' : fornecedor.condicaoPagamento;
+      const parcelas = parcelasDaCondicao(condicao, dataCompra, totalCompra);
+      const grupoId = parcelas.length > 1 ? randomUUID() : null;
+      for (const [i, p] of parcelas.entries()) {
+        await tx.contaPagar.create({
+          data: {
+            empresaId: usuario.empresaId,
+            descricao,
+            categoria: 'tecido_aviamento',
+            fornecedorId,
+            compraId: compra.id,
+            grupoId,
+            parcela: i + 1,
+            totalParcelas: parcelas.length,
+            valorCentavos: p.valorCentavos,
+            vencimento: p.vencimento,
+            usuarioId: usuario.id,
+          },
+        });
+      }
+    }
+
     return compra.id;
   });
 
@@ -128,6 +207,7 @@ export async function registrarCompra(_e: Resultado, form: FormData): Promise<Re
 
   revalidatePath('/compras');
   revalidatePath('/estoque');
+  revalidatePath('/financeiro', 'layout');
   revalidatePath('/');
   redirect('/compras');
 }
