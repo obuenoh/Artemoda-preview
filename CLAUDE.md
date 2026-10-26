@@ -203,6 +203,7 @@ Na Nota Fiscal: **nunca emitir NF-e direto na SEFAZ.** Usar API homologada, isol
 Estão gravadas na tabela `Configuracao` marcadas como pendentes — não chumbadas no código. Assumimos um palpite para não travar:
 1. **Como as costureiras são pagas:** **respondido em 25/10/2026, salário fixo.** A costura entra no rateio do mês, não no custo da peça. Se entrar nos dois, cada peça paga a costura duas vezes.
 2. **Compra em kg e uso em metro:** "depende muito", sem fator fixo. Onde precisar converter, o app usa a largura e a gramatura do cadastro do tecido; sem elas, pede o valor.
+3. **Prazo do Mercado Livre:** em quantos dias o Mercado Livre libera o dinheiro de uma venda (`prazo_repasse_mercado_livre_dias`). Palpite de 30 dias, que é o vencimento da conta a receber gerada pela venda. Confirmar quando começarem a vender lá.
 Com o contador, falta o regime tributário e os CFOPs para a nota sair do rascunho.
 
 ---
@@ -235,7 +236,7 @@ Entrar no gerenciador: `dona@arteemoda.com.br` / `arteemoda` (dados de exemplo; 
 
 Mora na branch `gh-pages` (saída de build, não código).
 Ver `scripts/` para regenerar via `montar-painel.mjs` e `reescrever.mjs`.
-O `/painel/` foi atualizado em 26/10/2026 (Financeiro, Visão Geral nova, Retalhos e estoque parado). Regenerar só com ok do usuário, porque publicar é público.
+O `/painel/` foi atualizado em 26/10/2026 com Financeiro, Visão Geral nova, Retalhos e estoque parado, mas **ainda não tem as três frentes** (tela Peças, três tipos de venda e o seletor de frente). O balcão de demonstração (`painel-vendas.js`) ainda tem só dois tipos de venda. Regenerar só com ok do usuário, porque publicar é público.
 
 Para regenerar o `/painel/`:
 1. Rodar o app em produção na porta 3100 (`npm run build && npm start`).

@@ -31,6 +31,12 @@ vale reconciliar.
 - **Onde:** `.env.example` → `NEXT_PUBLIC_SITE_URL` e `data/empresa.ts` → `site.url`
 - Afeta canonical, Open Graph, sitemap e schema. Está com `arteemoda.com.br`
   como suposição — **trocar antes de indexar**.
+> Atualização 26/10/2026 (consulta ao Registro.br):
+> - `arteemoda.com.br` foi registrado em 23/10/2026 por outra pessoa.
+> - `artemoda.com.br` é de outra pessoa desde 2019.
+> - Livres em 26/10: `grupoartemoda.com.br`, `grupoarteemoda.com.br`, `arteemodauniformes.com.br` e outros.
+>
+> Falta a escolha do usuário e o registro no CNPJ da empresa.
 
 ### Chaves de ambiente
 Copiar `.env.example` para `.env.local` e preencher:

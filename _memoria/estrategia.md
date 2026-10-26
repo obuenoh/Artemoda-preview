@@ -43,6 +43,14 @@ Candidatas a virar skill via `/mapear-rotinas`.
   - costureiras: salário fixo.
 - Para a nota fiscal sair pelo app: certificado digital A1, Inscrição Estadual, CEP, última nota emitida e, do contador, regime, CFOPs, NCM e o modelo de nota da loja. As perguntas foram mandadas à dona em 25/10/2026; aguardando resposta.
 - Compra em kg e uso em metro: "depende muito". O app converte pela largura e gramatura do tecido quando o cadastro tem esses dados.
+- Abertos em 26/10/2026, aguardando resposta:
+  - **Prazo do Mercado Livre:** em quantos dias o dinheiro é liberado. Palpite de 30 dias no app.
+  - **Duas perguntas para a dona:**
+    - o preço muda por frente? No Mercado Livre tem taxa, e pedido de escola às vezes tem preço combinado;
+    - precisa enviar várias peças de uma vez? Hoje o envio é peça por peça.
+  - **Domínio:** artemoda.com.br (de outra pessoa, desde 2019) e arteemoda.com.br (de outra pessoa, desde 23/10/2026) têm dono. grupoartemoda.com.br e grupoarteemoda.com.br estavam livres em 26/10/2026. Falta o usuário escolher e registrar no registro.br.
+  - **Repositório público:** o GitHub `obuenoh/Artemoda-preview` é público e mostra o código e a memória. Falta o usuário decidir se torna privado; aí a prévia do GitHub Pages precisa mudar de lugar.
+  - **Passo 3 (nota de compra):** falta o usuário separar uma ou duas notas de compra reais em PDF para testar a leitura.
 
 ## O que pode esperar
 

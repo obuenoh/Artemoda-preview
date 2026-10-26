@@ -19,8 +19,9 @@
 ### Arte e Moda
 
 Confecção em São Paulo: uniforme escolar, uniforme empresarial e private
-label. Opera como fábrica + loja física — por isso toda venda é separada
-entre "produção" (atacado, escola/empresa) e "loja" (varejo no balcão).
+label. Desde 26/10/2026 o app separa toda venda e todo estoque de peça
+pronta em três frentes: Fábrica (pedidos de escola, empresa e marca),
+Loja (balcão) e E-commerce (Mercado Livre). Ver "As três frentes" abaixo.
 Quem usa o sistema é a dona, que não é usuária de software: tela que
 precisa de treinamento está errada.
 
@@ -29,11 +30,18 @@ Duas aplicações no monorepo (`projetos/`):
 - **Site institucional** — `projetos/site`, porta 3000. Existe pra captar
   lead de tráfego pago do Instagram; não vende online. Prévia estática no
   ar em https://obuenoh.github.io/Artemoda-preview/
-- **Gerenciador interno** — `projetos/gerenciador`, porta 3100. Substitui
-  caderno, WhatsApp e planilha. Tem cadastros, compras com rateio de
-  frete, estoque com custo médio, Vendas (bipagem de código de barras),
-  Financeiro (caixa, contas a pagar e a receber) e Nota Fiscal em
-  rascunho. Roda local com banco SQLite.
+- **App de gestão** (chamado de "app"; pasta `projetos/gerenciador`,
+  porta 3100) — substitui caderno, WhatsApp e planilha. Tem:
+  - cadastros e compras com rateio de frete;
+  - estoque de tecido com custo médio, retalhos em kg e o que está parado
+    em reais;
+  - Peças: estoque de peça pronta por frente, produção e envios;
+  - Vendas com três tipos de venda e o Resumo;
+  - Financeiro: caixa, contas a pagar e a receber;
+  - Visão Geral com "Precisa de você" e o botão de ocultar valores;
+  - Nota Fiscal em rascunho.
+
+  Roda local com banco SQLite.
 
 ### As três frentes (reunião com a dona em 24/10/2026)
 
