@@ -25,6 +25,13 @@ saidas/*
 dados/*
 !dados/README.md
 
+# Prévia do app: saídas temporárias do scripts/montar-painel.mjs
+# (token.txt é uma sessão logada — nunca versionar)
+scripts/painel/
+scripts/dados/
+scripts/token.txt
+scripts/estilo.css
+
 # Backups e arquivos compactados
 *.zip
 _arquivo/

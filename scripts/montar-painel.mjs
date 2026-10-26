@@ -1,11 +1,12 @@
-// Captura o gerenciador rodando em localhost e converte num prototipo
+// Captura o app rodando em localhost e converte num prototipo
 // estatico navegavel. Nao toca no app real — so le o HTML que ele produz.
 import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
 const BASE = 'http://localhost:3100';
 const TOKEN = readFileSync(new URL('./token.txt', import.meta.url), 'utf8').trim();
-const SAIDA = new URL('./painel/', import.meta.url).pathname;
+const SAIDA = fileURLToPath(new URL('./painel/', import.meta.url));
 
 mkdirSync(SAIDA, { recursive: true });
 mkdirSync(join(SAIDA, 'fontes'), { recursive: true });
@@ -24,12 +25,14 @@ function nomeArquivo(url) {
 }
 
 // ── 1. crawl ────────────────────────────────────────────────────────────
-const fila = ['/', '/vendas', '/financeiro', '/financeiro/pagar', '/financeiro/receber',
-              '/nota-fiscal', '/tecidos', '/estoque', '/compras', '/fornecedores', '/clientes'];
+const fila = ['/', '/vendas', '/vendas/resumo', '/vendas/estoque', '/financeiro', '/financeiro/pagar',
+              '/financeiro/receber', '/nota-fiscal', '/tecidos', '/estoque', '/estoque/retalhos',
+              '/estoque/parado', '/compras', '/fornecedores', '/clientes'];
 const vistos = new Set();
 const paginas = new Map(); // url -> html cru
+const imagens = new Map(); // url -> nome do arquivo (icone do app)
 
-while (fila.length && paginas.size < 90) {
+while (fila.length && paginas.size < 140) {
   const url = fila.shift();
   if (vistos.has(url)) continue;
   vistos.add(url);
@@ -42,6 +45,13 @@ while (fila.length && paginas.size < 90) {
   for (const m of html.matchAll(/href="(\/[^"]*)"/g)) {
     const alvo = m[1];
     if (alvo.startsWith('/_next')) continue;
+    // Icone e imagem viram arquivo, nao pagina.
+    if (/\.(png|ico|svg|jpg)(\?|$)/.test(alvo)) {
+      if (!imagens.has(alvo)) imagens.set(alvo, alvo.split('?')[0].replace(/^\//, ''));
+      continue;
+    }
+    // "Mes anterior" do caixa anda para tras sem fim: fica fora da previa.
+    if (alvo.startsWith('/financeiro?mes=')) continue;
     if (!vistos.has(alvo)) fila.push(alvo);
   }
 }
@@ -69,7 +79,7 @@ for (const [url, cru] of paginas) {
   // links internos -> arquivos
   html = html.replace(/href="(\/[^"]*)"/g, (todo, alvo) => {
     if (alvo.startsWith('/_next')) return todo;
-    const arq = mapa.get(alvo);
+    const arq = mapa.get(alvo) ?? imagens.get(alvo);
     return arq ? `href="${arq}"` : `href="#" data-fora-da-previa="1"`;
   });
 
@@ -84,8 +94,13 @@ for (const [url, cru] of paginas) {
   writeFileSync(join(SAIDA, mapa.get(url)), html);
 }
 
+for (const [url, arquivo] of imagens) {
+  const r = await fetch(BASE + url, { headers: cabecalhos });
+  writeFileSync(join(SAIDA, arquivo), Buffer.from(await r.arrayBuffer()));
+}
+
 // ── 5. css + fontes ─────────────────────────────────────────────────────
-let css = readFileSync(new URL('./estilo.css', import.meta.url).pathname, 'utf8');
+let css = readFileSync(fileURLToPath(new URL('./estilo.css', import.meta.url)), 'utf8');
 const fontes = [...new Set([...css.matchAll(/url\(\/_next\/static\/media\/([^)]+)\)/g)].map(m => m[1]))];
 for (const f of fontes) {
   const r = await fetch(`${BASE}/_next/static/media/${f}`, { headers: cabecalhos });

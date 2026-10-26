@@ -218,7 +218,17 @@ Entrar no gerenciador: `dona@arteemoda.com.br` / `arteemoda` (dados de exemplo; 
 
 Mora na branch `gh-pages` (saída de build, não código).
 Ver `scripts/` para regenerar via `montar-painel.mjs` e `reescrever.mjs`.
-O `/painel/` está desatualizado desde 24/10/2026 (sem Financeiro e sem a Visão Geral nova). Regenerar só com ok do usuário: publicar é público.
+O `/painel/` foi atualizado em 26/10/2026 (Financeiro, Visão Geral nova, Retalhos e estoque parado). Regenerar só com ok do usuário, porque publicar é público.
+
+Para regenerar o `/painel/`:
+1. Rodar o app em produção na porta 3100 (`npm run build && npm start`).
+2. Gravar uma sessão de dona em `scripts/token.txt`.
+3. Salvar o CSS da página em `scripts/estilo.css` e os clientes em `scripts/dados/clientes.json`.
+4. `node montar-painel.mjs && node reescrever.mjs`.
+5. Copiar os `painel-*.js` e `painel-*.html` para `painel/`, sem o prefixo.
+6. Publicar `painel/` na branch `gh-pages`.
+
+Esses temporários estão no `.gitignore`.
 
 ---
 

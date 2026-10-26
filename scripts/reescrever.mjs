@@ -3,8 +3,9 @@
 // terem onde se plugar. Mantem as mesmas classes do componente React real —
 // visualmente identico, so ganha comportamento.
 import { readFileSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
-const DIR = new URL('./painel/', import.meta.url).pathname;
+const DIR = fileURLToPath(new URL('./painel/', import.meta.url));
 
 const CLIENTES = JSON.parse(readFileSync(new URL('./dados/clientes.json', import.meta.url), 'utf8'));
 function escaparHtml(s) {
