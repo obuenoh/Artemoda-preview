@@ -11,7 +11,7 @@ export default async function VendasLayout({ children }: { children: React.React
           { href: '/vendas', rotulo: 'Vender' },
           // O resumo tem os totais de venda: so quem vende e a dona.
           ...(usuario.papel !== 'producao' ? [{ href: '/vendas/resumo', rotulo: 'Resumo' }] : []),
-          { href: '/vendas/estoque', rotulo: 'Estoque da loja' },
+          { href: '/pecas', rotulo: 'Estoque de peças' },
         ]}
       />
       {children}

@@ -4,6 +4,7 @@ import { useActionState, useState } from 'react';
 import { gerarNotaFiscal, previsualizarRelatorio, type Resultado, type PreviaNota } from './acoes';
 import { Campo, ErroGeral } from '@/components/Campo';
 import { dataBR } from '@/lib/numeros';
+import { rotuloFrente } from '@/lib/frentes';
 import { Dinheiro } from '@/components/Valores';
 import { semLimpar } from '@/components/enviar';
 
@@ -154,7 +155,7 @@ export function FiltroNota({ clientes }: { clientes: { id: string; nome: string 
                   <tr key={i.vendaId}>
                     <td className="td">{dataBR(new Date(i.data))}</td>
                     <td className="td">{i.clienteNome}</td>
-                    <td className="td">{i.canal === 'loja' ? 'Loja' : 'Produção'}</td>
+                    <td className="td">{rotuloFrente(i.frente)}</td>
                     <td className="td">{i.pecas}</td>
                     <td className="td font-semibold">{<Dinheiro centavos={i.totalCentavos} />}</td>
                   </tr>

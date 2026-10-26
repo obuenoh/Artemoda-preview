@@ -4,6 +4,14 @@ import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { buscarProdutoPorSku, finalizarVenda, type ProdutoEncontrado } from './acoes';
 import { centavosParaReais, centavosNumero } from '@/lib/numeros';
+import { daFrente, naFrente, type Frente } from '@/lib/frentes';
+
+/** Os tres jeitos de vender. Cada um baixa do estoque da propria frente. */
+const TIPOS: { frente: Frente; rotulo: string }[] = [
+  { frente: 'loja', rotulo: 'Balcão da loja' },
+  { frente: 'fabrica', rotulo: 'Pedido da fábrica' },
+  { frente: 'ecommerce', rotulo: 'E-commerce' },
+];
 
 type LinhaCarrinho = ProdutoEncontrado & { quantidade: number };
 
@@ -14,9 +22,11 @@ export function PontoDeVenda({ clientes }: { clientes: { id: string; nome: strin
   const [erroCodigo, setErroCodigo] = useState<string | null>(null);
   const [buscando, iniciarBusca] = useTransition();
 
-  const [canal, setCanal] = useState<'loja' | 'producao'>('loja');
+  const [frente, setFrente] = useState<Frente>('loja');
   const [clienteId, setClienteId] = useState('');
   const [formaPagamento, setFormaPagamento] = useState('dinheiro');
+  const [pedidoMl, setPedidoMl] = useState('');
+  const [aviso, setAviso] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [erroFinal, setErroFinal] = useState<string | null>(null);
   const [sucesso, setSucesso] = useState<string | null>(null);
@@ -38,13 +48,13 @@ export function PontoDeVenda({ clientes }: { clientes: { id: string; nome: strin
     if (!valor) return;
     setErroCodigo(null);
     iniciarBusca(async () => {
-      const produto = await buscarProdutoPorSku(valor);
+      const produto = await buscarProdutoPorSku(valor, frente);
       if (!produto) {
-        setErroCodigo(`Nenhuma peça com o código "${valor}". Cadastre em Estoque da loja.`);
+        setErroCodigo(`Nenhuma peça com o código "${valor}". Cadastre em Peças.`);
         return;
       }
       if (produto.saldo <= 0) {
-        setErroCodigo(`"${produto.nome}" está com estoque zerado na loja.`);
+        setErroCodigo(`"${produto.nome}" está com estoque zerado ${naFrente(frente)}. Envie peças em Peças.`);
         return;
       }
       adicionarAoCarrinho(produto);
@@ -67,21 +77,33 @@ export function PontoDeVenda({ clientes }: { clientes: { id: string; nome: strin
 
   const total = carrinho.reduce((s, l) => s + l.quantidade * l.precoVendaCentavos, 0);
 
+  /** Trocar de frente esvazia o carrinho: cada frente vende do proprio estoque. */
+  function trocarFrente(nova: Frente) {
+    if (nova === frente) return;
+    setAviso(carrinho.length > 0 ? 'Carrinho esvaziado: cada tipo de venda sai do estoque da própria frente.' : null);
+    setCarrinho([]);
+    setClienteId('');
+    setErroCodigo(null);
+    setErroFinal(null);
+    setFormaPagamento(nova === 'ecommerce' ? 'mercado_livre' : 'dinheiro');
+    setFrente(nova);
+  }
+
   async function finalizar() {
     setErroFinal(null);
     setSucesso(null);
 
-    if (canal === 'producao' && !clienteId) {
-      setErroFinal('Escolha o cliente do pedido de produção.');
+    if (frente === 'fabrica' && !clienteId) {
+      setErroFinal('Escolha o cliente do pedido: escola, empresa ou marca.');
       return;
     }
 
     setEnviando(true);
     const resultado = await finalizarVenda({
-      canal,
+      frente,
       clienteId: clienteId || null,
       formaPagamento,
-      observacoes: '',
+      observacoes: frente === 'ecommerce' ? pedidoMl.trim() : '',
       itens: carrinho.map((l) => ({
         produtoAcabadoId: l.id,
         quantidade: l.quantidade,
@@ -97,6 +119,8 @@ export function PontoDeVenda({ clientes }: { clientes: { id: string; nome: strin
 
     setCarrinho([]);
     setClienteId('');
+    setPedidoMl('');
+    setAviso(null);
     setSucesso(`Venda registrada — ${centavosParaReais(total)}.`);
     router.refresh();
     inputRef.current?.focus();
@@ -106,21 +130,22 @@ export function PontoDeVenda({ clientes }: { clientes: { id: string; nome: strin
     <div className="mt-6 grid gap-5 lg:grid-cols-[1fr_360px]">
       <div>
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => setCanal('loja')}
-            className={`bt ${canal === 'loja' ? 'bt-cheio' : 'bt-vazio'}`}
-          >
-            Venda de balcão
-          </button>
-          <button
-            type="button"
-            onClick={() => setCanal('producao')}
-            className={`bt ${canal === 'producao' ? 'bt-cheio' : 'bt-vazio'}`}
-          >
-            Pedido de produção
-          </button>
+          {TIPOS.map((t) => (
+            <button
+              key={t.frente}
+              type="button"
+              onClick={() => trocarFrente(t.frente)}
+              aria-pressed={frente === t.frente}
+              className={`bt ${frente === t.frente ? 'bt-cheio' : 'bt-vazio'}`}
+            >
+              {t.rotulo}
+            </button>
+          ))}
         </div>
+        <p className="miudo mt-2">
+          As peças saem do estoque <strong>{daFrente(frente)}</strong>.
+          {aviso && ` ${aviso}`}
+        </p>
 
         <div className="mt-4">
           <label htmlFor="bipar" className="rotulo-campo">
@@ -226,7 +251,7 @@ export function PontoDeVenda({ clientes }: { clientes: { id: string; nome: strin
       <aside className="rounded border border-fio bg-cream-alt p-4">
         <p className="text-rotulo font-bold uppercase text-gold">Fechar venda</p>
 
-        {canal === 'producao' && (
+        {frente === 'fabrica' && (
           <div className="mt-4">
             <label htmlFor="cliente" className="rotulo-campo">
               Cliente
@@ -247,7 +272,16 @@ export function PontoDeVenda({ clientes }: { clientes: { id: string; nome: strin
           </div>
         )}
 
-        {canal === 'loja' && (
+        {frente === 'ecommerce' && (
+          <div className="mt-4">
+            <label htmlFor="pedidoMl" className="rotulo-campo">
+              Nº do pedido no Mercado Livre <span className="font-normal normal-case tracking-normal">opcional</span>
+            </label>
+            <input id="pedidoMl" value={pedidoMl} onChange={(e) => setPedidoMl(e.target.value)} className="campo mt-1.5" />
+          </div>
+        )}
+
+        {frente === 'loja' && (
           <div className="mt-4">
             <label htmlFor="clienteLoja" className="rotulo-campo">
               Cliente <span className="font-normal normal-case tracking-normal">opcional</span>
@@ -278,11 +312,15 @@ export function PontoDeVenda({ clientes }: { clientes: { id: string; nome: strin
             onChange={(e) => setFormaPagamento(e.target.value)}
             className="campo mt-1.5"
           >
+            {frente === 'ecommerce' && <option value="mercado_livre">Mercado Livre (o dinheiro cai depois)</option>}
             <option value="dinheiro">Dinheiro</option>
             <option value="pix">Pix</option>
             <option value="cartao">Cartão</option>
-            <option value="fiado">Fiado</option>
+            {frente !== 'ecommerce' && <option value="fiado">Fiado</option>}
           </select>
+          {formaPagamento === 'mercado_livre' && (
+            <p className="miudo mt-1.5">Vira conta a receber até o Mercado Livre liberar o dinheiro.</p>
+          )}
         </div>
 
         <div className="mt-5 rounded bg-navy-deep px-4 py-3 text-cream">

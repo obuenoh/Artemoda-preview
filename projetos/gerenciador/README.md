@@ -55,40 +55,64 @@ no app do banco. Escondeu numa tela, fica escondido em todas (Visão
 Geral, Financeiro e Resumo de vendas) até clicar em _Mostrar valores_ em
 qualquer uma delas.
 
+### As três frentes
+
+A empresa trabalha em três frentes, e o app separa os números de cada uma
+sem deixar de ser uma empresa só:
+
+- **Fábrica** — pedidos fechados para escolas, empresas e marcas
+- **Loja** — venda no balcão
+- **E-commerce** — vendas do Mercado Livre
+
+Na **Visão Geral** e no **Resumo de vendas**, o seletor _Tudo · Fábrica
+· Loja · E-commerce_ mostra os números de uma frente ou da empresa
+inteira. O caixa é um só, mas mostra de qual frente o dinheiro entrou.
+
+### Peças
+
+As peças prontas, cada uma com o próprio código, e quanto tem de cada
+uma **na Fábrica, na Loja e no E-commerce**, lado a lado.
+
+- **Toda peça nasce na Fábrica.** Quando um lote ficar pronto, clique em
+  _+ Produção_ na linha da peça: as peças entram no estoque da Fábrica.
+- **Enviar** leva peças de uma frente para outra (quase sempre da
+  Fábrica para a Loja ou para o E-commerce). Não é venda: a peça só muda
+  de prateleira. A aba _Envios_ guarda o histórico.
+- **Nova peça** cadastra uma peça nova. Cada tamanho e cor tem o próprio
+  código.
+
 ### Vendas
 
-Três abas: **Vender** (o balcão), **Resumo** e **Estoque da loja**.
-
-**Resumo:** quanto vendeu no período (hoje, 7 dias, 30 dias, este mês
-ou as datas que você escolher), quanto foi na loja e quanto em pedidos
-de produção, ticket médio, gráfico por dia, maiores clientes e peças
-mais vendidas.
+Duas abas: **Vender** (o balcão) e **Resumo**.
 
 **Bipe o código de barras ou digite o SKU** no campo do topo e a peça
 entra no carrinho — aponte a leitora comum de supermercado, ela funciona
 como um teclado rápido. Ajuste a quantidade, escolha a forma de
-pagamento e clique em _Finalizar venda_. O estoque da peça desconta
-sozinho e a entrada cai no caixa (menos quando o pagamento é **fiado** —
-aí o dinheiro ainda não entrou de verdade).
+pagamento e clique em _Finalizar venda_.
 
-Tem dois jeitos de vender:
+Escolha primeiro **que tipo de venda** é. Cada um tira as peças do
+estoque da sua frente:
 
-- **Venda de balcão** — o normal do dia a dia na loja, cliente opcional
-- **Pedido de produção** — venda fechada para um cliente (escola,
-  empresa, marca), cliente obrigatório
+- **Balcão da loja** — o dia a dia da loja, cliente opcional. Sai da Loja.
+- **Pedido da fábrica** — venda fechada para escola, empresa ou marca,
+  cliente obrigatório. Sai da Fábrica.
+- **E-commerce** — a venda do Mercado Livre, lançada à mão. Sai do
+  E-commerce. O pagamento _Mercado Livre_ vira conta a receber, porque o
+  dinheiro só cai quando o Mercado Livre libera.
 
-**Estoque da loja** (aba _Estoque da loja_) é onde ficam as peças
-prontas para vender, cada uma com o próprio código. Cadastre uma peça
-nova em _Nova peça_, e quando a produção terminar um lote, registre a
-entrada em _+ Entrada_ na linha da peça — é isso que faz ela aparecer
-disponível para bipar.
+A entrada cai no caixa na hora, menos no **fiado** e no **Mercado
+Livre**: aí o dinheiro ainda não entrou e vai para Contas a receber.
+
+**Resumo:** quanto vendeu no período (hoje, 7 dias, 30 dias, este mês
+ou as datas que você escolher), de qual frente, ticket médio, gráfico por
+dia, maiores clientes e peças mais vendidas.
 
 ### Financeiro
 
 Só a dona vê. Três abas:
 
 **Caixa** — quanto a empresa tem hoje, o que vence nas próximas 5
-semanas e para onde foi o dinheiro do mês. Se o saldo for ficar negativo
+semanas, de qual frente o dinheiro entrou e para onde foi no mês. Se o saldo for ficar negativo
 em algum dia, aparece um aviso em vermelho com a data, antes de
 acontecer.
 
@@ -229,10 +253,12 @@ de produção e cada nota ao seu dono.
 Gravadas na tabela `Configuracao`, marcadas como pendentes — não
 escondidas no código:
 
-1. **Como as costureiras são pagas** — assumido salário fixo. Define se
-   a costura entra no custo da peça ou nas contas do mês.
-2. **Você compra tecido em quilo e usa em metro?** Assumimos mesma
-   unidade. Se não for, falta o fator de conversão.
+1. **Em quantos dias o Mercado Livre libera o dinheiro** de uma venda.
+   Assumimos 30 dias: é quando a conta a receber vence. Confirmar quando
+   começarem a vender lá.
+
+Já respondido: as costureiras ganham salário fixo, e a conversão de kg
+para metro sai da largura e da gramatura de cada tecido.
 
 Com o contador, ainda falta o regime tributário e os CFOPs para a parte
 fiscal sair do rascunho.

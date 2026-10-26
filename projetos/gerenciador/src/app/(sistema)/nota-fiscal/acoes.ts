@@ -71,7 +71,7 @@ export async function gerarNotaFiscal(_e: Resultado, form: FormData): Promise<Re
 
 
 export type PreviaNota = {
-  itens: { vendaId: string; data: string; clienteNome: string; canal: string; totalCentavos: number; pecas: number }[];
+  itens: { vendaId: string; data: string; clienteNome: string; frente: string; totalCentavos: number; pecas: number }[];
   totalCentavos: number;
   totalPecas: number;
   totalComDescontoCentavos: number;
@@ -106,7 +106,7 @@ export async function previsualizarRelatorio(dados: {
         vendaId: i.vendaId,
         data: i.data.toISOString(),
         clienteNome: i.clienteNome,
-        canal: i.canal,
+        frente: i.frente,
         totalCentavos: i.totalCentavos,
         pecas: i.pecas,
       })),

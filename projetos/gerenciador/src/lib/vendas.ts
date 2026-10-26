@@ -1,35 +1,42 @@
 import { db } from './db';
+import { LISTA_FRENTES, type Frente } from './frentes';
 
 /**
- * Leituras agregadas de venda, usadas pela Visão Geral e pela própria tela
- * de Vendas. Nada aqui escreve — a escrita mora em
+ * Leituras agregadas de venda, usadas pela Visão Geral e pelo Resumo de
+ * vendas. Nada aqui escreve — a escrita mora em
  * src/app/(sistema)/vendas/acoes.ts, junto com o razão de produto acabado.
+ *
+ * Toda leitura aceita uma frente; sem frente, e a empresa inteira.
  */
+
+const filtroFrente = (frente?: Frente) => (frente ? { frente } : {});
 
 export type ResumoVendas = {
   totalCentavos: number;
   quantidadeVendas: number;
-  totalLojaCentavos: number;
-  totalProducaoCentavos: number;
+  /** Quanto cada frente vendeu no periodo (sempre as tres, mesmo filtrando). */
+  porFrente: Record<Frente, number>;
 };
 
 export async function resumoVendas(
   empresaId: string,
   inicio: Date,
   fim: Date,
+  frente?: Frente,
 ): Promise<ResumoVendas> {
   const vendas = await db.venda.findMany({
     where: { empresaId, criadoEm: { gte: inicio, lte: fim } },
-    select: { totalCentavos: true, canal: true },
+    select: { totalCentavos: true, frente: true },
   });
 
+  const porFrente = Object.fromEntries(LISTA_FRENTES.map((f) => [f, 0])) as Record<Frente, number>;
+  for (const v of vendas) if (v.frente in porFrente) porFrente[v.frente as Frente] += v.totalCentavos;
+
+  const doFiltro = frente ? vendas.filter((v) => v.frente === frente) : vendas;
   return {
-    totalCentavos: vendas.reduce((s, v) => s + v.totalCentavos, 0),
-    quantidadeVendas: vendas.length,
-    totalLojaCentavos: vendas.filter((v) => v.canal === 'loja').reduce((s, v) => s + v.totalCentavos, 0),
-    totalProducaoCentavos: vendas
-      .filter((v) => v.canal === 'producao')
-      .reduce((s, v) => s + v.totalCentavos, 0),
+    totalCentavos: doFiltro.reduce((s, v) => s + v.totalCentavos, 0),
+    quantidadeVendas: doFiltro.length,
+    porFrente,
   };
 }
 
@@ -53,9 +60,10 @@ export async function vendasPorDia(
   empresaId: string,
   inicio: Date,
   fim: Date,
+  frente?: Frente,
 ): Promise<PontoVendaDia[]> {
   const vendas = await db.venda.findMany({
-    where: { empresaId, criadoEm: { gte: inicio, lte: fim } },
+    where: { empresaId, criadoEm: { gte: inicio, lte: fim }, ...filtroFrente(frente) },
     select: { totalCentavos: true, criadoEm: true },
   });
 
@@ -80,24 +88,24 @@ export async function vendasPorDia(
 
 export type ClienteRanking = { clienteId: string | null; nome: string; totalCentavos: number; vendas: number };
 
-/** Maiores clientes no período, separados por canal (produção vs loja). */
+/** Maiores clientes no período, da frente escolhida ou de todas. */
 export async function rankingClientes(
   empresaId: string,
   inicio: Date,
   fim: Date,
-  canal: 'loja' | 'producao',
+  frente?: Frente,
 ): Promise<ClienteRanking[]> {
   const vendas = await db.venda.findMany({
-    where: { empresaId, canal, criadoEm: { gte: inicio, lte: fim } },
+    where: { empresaId, criadoEm: { gte: inicio, lte: fim }, ...filtroFrente(frente) },
     include: { cliente: { select: { nome: true } } },
   });
 
   const porCliente = new Map<string, ClienteRanking>();
   for (const v of vendas) {
-    const chave = v.clienteId ?? '__balcao__';
+    const chave = v.clienteId ?? '__sem_cliente__';
     const atual = porCliente.get(chave) ?? {
       clienteId: v.clienteId,
-      nome: v.cliente?.nome ?? 'Venda de balcão (sem cliente)',
+      nome: v.cliente?.nome ?? 'Sem cliente identificado',
       totalCentavos: 0,
       vendas: 0,
     };
@@ -116,9 +124,10 @@ export async function produtosMaisVendidos(
   inicio: Date,
   fim: Date,
   limite = 5,
+  frente?: Frente,
 ): Promise<ProdutoRanking[]> {
   const itens = await db.vendaItem.findMany({
-    where: { venda: { empresaId, criadoEm: { gte: inicio, lte: fim } } },
+    where: { venda: { empresaId, criadoEm: { gte: inicio, lte: fim }, ...filtroFrente(frente) } },
     include: { produtoAcabado: { select: { nome: true, tamanho: true, cor: true } } },
   });
 

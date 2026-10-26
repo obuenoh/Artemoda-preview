@@ -19,8 +19,8 @@ Site e app construídos. Redes sociais ainda não são usadas. O primeiro carros
 - **Estoque e financeiro:** colocar o app em uso real. Contas a pagar, a receber e o caixa ficaram prontos em 24/10/2026; falta colocar o app na internet (Neon + Render, escolhido pelo usuário).
 - **App em três frentes** (pedido da dona em 24/10/2026). Ordem aprovada pelo usuário em 25/10/2026:
   1. retalhos e estoque parado em R$ (**feito em 25/10/2026**);
-  2. Fábrica, Loja e E-commerce separados, com envio interno de peças (**próximo**);
-  3. nota de compra em PDF e histórico por fornecedor;
+  2. Fábrica, Loja e E-commerce separados, com envio interno de peças (**feito em 26/10/2026**);
+  3. nota de compra em PDF e histórico por fornecedor (**próximo**);
   4. cliente da loja, encomenda e promoção;
   5. e-commerce no Mercado Livre (à mão primeiro, integração depois).
 

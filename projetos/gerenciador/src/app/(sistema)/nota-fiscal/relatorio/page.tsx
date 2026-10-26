@@ -2,6 +2,7 @@ import { db } from '@/lib/db';
 import { exigirPapel } from '@/lib/sessao';
 import { relatorioPeriodo } from '@/lib/notafiscal';
 import { centavosParaReais, dataBR } from '@/lib/numeros';
+import { rotuloFrente } from '@/lib/frentes';
 import { BotaoImprimir } from './BotaoImprimir';
 
 export const metadata = { title: 'Relatório de vendas' };
@@ -73,7 +74,7 @@ export default async function RelatorioPage({
             <tr key={i.vendaId}>
               <td className="td">{dataBR(i.data)}</td>
               <td className="td">{i.clienteNome}</td>
-              <td className="td">{i.canal === 'loja' ? 'Loja' : 'Produção'}</td>
+              <td className="td">{rotuloFrente(i.frente)}</td>
               <td className="td">{i.pecas}</td>
               <td className="td font-semibold">{centavosParaReais(i.totalCentavos)}</td>
             </tr>

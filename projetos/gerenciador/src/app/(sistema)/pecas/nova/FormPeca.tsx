@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
-import { criarProdutoAcabado, type Resultado } from '../../acoes';
+import { criarProdutoAcabado, type Resultado } from '../acoes';
 import { Campo, ErroGeral } from '@/components/Campo';
 import { semLimpar } from '@/components/enviar';
 
@@ -51,7 +51,7 @@ export function FormPeca() {
         <button type="submit" disabled={pendente} className="bt bt-cheio">
           {pendente ? 'Salvando…' : 'Salvar peça'}
         </button>
-        <a href="/vendas/estoque" className="bt bt-vazio">
+        <a href="/pecas" className="bt bt-vazio">
           Cancelar
         </a>
       </div>

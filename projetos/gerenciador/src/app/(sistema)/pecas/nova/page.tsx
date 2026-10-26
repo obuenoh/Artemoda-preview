@@ -8,7 +8,7 @@ export default async function NovaPecaPage() {
   await exigirPapel('dona', 'vendas', 'producao');
   return (
     <>
-      <TituloPagina titulo="Nova peça" sub="Cada tamanho e cor tem o próprio código" />
+      <TituloPagina titulo="Nova peça" sub="Cada tamanho e cor tem o próprio código. Depois, registre a produção dela na Fábrica" />
       <FormPeca />
     </>
   );

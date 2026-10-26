@@ -178,8 +178,27 @@ export default async function CaixaPage({ searchParams }: { searchParams: Promis
           </div>
         </div>
 
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <div>
+            <h3 className="text-rotulo font-bold uppercase fraco">De onde entrou</h3>
+            <ul className="mt-2 divide-y divide-[color:var(--fio)] rounded border border-fio">
+              {ext.entradasPorFrente.map((e) => (
+                <li key={e.frente} className="flex items-center justify-between gap-4 px-4 py-2.5 text-sm">
+                  <span className={e.totalCentavos === 0 ? 'fraco' : ''}>{e.frente}</span>
+                  <span className="font-semibold tabular-nums">
+                    <Dinheiro centavos={e.totalCentavos} />
+                    {ext.entradasCentavos > 0 && (
+                      <span className="ml-2 font-normal fraco">
+                        {Math.round((e.totalCentavos * 100) / ext.entradasCentavos)}%
+                      </span>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
         {ext.saidasPorCategoria.length > 0 && (
-          <div className="mt-6">
+          <div>
             <h3 className="text-rotulo font-bold uppercase fraco">Para onde foi</h3>
             <ul className="mt-2 divide-y divide-[color:var(--fio)] rounded border border-fio">
               {ext.saidasPorCategoria.map((c) => (
@@ -196,6 +215,7 @@ export default async function CaixaPage({ searchParams }: { searchParams: Promis
             </ul>
           </div>
         )}
+        </div>
 
         <div className="mt-6">
           <h3 className="text-rotulo font-bold uppercase fraco">Extrato</h3>

@@ -13,6 +13,7 @@ import {
   centavosParaReais,
   campoDeData,
 } from '@/lib/numeros';
+import { ehFrente } from '@/lib/frentes';
 import {
   CATEGORIAS_SAIDA,
   CATEGORIAS_ENTRADA,
@@ -366,6 +367,8 @@ export async function receberConta(_e: Resultado, form: FormData): Promise<Resul
         valorCentavos: valor,
         descricao: `${conta.descricao}${parcela}`,
         categoria: 'recebimento',
+        // Recebimento de venda conta para a frente que vendeu.
+        frente: ehFrente(conta.frente) ? conta.frente : null,
         origemTipo: 'conta_receber',
         origemId: conta.id,
         data,

@@ -8,6 +8,8 @@ import { pendenciasFinanceiras, previsao, temAbertura } from '@/lib/financeiro';
 import { dataCurtaBR, diasAte, fimDoDia, inicioDoDia, somarDias } from '@/lib/numeros';
 import { Dinheiro, BotaoOcultar } from '@/components/Valores';
 import { GraficoVendas } from '@/components/GraficoVendas';
+import { SeletorFrente } from '@/components/SeletorFrente';
+import { ehFrente, FRENTES, LISTA_FRENTES } from '@/lib/frentes';
 
 export const metadata = { title: 'Visão Geral' };
 
@@ -41,8 +43,12 @@ function saudacao(): string {
  * esta tudo bem? O detalhe mora na aba de cada assunto — aqui so o que
  * pede acao, tres numeros e o ritmo das vendas.
  */
-export default async function VisaoGeralPage() {
+export default async function VisaoGeralPage({ searchParams }: { searchParams: Promise<{ frente?: string }> }) {
   const usuario = await exigirUsuario();
+  // A frente filtra so as vendas: o caixa e as contas sao da empresa toda.
+  const { frente: frenteParam } = await searchParams;
+  const frente = ehFrente(frenteParam) ? frenteParam : undefined;
+  const deQuem = frente ? ` · ${FRENTES[frente]}` : '';
   const dona = usuario.papel === 'dona';
   const veEstoque = usuario.papel !== 'vendas';
   const veLoja = usuario.papel !== 'producao';
@@ -55,9 +61,9 @@ export default async function VisaoGeralPage() {
     await Promise.all([
       veEstoque ? posicaoEstoque(usuario.empresaId) : [],
       veLoja ? posicaoProdutos(usuario.empresaId) : [],
-      resumoVendas(usuario.empresaId, inicioMes, fimDoDia(agora)),
-      resumoVendas(usuario.empresaId, hoje, fimDoDia(agora)),
-      veLoja ? vendasPorDia(usuario.empresaId, somarDias(hoje, -29), fimDoDia(agora)) : [],
+      resumoVendas(usuario.empresaId, inicioMes, fimDoDia(agora), frente),
+      resumoVendas(usuario.empresaId, hoje, fimDoDia(agora), frente),
+      veLoja ? vendasPorDia(usuario.empresaId, somarDias(hoje, -29), fimDoDia(agora), frente) : [],
       // Dinheiro so a dona ve: para os outros papeis nem consulta.
       dona ? pendenciasFinanceiras(usuario.empresaId) : null,
       dona ? previsao(usuario.empresaId) : null,
@@ -184,10 +190,10 @@ export default async function VisaoGeralPage() {
     pendencias.push({
       chave: 'loja',
       grave: false,
-      titulo: `${juntarNomes(pecasAbaixo.map((p) => [p.nome, p.tamanho].filter(Boolean).join(' ')))} acabando na loja`,
-      detalhe: 'Peças prontas abaixo do mínimo',
-      href: '/vendas/estoque',
-      acao: 'Ver estoque da loja',
+      titulo: `${juntarNomes(pecasAbaixo.map((p) => [p.nome, p.tamanho].filter(Boolean).join(' ')))} acabando`,
+      detalhe: 'Peças prontas abaixo do mínimo, somando as três frentes',
+      href: '/pecas',
+      acao: 'Ver peças',
     });
   }
 
@@ -201,7 +207,12 @@ export default async function VisaoGeralPage() {
           <h1 className="text-xl font-bold md:text-2xl">{saudacao()}</h1>
           <p className="mt-1 text-sm fraco first-letter:uppercase">{dataHoje}</p>
         </div>
-        {usuario.papel !== 'producao' && <BotaoOcultar />}
+        {usuario.papel !== 'producao' && (
+          <div className="flex flex-wrap items-center gap-2">
+            <SeletorFrente />
+            <BotaoOcultar />
+          </div>
+        )}
       </div>
 
       {/* ── precisa de voce ───────────────────────────────────────── */}
@@ -239,7 +250,27 @@ export default async function VisaoGeralPage() {
       <div className="mt-8 grid gap-3 sm:grid-cols-3">
         {dona && financeiro ? (
           <>
-            <Numero rotulo="Vendido no mês" href="/vendas/resumo?periodo=mes" nota={`${mes.quantidadeVendas} venda(s)`}>
+            <Numero
+              rotulo={`Vendido no mês${deQuem}`}
+              href={`/vendas/resumo?periodo=mes${frente ? `&frente=${frente}` : ''}`}
+              nota={
+                frente ? (
+                  `${mes.quantidadeVendas} venda(s)`
+                ) : (
+                  <>
+                    {LISTA_FRENTES.map((f, i) => (
+                      <span key={f}>
+                        {i > 0 && ' · '}
+                        {/* Sem quebrar no hifen de "E-commerce" nem entre nome e valor. */}
+                        <span className="whitespace-nowrap">
+                          {FRENTES[f]} <Dinheiro centavos={mes.porFrente[f]} />
+                        </span>
+                      </span>
+                    ))}
+                  </>
+                )
+              }
+            >
               <Dinheiro centavos={mes.totalCentavos} />
             </Numero>
             <Numero
@@ -266,13 +297,13 @@ export default async function VisaoGeralPage() {
           </>
         ) : veLoja ? (
           <>
-            <Numero rotulo="Vendido hoje" href="/vendas/resumo?periodo=hoje" nota={`${hojeVendas.quantidadeVendas} venda(s)`}>
+            <Numero rotulo={`Vendido hoje${deQuem}`} href={`/vendas/resumo?periodo=hoje${frente ? `&frente=${frente}` : ''}`} nota={`${hojeVendas.quantidadeVendas} venda(s)`}>
               <Dinheiro centavos={hojeVendas.totalCentavos} />
             </Numero>
-            <Numero rotulo="Vendido no mês" href="/vendas/resumo?periodo=mes" nota={`${mes.quantidadeVendas} venda(s)`}>
+            <Numero rotulo={`Vendido no mês${deQuem}`} href={`/vendas/resumo?periodo=mes${frente ? `&frente=${frente}` : ''}`} nota={`${mes.quantidadeVendas} venda(s)`}>
               <Dinheiro centavos={mes.totalCentavos} />
             </Numero>
-            <Numero rotulo="Peças acabando na loja" href="/vendas/estoque" grave={pecasAbaixo.length > 0}>
+            <Numero rotulo="Peças abaixo do mínimo" href="/pecas" grave={pecasAbaixo.length > 0}>
               {pecasAbaixo.length}
             </Numero>
           </>
@@ -292,8 +323,8 @@ export default async function VisaoGeralPage() {
       {veLoja && porDia.length > 1 && (
         <section className="mt-9">
           <div className="flex flex-wrap items-baseline justify-between gap-3">
-            <h2 className="text-rotulo font-bold uppercase text-gold">Vendas dos últimos 30 dias</h2>
-            <Link href="/vendas/resumo" className="compacto text-rotulo font-bold uppercase text-gold">
+            <h2 className="text-rotulo font-bold uppercase text-gold">Vendas dos últimos 30 dias{deQuem}</h2>
+            <Link href={`/vendas/resumo${frente ? `?frente=${frente}` : ''}`} className="compacto text-rotulo font-bold uppercase text-gold">
               Ver resumo de vendas →
             </Link>
           </div>

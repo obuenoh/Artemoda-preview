@@ -9,7 +9,7 @@ export type ItemRelatorio = {
   vendaId: string;
   data: Date;
   clienteNome: string;
-  canal: string;
+  frente: string;
   totalCentavos: number;
   pecas: number;
 };
@@ -40,7 +40,7 @@ export async function relatorioPeriodo(
     vendaId: v.id,
     data: v.criadoEm,
     clienteNome: v.cliente?.nome ?? 'Venda de balcão',
-    canal: v.canal,
+    frente: v.frente,
     totalCentavos: v.totalCentavos,
     pecas: v.itens.reduce((s, i) => s + i.quantidade, 0),
   }));

@@ -2,6 +2,7 @@ import type { Prisma, PrismaClient } from '@prisma/client';
 import { db } from './db';
 import { inicioDoDia, fimDoDia, somarDias, campoDeData } from './numeros';
 import { rotuloCategoria } from './financeiro-listas';
+import { LISTA_FRENTES, rotuloFrente, type Frente } from './frentes';
 
 /**
  * FINANCEIRO: caixa, contas a pagar e contas a receber.
@@ -26,6 +27,8 @@ export type LancamentoCaixaNovo = {
   categoria?: string | null;
   origemTipo: 'venda' | 'conta_pagar' | 'conta_receber' | 'manual' | 'abertura' | 'ajuste' | 'estorno';
   origemId?: string | null;
+  /** De qual frente veio o dinheiro (venda e recebimento de venda). */
+  frente?: Frente | null;
   data?: Date;
   usuarioId?: string | null;
 };
@@ -44,6 +47,7 @@ export async function lancarCaixa(dados: LancamentoCaixaNovo, tx: Cliente = db) 
       categoria: dados.categoria ?? null,
       origemTipo: dados.origemTipo,
       origemId: dados.origemId ?? null,
+      frente: dados.frente ?? null,
       data: dados.data ?? new Date(),
       usuarioId: dados.usuarioId ?? null,
     },
@@ -94,6 +98,8 @@ export type Extrato = {
   /** Mais recente primeiro, que e como ela le. */
   linhas: LinhaExtrato[];
   saidasPorCategoria: { categoria: string; totalCentavos: number }[];
+  /** Quanto entrou de cada frente (venda e recebimento de venda) e o resto. */
+  entradasPorFrente: { frente: string; totalCentavos: number }[];
 };
 
 /**
@@ -114,14 +120,19 @@ export async function extrato(empresaId: string, inicio: Date, fim: Date): Promi
   let entradas = 0;
   let saidas = 0;
   const porCategoria = new Map<string, number>();
+  const porFrente = new Map<string, number>();
   const linhas: LinhaExtrato[] = [];
 
   for (const l of lancamentos) {
     const sinal = l.tipo === 'entrada' ? 1 : -1;
     saldo += sinal * l.valorCentavos;
-    const categoria = rotuloCategoria(l);
-    if (l.tipo === 'entrada') entradas += l.valorCentavos;
-    else {
+    const frente = l.frente ? rotuloFrente(l.frente) : null;
+    const categoria = frente ? `${rotuloCategoria(l)} · ${frente}` : rotuloCategoria(l);
+    if (l.tipo === 'entrada') {
+      entradas += l.valorCentavos;
+      const chave = frente ?? 'Outras entradas';
+      porFrente.set(chave, (porFrente.get(chave) ?? 0) + l.valorCentavos);
+    } else {
       saidas += l.valorCentavos;
       porCategoria.set(categoria, (porCategoria.get(categoria) ?? 0) + l.valorCentavos);
     }
@@ -164,6 +175,10 @@ export async function extrato(empresaId: string, inicio: Date, fim: Date): Promi
     saidasPorCategoria: [...porCategoria.entries()]
       .map(([categoria, totalCentavos]) => ({ categoria, totalCentavos }))
       .sort((a, b) => b.totalCentavos - a.totalCentavos),
+    // Ordem fixa: as tres frentes primeiro (mesmo zeradas), o resto no fim.
+    entradasPorFrente: [...LISTA_FRENTES.map((f) => rotuloFrente(f)), 'Outras entradas']
+      .map((frente) => ({ frente, totalCentavos: porFrente.get(frente) ?? 0 }))
+      .filter((e, i) => i < LISTA_FRENTES.length || e.totalCentavos > 0),
   };
 }
 

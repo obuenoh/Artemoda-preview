@@ -153,9 +153,26 @@ Recalculado a cada entrada. Saída não mexe no médio — sai valorizada pelo m
 - Constante usada no servidor não pode morar em arquivo `'use client'`: lá ela vira referência, não valor. Listas puras do financeiro ficam em `src/lib/financeiro-listas.ts` justamente para servir aos dois lados.
 - `<select>` com opção "Escolha..." usa `<option value="">`, **sem `disabled`**. O navegador não envia campo cuja opção escolhida está desabilitada, e a validação devolve "Required" em inglês no lugar da mensagem que diz o que fazer.
 - "Parado há" é por **ordem de chegada** (`posicaoEstoque` em `src/lib/estoque.ts`): conta o lote mais antigo que ainda sobra. Saída e entrada nova não zeram a idade do resto da pilha.
+- **Três frentes** (`src/lib/frentes.ts`): `fabrica`, `loja` e `ecommerce`.
+  - `Venda.frente` diz quem vendeu.
+  - `MovimentoProdutoAcabado.frente` diz em qual estoque a peça está.
+  - `LancamentoCaixa.frente` e `ContaReceber.frente` dizem de onde veio o dinheiro.
+  - Toda peça nasce na Fábrica (`entrada_producao`) e muda de frente por envio: `EnvioPecas` gera `envio_saida` e `envio_entrada` com o mesmo `origemId`.
+  - Cada venda baixa do estoque da própria frente.
+  - Nunca escrever "na E-commerce": usar `naFrente()`, `daFrente()`, `paraFrente()` e `aFrente()`, que acertam o gênero.
 
 ### O que existe hoje
-Cadastros (fornecedor com preço versionado, tecido/aviamento por setor, cliente), compras com rateio de frete, estoque de matéria-prima com custo médio e contagem, **Vendas** com três abas (Vender com bipagem de código de barras e baixa automática do estoque de peça pronta, Resumo com rankings e gráfico por período, Estoque da loja) e **Nota Fiscal** em modo rascunho (relatório de período com desconto, nota salva mas nunca transmitida).
+Cadastros (fornecedor com preço versionado, tecido/aviamento por setor, cliente), compras com rateio de frete, estoque de matéria-prima com custo médio e contagem, **Vendas** com duas abas (Vender e Resumo) e **Nota Fiscal** em modo rascunho (relatório de período com desconto, nota salva mas nunca transmitida).
+
+**Três frentes** (desde 26/10/2026):
+- **Peças** (`/pecas`, para os três papéis): o estoque de cada peça na Fábrica, na Loja e no E-commerce, lado a lado, com "+ Produção" (entra na Fábrica), "Enviar" entre frentes e a aba Envios.
+- **Balcão com três tipos de venda:**
+  - **Balcão da loja**: sai da Loja.
+  - **Pedido da fábrica**: cliente obrigatório; sai da Fábrica.
+  - **E-commerce**: sai do E-commerce. O pagamento "Mercado Livre" vira conta a receber, com o prazo em `Configuracao.prazo_repasse_mercado_livre_dias`, que ainda é palpite de 30 dias.
+- **Seletor Tudo/Fábrica/Loja/E-commerce** na Visão Geral e no Resumo de vendas.
+- **Caixa:** "De onde entrou", por frente.
+- `/vendas/estoque` redireciona para `/pecas`.
 
 **Financeiro** (desde 24/10/2026, só a dona):
 - **Caixa:** saldo de abertura, conferência com ajuste, previsão de 5 semanas com aviso do dia em que o saldo fica negativo, extrato do mês.
@@ -171,7 +188,7 @@ Cadastros (fornecedor com preço versionado, tecido/aviamento por setor, cliente
 
 Ainda faltam:
 - ficha técnica e ordem de produção (custo real por peça);
-- a estrutura em três frentes pedida pela dona (Fábrica, Loja, E-commerce), com o plano em `_memoria/estrategia.md` e `_memoria/empresa.md`;
+- os próximos passos do plano das frentes (`_memoria/estrategia.md`): nota de compra em PDF com histórico por fornecedor, cliente da loja com encomenda e promoção, e o Mercado Livre ligado ao app;
 - a emissão fiscal de verdade;
 - hospedagem na internet (escolhido: Neon + Render, com `TZ=America/Sao_Paulo`, porque "hoje" e "vencida" dependem do fuso do servidor).
 Na Nota Fiscal: **nunca emitir NF-e direto na SEFAZ.** Usar API homologada, isolada atrás de uma interface única — até lá, todo registro fica com `status: "rascunho"` e a tela deixa isso explícito para quem usa.

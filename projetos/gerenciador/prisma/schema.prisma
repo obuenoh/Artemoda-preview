@@ -37,6 +37,7 @@ model Empresa {
   inventarios       Inventario[]
   produtosAcabados  ProdutoAcabado[]
   movimentosProduto MovimentoProdutoAcabado[]
+  enviosPecas       EnvioPecas[]
   vendas            Venda[]
   lancamentosCaixa  LancamentoCaixa[]
   contasPagar       ContaPagar[]
@@ -358,11 +359,17 @@ model ProdutoAcabado {
 
 /// Mesmo principio do estoque de tecido: nunca UPDATE, saldo e soma.
 /// Peca nao e fracionaria — quantidade em unidades inteiras, sem milesimos.
+/// O saldo e POR FRENTE: a mesma peca tem estoque na Fabrica, na Loja e no
+/// E-commerce. Toda peca nasce na Fabrica (entrada_producao) e chega as
+/// outras frentes por envio (envio_saida + envio_entrada, mesmo origemId).
 model MovimentoProdutoAcabado {
   id                    String   @id @default(cuid())
   empresaId             String
   produtoAcabadoId      String
-  tipo                  String // entrada_producao | saida_venda | ajuste_inventario | perda
+  /// fabrica | loja | ecommerce (src/lib/frentes.ts)
+  frente                String   @default("loja")
+  /// entrada_producao | saida_venda | envio_saida | envio_entrada | ajuste_inventario | perda
+  tipo                  String
   quantidade            Int // com sinal: positivo entra, negativo sai
   custoUnitarioCentavos Int
   saldoAposUnidades     Int
@@ -376,6 +383,24 @@ model MovimentoProdutoAcabado {
   produtoAcabado ProdutoAcabado @relation(fields: [produtoAcabadoId], references: [id])
 
   @@index([empresaId, produtoAcabadoId, criadoEm])
+  @@index([empresaId, produtoAcabadoId, frente, criadoEm])
+}
+
+/// Peca que saiu de uma frente para outra (quase sempre Fabrica -> Loja
+/// ou E-commerce). Nao e venda: o dinheiro nao saiu da empresa. Os
+/// movimentos do envio apontam para ca por origemTipo "envio".
+model EnvioPecas {
+  id          String   @id @default(cuid())
+  empresaId   String
+  de          String
+  para        String
+  observacoes String?
+  usuarioId   String?
+  criadoEm    DateTime @default(now())
+
+  empresa Empresa @relation(fields: [empresaId], references: [id])
+
+  @@index([empresaId, criadoEm])
 }
 
 // ──────────────────────────────────────────────────────────────── vendas
@@ -384,10 +409,10 @@ model Venda {
   id               String   @id @default(cuid())
   empresaId        String
   clienteId        String?
-  /// loja (balcao, com ou sem cliente identificado) | producao (pedido
-  /// fechado para escola/empresa/marca)
-  canal            String
-  formaPagamento   String   @default("dinheiro") // dinheiro | pix | cartao | fiado
+  /// fabrica (pedido fechado para escola, empresa ou marca) | loja (balcao,
+  /// com ou sem cliente) | ecommerce (Mercado Livre, lancado a mao)
+  frente           String
+  formaPagamento   String   @default("dinheiro") // dinheiro | pix | cartao | fiado | mercado_livre
   totalCentavos    Int
   descontoCentavos Int      @default(0)
   observacoes      String?
@@ -435,6 +460,9 @@ model LancamentoCaixa {
   descricao     String
   /// Mesma lista de src/lib/financeiro.ts. Vazio em venda, abertura e ajuste.
   categoria     String?
+  /// De qual frente veio o dinheiro (venda e recebimento de venda). Vazio
+  /// no que e da empresa toda, como aluguel e abertura.
+  frente        String?
   data          DateTime @default(now())
   usuarioId     String?
   criadoEm      DateTime @default(now())
@@ -489,6 +517,8 @@ model ContaReceber {
   descricao             String
   clienteId             String?
   vendaId               String?
+  /// Frente da venda que gerou a conta; vai para o caixa quando receber.
+  frente                String?
   grupoId               String?
   parcela               Int       @default(1)
   totalParcelas         Int       @default(1)

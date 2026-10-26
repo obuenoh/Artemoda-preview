@@ -77,10 +77,11 @@ async function lancarEstoque(dados: {
   });
 }
 
-/** Mesma lógica, para o razão de produto acabado (unidades inteiras). */
+/** Mesma lógica, para o razão de produto acabado (unidades inteiras, por frente). */
 async function lancarProduto(dados: {
   empresaId: string;
   produtoAcabadoId: string;
+  frente: 'fabrica' | 'loja' | 'ecommerce';
   tipo: string;
   quantidade: number;
   custoUnitarioCentavos: number;
@@ -91,7 +92,7 @@ async function lancarProduto(dados: {
   quando: Date;
 }) {
   const ultimo = await db.movimentoProdutoAcabado.findFirst({
-    where: { produtoAcabadoId: dados.produtoAcabadoId },
+    where: { produtoAcabadoId: dados.produtoAcabadoId, frente: dados.frente },
     orderBy: { criadoEm: 'desc' },
   });
   const saldo = ultimo?.saldoAposUnidades ?? 0;
@@ -100,6 +101,7 @@ async function lancarProduto(dados: {
     data: {
       empresaId: dados.empresaId,
       produtoAcabadoId: dados.produtoAcabadoId,
+      frente: dados.frente,
       tipo: dados.tipo,
       quantidade: dados.quantidade,
       custoUnitarioCentavos: dados.custoUnitarioCentavos,
@@ -122,6 +124,7 @@ async function main() {
   await db.lancamentoCaixa.deleteMany();
   await db.vendaItem.deleteMany();
   await db.venda.deleteMany();
+  await db.envioPecas.deleteMany();
   await db.movimentoProdutoAcabado.deleteMany();
   await db.produtoAcabado.deleteMany();
   await db.movimentoEstoque.deleteMany();
@@ -183,6 +186,13 @@ async function main() {
         descricao:
           'Como as costureiras são pagas: salário fixo (confirmado em 25/10/2026). A costura entra no rateio das contas do mês, não no custo de cada peça.',
         pendente: false,
+      },
+      {
+        chave: 'prazo_repasse_mercado_livre_dias',
+        valor: '30',
+        descricao:
+          'Em quantos dias o Mercado Livre libera o dinheiro de uma venda (vira conta a receber até lá). Palpite: 30. Confirmar quando começarem a vender lá.',
+        pendente: true,
       },
       {
         chave: 'regime_tributario',
@@ -628,7 +638,7 @@ async function main() {
     usuarioId: dona.id, quando: diasAtras(180),
   });
 
-  console.log('Cadastrando peças da loja…');
+  console.log('Cadastrando peças…');
   const poloP = await db.produtoAcabado.create({
     data: { empresaId: empresa.id, nome: 'Polo Colégio Alfa', tamanho: 'P', cor: 'Azul marinho', sku: '7891000000012', precoVendaCentavos: 6900, custoCentavos: 3200, estoqueMinimo: 10 },
   });
@@ -644,21 +654,48 @@ async function main() {
   const camisetaRuaNove = await db.produtoAcabado.create({
     data: { empresaId: empresa.id, nome: 'Camiseta Rua Nove básica', tamanho: 'M', cor: 'Branco', sku: '7891000000050', precoVendaCentavos: 4500, custoCentavos: 1800, estoqueMinimo: 15 },
   });
+  // Camiseta básica do e-commerce (exemplo).
+  const basicaM = await db.produtoAcabado.create({
+    data: { empresaId: empresa.id, nome: 'Camiseta básica', tamanho: 'M', cor: 'Preta', sku: '7891000000067', precoVendaCentavos: 3990, custoCentavos: 1500, estoqueMinimo: 10 },
+  });
+  const basicaG = await db.produtoAcabado.create({
+    data: { empresaId: empresa.id, nome: 'Camiseta básica', tamanho: 'G', cor: 'Preta', sku: '7891000000074', precoVendaCentavos: 3990, custoCentavos: 1500, estoqueMinimo: 10 },
+  });
 
-  for (const [produto, qtd] of [[poloP, 40], [poloM, 60], [poloG, 30], [moletomM, 25], [camisetaRuaNove, 80]] as const) {
+  // Toda peça nasce na Fábrica...
+  const producao = [[poloP, 60], [poloM, 90], [poloG, 50], [moletomM, 30], [camisetaRuaNove, 60], [basicaM, 40], [basicaG, 40]] as const;
+  for (const [produto, qtd] of producao) {
     await lancarProduto({
-      empresaId: empresa.id, produtoAcabadoId: produto.id, tipo: 'entrada_producao',
+      empresaId: empresa.id, produtoAcabadoId: produto.id, frente: 'fabrica', tipo: 'entrada_producao',
       quantidade: qtd, custoUnitarioCentavos: produto.custoCentavos,
       origemTipo: 'manual', motivo: 'Entrada da produção',
-      usuarioId: dona.id, quando: diasAtras(20),
+      usuarioId: dona.id, quando: diasAtras(35),
     });
   }
+
+  // ...e vai para a Loja e o E-commerce por envio.
+  async function enviar(produto: typeof poloP, para: 'loja' | 'ecommerce', qtd: number, quando: Date) {
+    const envio = await db.envioPecas.create({
+      data: { empresaId: empresa.id, de: 'fabrica', para, usuarioId: dona.id, criadoEm: quando },
+    });
+    const comum = {
+      empresaId: empresa.id, produtoAcabadoId: produto.id, custoUnitarioCentavos: produto.custoCentavos,
+      origemTipo: 'envio', origemId: envio.id, usuarioId: dona.id, quando,
+    };
+    await lancarProduto({ ...comum, frente: 'fabrica', tipo: 'envio_saida', quantidade: -qtd, motivo: para === 'loja' ? 'Enviada para a Loja' : 'Enviada para o E-commerce' });
+    await lancarProduto({ ...comum, frente: para, tipo: 'envio_entrada', quantidade: qtd, motivo: 'Recebida da Fábrica' });
+  }
+  for (const [produto, qtd] of [[poloP, 25], [poloM, 30], [poloG, 20], [camisetaRuaNove, 50]] as const) {
+    await enviar(produto, 'loja', qtd, diasAtras(34));
+  }
+  await enviar(basicaM, 'ecommerce', 25, diasAtras(15));
+  await enviar(basicaG, 'ecommerce', 25, diasAtras(15));
 
   console.log('Registrando vendas dos últimos 30 dias…');
   const pecasLoja = [poloP, poloM, poloG, camisetaRuaNove];
 
   async function registrarVenda(dados: {
-    canal: 'loja' | 'producao';
+    frente: 'fabrica' | 'loja' | 'ecommerce';
     clienteId: string | null;
     formaPagamento: string;
     itens: { produto: typeof poloP; quantidade: number }[];
@@ -669,7 +706,7 @@ async function main() {
       data: {
         empresaId: empresa.id,
         clienteId: dados.clienteId,
-        canal: dados.canal,
+        frente: dados.frente,
         formaPagamento: dados.formaPagamento,
         totalCentavos,
         usuarioId: vendedora.id,
@@ -686,17 +723,29 @@ async function main() {
         },
       });
       await lancarProduto({
-        empresaId: empresa.id, produtoAcabadoId: item.produto.id, tipo: 'saida_venda',
+        empresaId: empresa.id, produtoAcabadoId: item.produto.id, frente: dados.frente, tipo: 'saida_venda',
         quantidade: -item.quantidade, custoUnitarioCentavos: item.produto.custoCentavos,
         origemTipo: 'venda', origemId: venda.id, motivo: 'Venda',
         usuarioId: vendedora.id, quando: dados.quando,
       });
     }
-    if (dados.formaPagamento !== 'fiado') {
+    const descricaoVenda = { fabrica: 'Pedido da fábrica', loja: 'Venda na loja', ecommerce: 'Venda no e-commerce' }[dados.frente];
+    if (dados.formaPagamento === 'mercado_livre') {
+      // Mesma regra de vendas/acoes.ts: o Mercado Livre libera depois (palpite: 30 dias).
+      const vencimento = new Date(dados.quando);
+      vencimento.setDate(vencimento.getDate() + 30);
+      vencimento.setHours(12, 0, 0, 0);
+      await db.contaReceber.create({
+        data: {
+          empresaId: empresa.id, descricao: 'Mercado Livre', vendaId: venda.id, frente: dados.frente,
+          valorCentavos: totalCentavos, vencimento, usuarioId: vendedora.id,
+        },
+      });
+    } else if (dados.formaPagamento !== 'fiado') {
       await db.lancamentoCaixa.create({
         data: {
-          empresaId: empresa.id, tipo: 'entrada', origemTipo: 'venda', origemId: venda.id,
-          valorCentavos: totalCentavos, descricao: dados.canal === 'loja' ? 'Venda na loja' : 'Venda de produção',
+          empresaId: empresa.id, tipo: 'entrada', origemTipo: 'venda', origemId: venda.id, frente: dados.frente,
+          valorCentavos: totalCentavos, descricao: descricaoVenda,
           usuarioId: vendedora.id, data: dados.quando,
         },
       });
@@ -709,8 +758,8 @@ async function main() {
       for (const [i, p] of parcelas.entries()) {
         await db.contaReceber.create({
           data: {
-            empresaId: empresa.id, descricao: `Venda fiado — ${cliente?.nome ?? 'balcão, sem cliente'}`,
-            clienteId: dados.clienteId, vendaId: venda.id, grupoId, parcela: i + 1, totalParcelas: parcelas.length,
+            empresaId: empresa.id, descricao: `Venda fiado — ${cliente?.nome ?? 'sem cliente'}`,
+            clienteId: dados.clienteId, vendaId: venda.id, frente: dados.frente, grupoId, parcela: i + 1, totalParcelas: parcelas.length,
             valorCentavos: p.valorCentavos, vencimento: p.vencimento, usuarioId: vendedora.id,
           },
         });
@@ -727,7 +776,7 @@ async function main() {
       const produto = pecasLoja[(dia + v) % pecasLoja.length];
       const clienteOcasional = v === 0 && dia % 5 === 0 ? ruaNove.id : null;
       await registrarVenda({
-        canal: 'loja',
+        frente: 'loja',
         clienteId: clienteOcasional,
         formaPagamento: formas[(dia + v) % formas.length],
         itens: [{ produto, quantidade: 1 + (v % 2) }],
@@ -738,7 +787,7 @@ async function main() {
 
   // Pedidos de produção — venda fechada para as escolas, valores maiores.
   await registrarVenda({
-    canal: 'producao',
+    frente: 'fabrica',
     clienteId: alfa.id,
     formaPagamento: 'fiado',
     itens: [
@@ -749,19 +798,30 @@ async function main() {
     quando: diasAtras(18),
   });
   await registrarVenda({
-    canal: 'producao',
+    frente: 'fabrica',
     clienteId: colegioSaoJorge.id,
     formaPagamento: 'pix',
     itens: [{ produto: moletomM, quantidade: 12 }],
     quando: diasAtras(9),
   });
   await registrarVenda({
-    canal: 'producao',
+    frente: 'fabrica',
     clienteId: alfa.id,
     formaPagamento: 'fiado',
     itens: [{ produto: poloM, quantidade: 8 }],
     quando: diasAtras(2),
   });
+
+  // E-commerce: vendas do Mercado Livre lançadas à mão (o dinheiro cai depois).
+  for (const [dia, produto, qtd] of [[10, basicaM, 2], [6, basicaG, 1], [3, basicaM, 3], [1, basicaG, 2]] as const) {
+    await registrarVenda({
+      frente: 'ecommerce',
+      clienteId: null,
+      formaPagamento: 'mercado_livre',
+      itens: [{ produto, quantidade: qtd }],
+      quando: diasAtras(dia),
+    });
+  }
 
   console.log('Contas do mês…');
   await contaFixa('Aluguel do galpão', 'aluguel', 320_000, dia(-25));

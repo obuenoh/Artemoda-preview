@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { exigirUsuario } from '@/lib/sessao';
 import { centavosParaReais, dataBR } from '@/lib/numeros';
+import { rotuloFrente } from '@/lib/frentes';
 import { TituloPagina } from '@/components/Ui';
 import { PontoDeVenda } from './PontoDeVenda';
 
@@ -28,7 +29,7 @@ export default async function VendasPage() {
     <>
       <TituloPagina
         titulo="Vendas"
-        sub="Bipe o código de barras ou digite o SKU — o estoque desconta sozinho"
+        sub="Bipe o código de barras ou digite o SKU — cada venda desconta do estoque da sua frente"
       />
 
       <PontoDeVenda clientes={clientes} />
@@ -45,8 +46,8 @@ export default async function VendasPage() {
             {ultimasVendas.map((v) => (
               <li key={v.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 text-sm">
                 <span className="font-semibold">{dataBR(v.criadoEm)}</span>
-                <span className="selo selo-neutro">{v.canal === 'loja' ? 'Loja' : 'Produção'}</span>
-                <span className="fraco">{v.cliente?.nome ?? 'Balcão'}</span>
+                <span className="selo selo-neutro">{rotuloFrente(v.frente)}</span>
+                <span className="fraco">{v.cliente?.nome ?? 'Sem cliente'}</span>
                 <span className="fraco">
                   {v.itens.reduce((s, i) => s + i.quantidade, 0)} peça(s)
                 </span>

@@ -9,6 +9,7 @@ import type { Papel } from '@/lib/sessao';
 const itens: { href: string; rotulo: string; papeis: Papel[] }[] = [
   { href: '/', rotulo: 'Visão Geral', papeis: ['dona', 'producao', 'vendas'] },
   { href: '/vendas', rotulo: 'Vendas', papeis: ['dona', 'vendas'] },
+  { href: '/pecas', rotulo: 'Peças', papeis: ['dona', 'producao', 'vendas'] },
   { href: '/financeiro', rotulo: 'Financeiro', papeis: ['dona'] },
   { href: '/nota-fiscal', rotulo: 'Nota Fiscal', papeis: ['dona'] },
   { href: '/tecidos', rotulo: 'Tecidos', papeis: ['dona', 'producao'] },

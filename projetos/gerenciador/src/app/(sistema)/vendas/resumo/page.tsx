@@ -1,8 +1,10 @@
 import { exigirPapel } from '@/lib/sessao';
 import { resumoVendas, vendasPorDia, rankingClientes, produtosMaisVendidos } from '@/lib/vendas';
+import { ehFrente, FRENTES, LISTA_FRENTES } from '@/lib/frentes';
 import { TituloPagina } from '@/components/Ui';
 import { Dinheiro, BotaoOcultar } from '@/components/Valores';
 import { GraficoVendas } from '@/components/GraficoVendas';
+import { SeletorFrente } from '@/components/SeletorFrente';
 import { SeletorPeriodo } from '../../SeletorPeriodo';
 
 export const metadata = { title: 'Resumo de vendas' };
@@ -28,25 +30,26 @@ function calcularPeriodo(periodo: string, inicioParam?: string, fimParam?: strin
   return { inicio, fim: fimHoje };
 }
 
-/** O detalhe de vendas que saiu da Visão Geral: quem compra, o que sai e como. */
+/** Quanto vendeu, para quem e o que mais saiu — de cada frente ou da empresa toda. */
 export default async function ResumoVendasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ periodo?: string; inicio?: string; fim?: string }>;
+  searchParams: Promise<{ periodo?: string; inicio?: string; fim?: string; frente?: string }>;
 }) {
-  const { periodo = '30d', inicio: inicioParam, fim: fimParam } = await searchParams;
+  const { periodo = '30d', inicio: inicioParam, fim: fimParam, frente: frenteParam } = await searchParams;
   const usuario = await exigirPapel('dona', 'vendas');
   const { inicio, fim } = calcularPeriodo(periodo, inicioParam, fimParam);
+  const frente = ehFrente(frenteParam) ? frenteParam : undefined;
 
-  const [resumo, porDia, clientesProducao, clientesLoja, maisVendidos] = await Promise.all([
-    resumoVendas(usuario.empresaId, inicio, fim),
-    vendasPorDia(usuario.empresaId, inicio, fim),
-    rankingClientes(usuario.empresaId, inicio, fim, 'producao'),
-    rankingClientes(usuario.empresaId, inicio, fim, 'loja'),
-    produtosMaisVendidos(usuario.empresaId, inicio, fim),
+  const [resumo, porDia, clientes, maisVendidos] = await Promise.all([
+    resumoVendas(usuario.empresaId, inicio, fim, frente),
+    vendasPorDia(usuario.empresaId, inicio, fim, frente),
+    rankingClientes(usuario.empresaId, inicio, fim, frente),
+    produtosMaisVendidos(usuario.empresaId, inicio, fim, 6, frente),
   ]);
 
   const ticketMedio = resumo.quantidadeVendas > 0 ? Math.round(resumo.totalCentavos / resumo.quantidadeVendas) : 0;
+  const deQuem = frente ? ` · ${FRENTES[frente]}` : '';
 
   return (
     <>
@@ -61,28 +64,33 @@ export default async function ResumoVendasPage({
         }
       />
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-3">
-        <Numero rotulo="Vendido no período" nota={`${resumo.quantidadeVendas} venda(s)`}>
+      <div className="mt-5">
+        <SeletorFrente />
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <Numero rotulo={`Vendido no período${deQuem}`} nota={`${resumo.quantidadeVendas} venda(s)`}>
           <Dinheiro centavos={resumo.totalCentavos} />
         </Numero>
-        <Numero
-          rotulo="Na loja (balcão)"
-          nota={
-            <>
-              <Dinheiro centavos={resumo.totalProducaoCentavos} /> em pedidos de produção
-            </>
-          }
-        >
-          <Dinheiro centavos={resumo.totalLojaCentavos} />
-        </Numero>
-        <Numero rotulo="Ticket médio" nota="Por venda, no período">
+        <Numero rotulo={`Ticket médio${deQuem}`} nota="Por venda, no período">
           <Dinheiro centavos={ticketMedio} />
         </Numero>
+        <div className="cartao">
+          <p className="rotulo-campo">Por frente</p>
+          <ul className="mt-2 flex flex-col gap-1 text-sm">
+            {LISTA_FRENTES.map((f) => (
+              <li key={f} className={`flex justify-between gap-3 ${frente && frente !== f ? 'fraco' : ''}`}>
+                <span className={frente === f ? 'font-semibold' : ''}>{FRENTES[f]}</span>
+                <Dinheiro centavos={resumo.porFrente[f]} className="font-semibold tabular-nums" />
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
       {porDia.length > 1 && (
         <section className="mt-9">
-          <h2 className="text-rotulo font-bold uppercase text-gold">Vendas por dia</h2>
+          <h2 className="text-rotulo font-bold uppercase text-gold">Vendas por dia{deQuem}</h2>
           <div className="mt-3">
             <GraficoVendas pontos={porDia} />
           </div>
@@ -91,19 +99,14 @@ export default async function ResumoVendasPage({
 
       <div className="mt-9 grid gap-6 lg:grid-cols-2">
         <section>
-          <h2 className="text-rotulo font-bold uppercase text-gold">Maiores clientes — produção</h2>
-          <Ranking linhas={clientesProducao.map((c) => ({ chave: c.clienteId ?? c.nome, nome: c.nome, detalhe: `${c.vendas} venda(s)`, centavos: c.totalCentavos }))} />
+          <h2 className="text-rotulo font-bold uppercase text-gold">Maiores clientes{deQuem}</h2>
+          <Ranking linhas={clientes.map((c) => ({ chave: c.clienteId ?? c.nome, nome: c.nome, detalhe: `${c.vendas} venda(s)`, centavos: c.totalCentavos }))} />
         </section>
         <section>
-          <h2 className="text-rotulo font-bold uppercase text-gold">Maiores clientes — loja</h2>
-          <Ranking linhas={clientesLoja.map((c) => ({ chave: c.clienteId ?? c.nome, nome: c.nome, detalhe: `${c.vendas} venda(s)`, centavos: c.totalCentavos }))} />
+          <h2 className="text-rotulo font-bold uppercase text-gold">Peças mais vendidas{deQuem}</h2>
+          <Ranking linhas={maisVendidos.map((p) => ({ chave: p.nome, nome: p.nome, detalhe: `${p.quantidade} peça(s)`, centavos: p.totalCentavos }))} />
         </section>
       </div>
-
-      <section className="mt-9">
-        <h2 className="text-rotulo font-bold uppercase text-gold">Peças mais vendidas</h2>
-        <Ranking linhas={maisVendidos.map((p) => ({ chave: p.nome, nome: p.nome, detalhe: `${p.quantidade} peça(s)`, centavos: p.totalCentavos }))} />
-      </section>
     </>
   );
 }
