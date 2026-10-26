@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import { exigirUsuario } from '@/lib/sessao';
-import { centavosParaReais, milFormatado, dataBR, dataCurtaBR, valorDe } from '@/lib/numeros';
+import { milFormatado, dataBR, dataCurtaBR, valorDe } from '@/lib/numeros';
+import { Dinheiro, BotaoOcultar } from '@/components/Valores';
 import { TituloPagina, Vazio, Botao } from '@/components/Ui';
 
 export const metadata = { title: 'Compras' };
@@ -24,7 +25,12 @@ export default async function ComprasPage() {
       <TituloPagina
         titulo="Compras de tecido"
         sub="O que entrou, de quem e por quanto"
-        acao={<Botao href="/compras/nova">Registrar compra</Botao>}
+        acao={
+          <div className="flex flex-wrap gap-3">
+            <BotaoOcultar />
+            <Botao href="/compras/nova">Registrar compra</Botao>
+          </div>
+        }
       />
 
       {compras.length === 0 ? (
@@ -53,7 +59,7 @@ export default async function ComprasPage() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-bold">{centavosParaReais(total)}</p>
+                    <p className="text-lg font-bold">{<Dinheiro centavos={total} />}</p>
                     {usuario.papel === 'dona' && <SituacaoPagamento contas={c.contasPagar} />}
                   </div>
                 </div>
@@ -67,8 +73,8 @@ export default async function ComprasPage() {
                       </span>
                       <span className="fraco">
                         {milFormatado(i.quantidadeMil, i.materiaPrima.unidade)} ×{' '}
-                        {centavosParaReais(i.valorUnitarioCentavos)}
-                        {i.rateioCentavos > 0 && ` (+${centavosParaReais(i.rateioCentavos)} de frete)`}
+                        {<Dinheiro centavos={i.valorUnitarioCentavos} />}
+                        {i.rateioCentavos > 0 && <> (+{<Dinheiro centavos={i.rateioCentavos} />} de frete)</>}
                       </span>
                     </li>
                   ))}

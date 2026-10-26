@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { exigirUsuario } from '@/lib/sessao';
 import { estadoAtual, rotuloMovimento, type TipoMovimento } from '@/lib/estoque';
-import { centavosParaReais, centavosNumero, milParaNumero, dataBR } from '@/lib/numeros';
+import { milParaNumero, dataBR } from '@/lib/numeros';
+import { Dinheiro, BotaoOcultar } from '@/components/Valores';
 import { TituloPagina } from '@/components/Ui';
 
 export const metadata = { title: 'Extrato do tecido' };
@@ -49,6 +50,7 @@ export default async function ExtratoPage({ params }: { params: Promise<{ id: st
         <TituloPagina
           titulo={`${tecido.nome}${tecido.cor ? ` · ${tecido.cor}` : ''}`}
           sub={[tecido.composicao, tecido.localizacao].filter(Boolean).join(' · ') || undefined}
+          acao={<BotaoOcultar />}
         />
       </div>
 
@@ -62,7 +64,7 @@ export default async function ExtratoPage({ params }: { params: Promise<{ id: st
         <div className="rounded border border-fio bg-cream-alt p-4">
           <dt className="text-rotulo font-semibold uppercase fraco">Custo médio</dt>
           <dd className="mt-1 text-xl font-bold">
-            {centavosParaReais(estado.custoMedioCentavos)}
+            {<Dinheiro centavos={estado.custoMedioCentavos} />}
             <span className="text-sm font-normal fraco"> / {un}</span>
           </dd>
         </div>
@@ -71,7 +73,7 @@ export default async function ExtratoPage({ params }: { params: Promise<{ id: st
           <dd className="mt-1 text-xl font-bold">
             {estado.ultimoCustoCentavos > 0 ? (
               <>
-                {centavosParaReais(estado.ultimoCustoCentavos)}
+                {<Dinheiro centavos={estado.ultimoCustoCentavos} />}
                 <span className="text-sm font-normal fraco"> / {un}</span>
               </>
             ) : (
@@ -116,11 +118,11 @@ export default async function ExtratoPage({ params }: { params: Promise<{ id: st
                     <td className={`td font-semibold ${entrada ? 'text-ok' : 'text-alerta'}`}>
                       {entrada ? '+' : '−'} {milParaNumero(Math.abs(m.quantidadeMil))} {un}
                     </td>
-                    <td className="td">{centavosNumero(m.custoUnitarioCentavos)}</td>
+                    <td className="td">{<Dinheiro centavos={m.custoUnitarioCentavos} semSimbolo />}</td>
                     <td className="td">
                       {milParaNumero(m.saldoAposMil)} {un}
                     </td>
-                    <td className="td">{centavosNumero(m.custoMedioAposCentavos)}</td>
+                    <td className="td">{<Dinheiro centavos={m.custoMedioAposCentavos} semSimbolo />}</td>
                     <td className="td">{m.motivo ?? <span className="fraco">—</span>}</td>
                     <td className="td">
                       {m.usuarioId ? (

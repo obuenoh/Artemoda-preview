@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { exigirUsuario } from '@/lib/sessao';
 import { posicaoEstoque, listarTiposProduto } from '@/lib/estoque';
-import { centavosParaReais, centavosNumero, milFormatado } from '@/lib/numeros';
+import { milFormatado } from '@/lib/numeros';
+import { Dinheiro, BotaoOcultar } from '@/components/Valores';
 import { TituloPagina, FaixaTotal, Vazio, Botao } from '@/components/Ui';
 
 export const metadata = { title: 'Estoque' };
@@ -36,6 +37,7 @@ export default async function EstoquePage({
         sub="Tecido e aviamento — saldo, custo e tempo parado, por setor"
         acao={
           <div className="flex flex-wrap gap-3">
+            <BotaoOcultar />
             <Botao href="/estoque/contagem" variante="vazio">
               Fazer contagem
             </Botao>
@@ -120,7 +122,7 @@ export default async function EstoquePage({
                     </td>
                     <td className="td">
                       {l.custoMedioCentavos > 0 ? (
-                        centavosNumero(l.custoMedioCentavos)
+                        <Dinheiro centavos={l.custoMedioCentavos} semSimbolo />
                       ) : (
                         <span className="fraco">—</span>
                       )}
@@ -128,7 +130,7 @@ export default async function EstoquePage({
                     <td className="td">
                       {l.ultimoCustoCentavos > 0 ? (
                         <>
-                          {centavosNumero(l.ultimoCustoCentavos)}
+                          {<Dinheiro centavos={l.ultimoCustoCentavos} semSimbolo />}
                           {l.variacaoPct !== null && l.variacaoPct !== 0 && (
                             <span
                               className={`ml-1.5 font-semibold ${
@@ -152,7 +154,7 @@ export default async function EstoquePage({
                         `${l.diasParado} dias`
                       )}
                     </td>
-                    <td className="td font-semibold">{centavosParaReais(l.valorCentavos)}</td>
+                    <td className="td font-semibold">{<Dinheiro centavos={l.valorCentavos} />}</td>
                     <td className="td">
                       <Link
                         href={`/estoque/${l.id}`}
@@ -171,7 +173,7 @@ export default async function EstoquePage({
             <span className="text-sm text-[color:var(--texto-claro)]">
               {setor ? 'Total neste setor:' : 'Total em estoque:'}
             </span>
-            <span className="text-xl font-bold">{centavosParaReais(total)}</span>
+            <span className="text-xl font-bold">{<Dinheiro centavos={total} />}</span>
           </FaixaTotal>
 
           <p className="mt-4 max-w-[70ch] text-xs fraco">

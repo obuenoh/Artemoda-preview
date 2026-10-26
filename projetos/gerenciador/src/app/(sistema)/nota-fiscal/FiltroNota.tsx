@@ -3,7 +3,8 @@
 import { useActionState, useState } from 'react';
 import { gerarNotaFiscal, previsualizarRelatorio, type Resultado, type PreviaNota } from './acoes';
 import { Campo, ErroGeral } from '@/components/Campo';
-import { centavosParaReais, dataBR } from '@/lib/numeros';
+import { dataBR } from '@/lib/numeros';
+import { Dinheiro } from '@/components/Valores';
 import { semLimpar } from '@/components/enviar';
 
 function hojeISO() {
@@ -155,7 +156,7 @@ export function FiltroNota({ clientes }: { clientes: { id: string; nome: string 
                     <td className="td">{i.clienteNome}</td>
                     <td className="td">{i.canal === 'loja' ? 'Loja' : 'Produção'}</td>
                     <td className="td">{i.pecas}</td>
-                    <td className="td font-semibold">{centavosParaReais(i.totalCentavos)}</td>
+                    <td className="td font-semibold">{<Dinheiro centavos={i.totalCentavos} />}</td>
                   </tr>
                 ))}
               </tbody>
@@ -167,10 +168,10 @@ export function FiltroNota({ clientes }: { clientes: { id: string; nome: string 
               {previa.itens.length} venda(s), {previa.totalPecas} peça(s)
             </span>
             <span className="text-sm text-[color:var(--texto-claro)]">
-              Bruto: {centavosParaReais(previa.totalCentavos)}
+              Bruto: {<Dinheiro centavos={previa.totalCentavos} />}
             </span>
             <span className="ml-auto text-xl font-bold">
-              {centavosParaReais(previa.totalComDescontoCentavos)}
+              {<Dinheiro centavos={previa.totalComDescontoCentavos} />}
             </span>
           </div>
 

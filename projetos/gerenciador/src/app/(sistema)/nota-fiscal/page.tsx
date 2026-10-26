@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { exigirPapel } from '@/lib/sessao';
-import { centavosParaReais, dataBR } from '@/lib/numeros';
+import { dataBR } from '@/lib/numeros';
+import { Dinheiro, BotaoOcultar } from '@/components/Valores';
 import { TituloPagina, Aviso, Vazio } from '@/components/Ui';
 import { FiltroNota } from './FiltroNota';
 
@@ -29,6 +30,7 @@ export default async function NotaFiscalPage() {
       <TituloPagina
         titulo="Nota Fiscal"
         sub="Relatório de vendas por período, com desconto — e a nota em rascunho"
+        acao={<BotaoOcultar />}
       />
 
       <Aviso>
@@ -60,7 +62,7 @@ export default async function NotaFiscalPage() {
                 <span className="fraco">{n.cliente?.nome ?? 'Todos os clientes'}</span>
                 <span className="selo selo-neutro">Rascunho</span>
                 <span className="ml-auto font-semibold">
-                  {centavosParaReais(n.totalComDescontoCentavos)}
+                  {<Dinheiro centavos={n.totalComDescontoCentavos} />}
                 </span>
               </li>
             ))}

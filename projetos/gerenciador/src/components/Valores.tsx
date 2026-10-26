@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, type ReactNode } from 'react';
-import { centavosParaReais } from '@/lib/numeros';
+import { centavosParaReais, centavosNumero } from '@/lib/numeros';
 import { COOKIE_VALORES } from '@/lib/preferencias';
 
 /**
@@ -36,17 +36,20 @@ export function useValoresOcultos(): boolean {
   return useContext(Contexto).ocultos;
 }
 
-/** Valor em reais que respeita o "ocultar". Negativo sai com o sinal de menos na frente. */
-export function Dinheiro({ centavos, className }: { centavos: number; className?: string }) {
+/**
+ * Valor em reais que respeita o "ocultar". Negativo sai com o sinal de menos
+ * na frente. `semSimbolo` e para tabela cuja coluna ja diz que e dinheiro.
+ */
+export function Dinheiro({ centavos, className, semSimbolo = false }: { centavos: number; className?: string; semSimbolo?: boolean }) {
   const ocultos = useValoresOcultos();
   if (ocultos) {
     return (
       <span className={className} aria-label="valor oculto">
-        R$ •••••
+        {semSimbolo ? '•••••' : 'R$ •••••'}
       </span>
     );
   }
-  const texto = centavosParaReais(Math.abs(centavos));
+  const texto = semSimbolo ? centavosNumero(Math.abs(centavos)) : centavosParaReais(Math.abs(centavos));
   return <span className={className}>{centavos < 0 ? `−${texto}` : texto}</span>;
 }
 

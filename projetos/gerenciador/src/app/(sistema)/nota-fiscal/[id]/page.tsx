@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { exigirPapel } from '@/lib/sessao';
-import { centavosParaReais, centavosNumero, dataBR } from '@/lib/numeros';
+import { centavosNumero, dataBR } from '@/lib/numeros';
+import { Dinheiro, BotaoOcultar } from '@/components/Valores';
 import { TituloPagina, Aviso } from '@/components/Ui';
 
 export const metadata = { title: 'Rascunho de nota' };
@@ -30,6 +31,7 @@ export default async function NotaFiscalDetalhePage({ params }: { params: Promis
         <TituloPagina
           titulo={`Rascunho — ${dataBR(nota.periodoInicio)} a ${dataBR(nota.periodoFim)}`}
           sub={nota.cliente?.nome ?? 'Todos os clientes'}
+          acao={<BotaoOcultar />}
         />
       </div>
 
@@ -42,13 +44,13 @@ export default async function NotaFiscalDetalhePage({ params }: { params: Promis
       <dl className="mt-6 grid gap-3 sm:grid-cols-3">
         <div className="rounded border border-fio bg-cream-alt p-4">
           <dt className="text-rotulo font-semibold uppercase fraco">Total das vendas</dt>
-          <dd className="mt-1 text-xl font-bold">{centavosParaReais(nota.totalVendasCentavos)}</dd>
+          <dd className="mt-1 text-xl font-bold">{<Dinheiro centavos={nota.totalVendasCentavos} />}</dd>
         </div>
         <div className="rounded border border-fio bg-cream-alt p-4">
           <dt className="text-rotulo font-semibold uppercase fraco">Desconto</dt>
           <dd className="mt-1 text-xl font-bold">
             {nota.descontoPercentualCem > 0 && `${centavosNumero(nota.descontoPercentualCem).replace(/,00$/, '')}% `}
-            {nota.descontoValorCentavos > 0 && `+ ${centavosParaReais(nota.descontoValorCentavos)}`}
+            {nota.descontoValorCentavos > 0 && <>+ {<Dinheiro centavos={nota.descontoValorCentavos} />}</>}
             {nota.descontoPercentualCem === 0 && nota.descontoValorCentavos === 0 && (
               <span className="fraco">Nenhum</span>
             )}
@@ -58,7 +60,7 @@ export default async function NotaFiscalDetalhePage({ params }: { params: Promis
           <dt className="text-rotulo font-semibold uppercase text-[color:var(--texto-claro)]">
             Total com desconto
           </dt>
-          <dd className="mt-1 text-xl font-bold">{centavosParaReais(nota.totalComDescontoCentavos)}</dd>
+          <dd className="mt-1 text-xl font-bold">{<Dinheiro centavos={nota.totalComDescontoCentavos} />}</dd>
         </div>
       </dl>
 
@@ -69,7 +71,7 @@ export default async function NotaFiscalDetalhePage({ params }: { params: Promis
             <li key={nv.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 text-sm">
               <span className="font-semibold">{dataBR(nv.venda.criadoEm)}</span>
               <span className="fraco">{nv.venda.cliente?.nome ?? 'Balcão'}</span>
-              <span className="ml-auto font-semibold">{centavosParaReais(nv.venda.totalCentavos)}</span>
+              <span className="ml-auto font-semibold">{<Dinheiro centavos={nv.venda.totalCentavos} />}</span>
             </li>
           ))}
         </ul>
