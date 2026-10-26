@@ -90,6 +90,8 @@ for (const [url, cru] of paginas) {
   });
 
   html = html.replace(/(<body[^>]*>)/i, `$1${FAIXA}`);
+  // O botao "Ocultar valores" volta a funcionar sem React (painel-valores.js).
+  html = html.replace('</body>', '<script src="valores.js"></script></body>');
 
   writeFileSync(join(SAIDA, mapa.get(url)), html);
 }

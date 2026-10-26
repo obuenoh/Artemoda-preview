@@ -12,7 +12,9 @@ export type DadosRetalho = {
   nome: string;
   cor: string | null;
   quantidade: string;
-  detalhe: string;
+  /** Valor do kg: passa pelo <Dinheiro> para respeitar o "ocultar valores". */
+  custoKgCentavos: number;
+  localizacao: string | null;
   diasParado: number | null;
   valorCentavos: number;
 };
@@ -29,7 +31,10 @@ export function LinhaRetalho({ r }: { r: DadosRetalho }) {
           <p className="font-semibold">
             {r.nome} {r.cor && <span className="fraco">· {r.cor}</span>}
           </p>
-          <p className="miudo mt-0.5">{r.detalhe}</p>
+          <p className="miudo mt-0.5">
+            <Dinheiro centavos={r.custoKgCentavos} /> o kg
+            {r.localizacao && ` · ${r.localizacao}`}
+          </p>
         </div>
         <p className="w-[90px] text-right font-semibold tabular-nums">{r.quantidade}</p>
         <p className={`w-[110px] text-right text-sm ${longo ? 'font-semibold text-alerta' : 'fraco'}`}>

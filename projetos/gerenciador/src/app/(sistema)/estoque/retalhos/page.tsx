@@ -1,7 +1,7 @@
 import { db } from '@/lib/db';
 import { exigirPapel } from '@/lib/sessao';
 import { posicaoEstoque, NOME_TIPO_RETALHO } from '@/lib/estoque';
-import { centavosParaReais, milFormatado } from '@/lib/numeros';
+import { milFormatado } from '@/lib/numeros';
 import { TituloPagina, FaixaTotal } from '@/components/Ui';
 import { Dinheiro, BotaoOcultar } from '@/components/Valores';
 import { FormRetalho } from './FormRetalho';
@@ -81,7 +81,8 @@ export default async function RetalhosPage() {
                   nome: l.nome,
                   cor: l.cor,
                   quantidade: milFormatado(l.saldoMil, 'kg'),
-                  detalhe: [`${centavosParaReais(l.custoMedioCentavos)} o kg`, l.localizacao].filter(Boolean).join(' · '),
+                  custoKgCentavos: l.custoMedioCentavos,
+                  localizacao: l.localizacao,
                   diasParado: l.diasParado,
                   valorCentavos: l.valorCentavos,
                 }}

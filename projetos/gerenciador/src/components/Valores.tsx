@@ -42,17 +42,27 @@ export function useValoresOcultos(): boolean {
  */
 export function Dinheiro({ centavos, className, semSimbolo = false }: { centavos: number; className?: string; semSimbolo?: boolean }) {
   const ocultos = useValoresOcultos();
+  // data-dinheiro: a previa estatica (sem React) acha os valores por ele.
+  const marca = semSimbolo ? 'numero' : 'reais';
   if (ocultos) {
     return (
-      <span className={className} aria-label="valor oculto">
+      <span className={className} aria-label="valor oculto" data-dinheiro={marca}>
         {semSimbolo ? '•••••' : 'R$ •••••'}
       </span>
     );
   }
   const texto = semSimbolo ? centavosNumero(Math.abs(centavos)) : centavosParaReais(Math.abs(centavos));
-  return <span className={className}>{centavos < 0 ? `−${texto}` : texto}</span>;
+  return (
+    <span className={className} data-dinheiro={marca}>
+      {centavos < 0 ? `−${texto}` : texto}
+    </span>
+  );
 }
 
+/**
+ * O botao do olho. Os atributos data-* deixam a previa estatica do GitHub
+ * Pages (scripts/painel-valores.js) fazer o mesmo sem React.
+ */
 export function BotaoOcultar() {
   const { ocultos, alternar } = useContext(Contexto);
   return (
@@ -60,15 +70,16 @@ export function BotaoOcultar() {
       type="button"
       onClick={alternar}
       aria-pressed={ocultos}
+      data-ocultar-valores=""
       className="bt bt-vazio compacto gap-2 py-2"
       title={ocultos ? 'Mostrar os valores' : 'Esconder os valores'}
     >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
         <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
         <circle cx="12" cy="12" r="3" />
-        {ocultos && <path d="M4 4l16 16" />}
+        <path d="M4 4l16 16" data-risco="" style={{ opacity: ocultos ? 1 : 0 }} />
       </svg>
-      {ocultos ? 'Mostrar valores' : 'Ocultar valores'}
+      <span data-rotulo="">{ocultos ? 'Mostrar valores' : 'Ocultar valores'}</span>
     </button>
   );
 }
