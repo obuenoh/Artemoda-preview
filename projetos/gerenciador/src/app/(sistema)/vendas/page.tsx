@@ -47,6 +47,7 @@ export default async function VendasPage() {
               <li key={v.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 text-sm">
                 <span className="font-semibold">{dataBR(v.criadoEm)}</span>
                 <span className="selo selo-neutro">{rotuloFrente(v.frente)}</span>
+                {v.encomenda && <span className="selo selo-neutro">Encomenda</span>}
                 <span className="fraco">{v.cliente?.nome ?? 'Sem cliente'}</span>
                 <span className="fraco">
                   {v.itens.reduce((s, i) => s + i.quantidade, 0)} peça(s)

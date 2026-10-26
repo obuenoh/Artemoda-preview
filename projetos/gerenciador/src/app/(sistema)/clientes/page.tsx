@@ -4,7 +4,7 @@ import { TituloPagina, Vazio, Botao } from '@/components/Ui';
 
 export const metadata = { title: 'Clientes' };
 
-const rotuloTipo: Record<string, string> = { escola: 'Escola', empresa: 'Empresa', marca: 'Marca' };
+const rotuloTipo: Record<string, string> = { escola: 'Escola', empresa: 'Empresa', marca: 'Marca', pessoa: 'Pessoa' };
 const rotuloPagamento: Record<string, string> = {
   a_vista: 'À vista',
   '30': '30 dias',

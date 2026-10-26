@@ -415,6 +415,8 @@ model Venda {
   formaPagamento   String   @default("dinheiro") // dinheiro | pix | cartao | fiado | mercado_livre
   totalCentavos    Int
   descontoCentavos Int      @default(0)
+  /// Venda de balcao marcada como encomenda: o cliente pediu a peca e ela e fabricada.
+  encomenda        Boolean  @default(false)
   observacoes      String?
   usuarioId        String?
   criadoEm         DateTime @default(now())

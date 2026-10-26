@@ -170,6 +170,7 @@ Cadastros (fornecedor com preço versionado, tecido/aviamento por setor, cliente
   - **Balcão da loja**: sai da Loja.
   - **Pedido da fábrica**: cliente obrigatório; sai da Fábrica.
   - **E-commerce**: sai do E-commerce. O pagamento "Mercado Livre" vira conta a receber, com o prazo em `Configuracao.prazo_repasse_mercado_livre_dias`, que ainda é palpite de 30 dias.
+- **Cliente na hora da venda** (26/10/2026): botão "+ Novo cliente" ao lado do campo Cliente, no balcão e no pedido da fábrica (`vendas/ClienteRapido.tsx`), sem sair da tela nem perder o carrinho. No balcão, a caixa "É uma encomenda" exige cliente e grava `Venda.encomenda`. Ainda não faz sinal de metade, nem lista do que fabricar.
 - **Seletor Tudo/Fábrica/Loja/E-commerce** na Visão Geral e no Resumo de vendas.
 - **Caixa:** "De onde entrou", por frente.
 - `/vendas/estoque` redireciona para `/pecas`.
@@ -236,7 +237,7 @@ Entrar no gerenciador: `dona@arteemoda.com.br` / `arteemoda` (dados de exemplo; 
 
 Mora na branch `gh-pages` (saída de build, não código).
 Ver `scripts/` para regenerar via `montar-painel.mjs` e `reescrever.mjs`.
-O `/painel/` foi atualizado em 26/10/2026 com Financeiro, Visão Geral nova, Retalhos e estoque parado, mas **ainda não tem as três frentes** (tela Peças, três tipos de venda e o seletor de frente). O balcão de demonstração (`painel-vendas.js`) ainda tem só dois tipos de venda. Regenerar só com ok do usuário, porque publicar é público.
+O `/painel/` foi atualizado em 26/10/2026 com Financeiro, Visão Geral nova, Retalhos e estoque parado, mas **ainda não tem as três frentes** (tela Peças, três tipos de venda e o seletor de frente). O balcão de demonstração (`painel-vendas.js`) ainda tem só dois tipos de venda. Regenerar só com ok do usuário, porque publicar é público. O repositório vai ficar privado (decisão de 26/10/2026); no plano gratuito o GitHub Pages de repositório privado não publica, então a prévia pode sair do ar.
 
 Para regenerar o `/painel/`:
 1. Rodar o app em produção na porta 3100 (`npm run build && npm start`).

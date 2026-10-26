@@ -20,8 +20,8 @@ Site e app construídos. Redes sociais ainda não são usadas. O primeiro carros
 - **App em três frentes** (pedido da dona em 24/10/2026). Ordem aprovada pelo usuário em 25/10/2026:
   1. retalhos e estoque parado em R$ (**feito em 25/10/2026**);
   2. Fábrica, Loja e E-commerce separados, com envio interno de peças (**feito em 26/10/2026**);
-  3. nota de compra em PDF e histórico por fornecedor (**próximo**);
-  4. cliente da loja, encomenda e promoção;
+  3. nota de compra em PDF e histórico por fornecedor (**parado**: sem nota real para testar);
+  4. cliente da loja, encomenda e promoção (**em andamento**: cadastro de cliente na venda feito em 26/10);
   5. e-commerce no Mercado Livre (à mão primeiro, integração depois).
 
 ## Pra tirar das costas
@@ -43,14 +43,20 @@ Candidatas a virar skill via `/mapear-rotinas`.
   - costureiras: salário fixo.
 - Para a nota fiscal sair pelo app: certificado digital A1, Inscrição Estadual, CEP, última nota emitida e, do contador, regime, CFOPs, NCM e o modelo de nota da loja. As perguntas foram mandadas à dona em 25/10/2026; aguardando resposta.
 - Compra em kg e uso em metro: "depende muito". O app converte pela largura e gramatura do tecido quando o cadastro tem esses dados.
-- Abertos em 26/10/2026, aguardando resposta:
-  - **Prazo do Mercado Livre:** em quantos dias o dinheiro é liberado. Palpite de 30 dias no app.
-  - **Duas perguntas para a dona:**
-    - o preço muda por frente? No Mercado Livre tem taxa, e pedido de escola às vezes tem preço combinado;
-    - precisa enviar várias peças de uma vez? Hoje o envio é peça por peça.
-  - **Domínio:** artemoda.com.br (de outra pessoa, desde 2019) e arteemoda.com.br (de outra pessoa, desde 23/10/2026) têm dono. grupoartemoda.com.br e grupoarteemoda.com.br estavam livres em 26/10/2026. Falta o usuário escolher e registrar no registro.br.
-  - **Repositório público:** o GitHub `obuenoh/Artemoda-preview` é público e mostra o código e a memória. Falta o usuário decidir se torna privado; aí a prévia do GitHub Pages precisa mudar de lugar.
-  - **Passo 3 (nota de compra):** falta o usuário separar uma ou duas notas de compra reais em PDF para testar a leitura.
+- Decidido em 26/10/2026:
+  - **E-commerce:** ainda não funciona, está em estruturação. Preços e lista de itens ficam com o usuário, que preenche depois.
+  - **Repositório:** vira privado (decisão do usuário). A prévia do GitHub Pages pode sair do ar; ver `CLAUDE.md` seção 8.
+  - **Passo 3 (nota de compra em PDF):** parado, o usuário ainda não tem nota para simular.
+  - **Passo 4:** começou pelo cadastro de cliente dentro da venda (botão "+ Novo cliente" no balcão e no pedido da fábrica) e a marca "É uma encomenda" no balcão.
+  - **Passo 5 (Mercado Livre):** pendente.
+  - **Resto do site:** pendente, o foco agora é o app.
+- Pendentes, sem data:
+  - **Domínio:** `arteemoda.com.br` e `artemoda.com.br` têm dono. Livres em 26/10: `grupoartemoda.com.br` e `grupoarteemoda.com.br`. O usuário escolhe depois.
+  - **Hospedagem** (Neon + Render): o usuário faz depois.
+  - **Prazo do Mercado Livre:** ninguém sabe em quantos dias o dinheiro é liberado. O app usa 30 dias de palpite; o usuário pediu ajuda com isso depois.
+  - **Perguntas para a dona:** o preço muda por frente? Precisa enviar várias peças de uma vez?
+  - **Nota fiscal:** perguntas de 25/10 sem resposta.
+  - **Prévia `/painel/`:** sem as três frentes; regenerar só com ok do usuário.
 
 ## O que pode esperar
 

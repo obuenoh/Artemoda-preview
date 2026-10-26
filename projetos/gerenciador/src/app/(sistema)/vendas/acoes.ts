@@ -42,6 +42,67 @@ export async function buscarProdutoPorSku(sku: string, frente: Frente): Promise<
   };
 }
 
+// ─────────────────────────────────────────── cliente na hora da venda
+
+const clienteRapidoSchema = z.object({
+  nome: z.string().trim().min(2, 'Informe o nome do cliente.'),
+  tipo: z.enum(['escola', 'empresa', 'marca', 'pessoa']),
+  contato: z.string().trim().optional(),
+  whatsapp: z.string().trim().optional(),
+  cnpj: z.string().trim().optional(),
+  condicaoPagamento: z.enum(['a_vista', '30', '30_60']),
+});
+
+export type ClienteRapido = { id: string; nome: string };
+
+/**
+ * Cadastra o cliente sem sair da venda. Devolve o cliente para a tela ja
+ * deixa-lo escolhido. Nao redireciona: quem esta vendendo perderia o carrinho.
+ */
+export async function cadastrarClienteRapido(
+  dados: z.input<typeof clienteRapidoSchema>,
+): Promise<{ erro: string; campos?: Record<string, string> } | { ok: true; cliente: ClienteRapido }> {
+  const usuario = await exigirPapel('dona', 'vendas');
+
+  const parsed = clienteRapidoSchema.safeParse(dados);
+  if (!parsed.success) {
+    const campos: Record<string, string> = {};
+    for (const i of parsed.error.issues) {
+      const c = i.path[0];
+      if (typeof c === 'string' && !campos[c]) campos[c] = i.message;
+    }
+    return { erro: 'Confira os campos marcados.', campos };
+  }
+  const d = parsed.data;
+  if (d.whatsapp && d.whatsapp.replace(/\D/g, '').length < 10) {
+    return { erro: 'Informe um WhatsApp com DDD.', campos: { whatsapp: 'Informe um WhatsApp com DDD.' } };
+  }
+
+  const c = await db.cliente.create({
+    data: {
+      empresaId: usuario.empresaId,
+      nome: d.nome,
+      tipo: d.tipo,
+      cnpj: d.cnpj || null,
+      contato: d.contato || null,
+      whatsapp: d.whatsapp || null,
+      condicaoPagamento: d.condicaoPagamento,
+    },
+  });
+
+  await registrarAuditoria({
+    empresaId: usuario.empresaId,
+    usuarioId: usuario.id,
+    entidade: 'cliente',
+    entidadeId: c.id,
+    acao: 'criou',
+    resumo: `Cadastrou o cliente ${c.nome} (na venda)`,
+  });
+
+  revalidatePath('/clientes');
+  return { ok: true, cliente: { id: c.id, nome: c.nome } };
+}
+
 // ─────────────────────────────────────────────────────── finalizar venda
 
 const itemSchema = z.object({
@@ -72,6 +133,7 @@ export async function finalizarVenda(dados: {
   clienteId: string | null;
   formaPagamento: string;
   observacoes: string;
+  encomenda?: boolean;
   itens: CarrinhoItem[];
 }): Promise<{ erro: string } | { ok: true; vendaId: string }> {
   const usuario = await exigirPapel('dona', 'vendas', 'producao');
@@ -80,6 +142,10 @@ export async function finalizarVenda(dados: {
   if (dados.itens.length === 0) return { erro: 'Adicione ao menos uma peça antes de finalizar.' };
   if (dados.frente === 'fabrica' && !dados.clienteId) {
     return { erro: 'Pedido da fábrica precisa de um cliente: escola, empresa ou marca.' };
+  }
+  if (dados.encomenda && dados.frente !== 'loja') return { erro: 'Encomenda é só no balcão da loja.' };
+  if (dados.encomenda && !dados.clienteId) {
+    return { erro: 'Encomenda precisa de cliente: escolha um ou cadastre agora em "+ Novo cliente".' };
   }
   if (!(FORMAS as readonly string[]).includes(dados.formaPagamento)) return { erro: 'Escolha a forma de pagamento.' };
 
@@ -98,6 +164,7 @@ export async function finalizarVenda(dados: {
           frente: dados.frente,
           formaPagamento: dados.formaPagamento,
           totalCentavos,
+          encomenda: !!dados.encomenda,
           observacoes: dados.observacoes || null,
           usuarioId: usuario.id,
         },

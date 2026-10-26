@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { buscarProdutoPorSku, finalizarVenda, type ProdutoEncontrado } from './acoes';
+import { ClienteRapido } from './ClienteRapido';
 import { centavosParaReais, centavosNumero } from '@/lib/numeros';
 import { daFrente, naFrente, type Frente } from '@/lib/frentes';
 
@@ -15,7 +16,7 @@ const TIPOS: { frente: Frente; rotulo: string }[] = [
 
 type LinhaCarrinho = ProdutoEncontrado & { quantidade: number };
 
-export function PontoDeVenda({ clientes }: { clientes: { id: string; nome: string }[] }) {
+export function PontoDeVenda({ clientes: clientesIniciais }: { clientes: { id: string; nome: string }[] }) {
   const router = useRouter();
   const [codigo, setCodigo] = useState('');
   const [carrinho, setCarrinho] = useState<LinhaCarrinho[]>([]);
@@ -23,7 +24,10 @@ export function PontoDeVenda({ clientes }: { clientes: { id: string; nome: strin
   const [buscando, iniciarBusca] = useTransition();
 
   const [frente, setFrente] = useState<Frente>('loja');
+  const [clientes, setClientes] = useState(clientesIniciais);
   const [clienteId, setClienteId] = useState('');
+  const [cadastrando, setCadastrando] = useState(false);
+  const [encomenda, setEncomenda] = useState(false);
   const [formaPagamento, setFormaPagamento] = useState('dinheiro');
   const [pedidoMl, setPedidoMl] = useState('');
   const [aviso, setAviso] = useState<string | null>(null);
@@ -83,6 +87,8 @@ export function PontoDeVenda({ clientes }: { clientes: { id: string; nome: strin
     setAviso(carrinho.length > 0 ? 'Carrinho esvaziado: cada tipo de venda sai do estoque da própria frente.' : null);
     setCarrinho([]);
     setClienteId('');
+    setCadastrando(false);
+    setEncomenda(false);
     setErroCodigo(null);
     setErroFinal(null);
     setFormaPagamento(nova === 'ecommerce' ? 'mercado_livre' : 'dinheiro');
@@ -93,6 +99,10 @@ export function PontoDeVenda({ clientes }: { clientes: { id: string; nome: strin
     setErroFinal(null);
     setSucesso(null);
 
+    if (encomenda && !clienteId) {
+      setErroFinal('Encomenda precisa de cliente: escolha um ou cadastre agora em "+ Novo cliente".');
+      return;
+    }
     if (frente === 'fabrica' && !clienteId) {
       setErroFinal('Escolha o cliente do pedido: escola, empresa ou marca.');
       return;
@@ -103,6 +113,7 @@ export function PontoDeVenda({ clientes }: { clientes: { id: string; nome: strin
       frente,
       clienteId: clienteId || null,
       formaPagamento,
+      encomenda: frente === 'loja' && encomenda,
       observacoes: frente === 'ecommerce' ? pedidoMl.trim() : '',
       itens: carrinho.map((l) => ({
         produtoAcabadoId: l.id,
@@ -119,11 +130,27 @@ export function PontoDeVenda({ clientes }: { clientes: { id: string; nome: strin
 
     setCarrinho([]);
     setClienteId('');
+    setCadastrando(false);
+    setEncomenda(false);
     setPedidoMl('');
     setAviso(null);
     setSucesso(`Venda registrada — ${centavosParaReais(total)}.`);
     router.refresh();
     inputRef.current?.focus();
+  }
+
+  function cadastroInline(tipoInicial: 'pessoa' | 'escola') {
+    return (
+      <ClienteRapido
+        tipoInicial={tipoInicial}
+        onCancelar={() => setCadastrando(false)}
+        onCadastrado={(c) => {
+          setClientes((lista) => [...lista, c].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')));
+          setClienteId(c.id);
+          setCadastrando(false);
+        }}
+      />
+    );
   }
 
   return (
@@ -253,9 +280,14 @@ export function PontoDeVenda({ clientes }: { clientes: { id: string; nome: strin
 
         {frente === 'fabrica' && (
           <div className="mt-4">
-            <label htmlFor="cliente" className="rotulo-campo">
-              Cliente
-            </label>
+            <div className="flex items-baseline justify-between gap-3">
+              <label htmlFor="cliente" className="rotulo-campo">
+                Cliente
+              </label>
+              <button type="button" onClick={() => setCadastrando((v) => !v)} className="compacto text-rotulo font-bold uppercase text-gold">
+                {cadastrando ? 'Fechar' : '+ Novo cliente'}
+              </button>
+            </div>
             <select
               id="cliente"
               value={clienteId}
@@ -269,6 +301,7 @@ export function PontoDeVenda({ clientes }: { clientes: { id: string; nome: strin
                 </option>
               ))}
             </select>
+            {cadastrando && cadastroInline('escola')}
           </div>
         )}
 
@@ -283,9 +316,14 @@ export function PontoDeVenda({ clientes }: { clientes: { id: string; nome: strin
 
         {frente === 'loja' && (
           <div className="mt-4">
-            <label htmlFor="clienteLoja" className="rotulo-campo">
-              Cliente <span className="font-normal normal-case tracking-normal">opcional</span>
-            </label>
+            <div className="flex items-baseline justify-between gap-3">
+              <label htmlFor="clienteLoja" className="rotulo-campo">
+                Cliente <span className="font-normal normal-case tracking-normal">{encomenda ? '' : 'opcional'}</span>
+              </label>
+              <button type="button" onClick={() => setCadastrando((v) => !v)} className="compacto text-rotulo font-bold uppercase text-gold">
+                {cadastrando ? 'Fechar' : '+ Novo cliente'}
+              </button>
+            </div>
             <select
               id="clienteLoja"
               value={clienteId}
@@ -299,6 +337,19 @@ export function PontoDeVenda({ clientes }: { clientes: { id: string; nome: strin
                 </option>
               ))}
             </select>
+            {cadastrando && cadastroInline('pessoa')}
+            <label className="mt-3 flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={encomenda}
+                onChange={(e) => setEncomenda(e.target.checked)}
+                className="mt-0.5"
+              />
+              <span>
+                <strong>É uma encomenda</strong>
+                <span className="miudo">O cliente pediu a peça. Precisa de cliente cadastrado.</span>
+              </span>
+            </label>
           </div>
         )}
 
